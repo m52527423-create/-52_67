@@ -24,6 +24,7 @@ import android.util.Log
 import android.view.Display
 import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.gl.render.filters.`object`.ImageObjectFilterRender
+import com.pedro.encoder.input.sources.audio.AudioSource
 import com.pedro.encoder.input.sources.audio.InternalAudioSource
 import com.pedro.encoder.input.sources.audio.MicrophoneSource
 import com.pedro.encoder.input.sources.audio.MixAudioSource
@@ -33,9 +34,10 @@ import com.pedro.library.generic.GenericStream
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.concurrent.thread
 
 /** Фоновый сервис: захват экрана + звук → сцена → Twitch (RTMP). */
-class StreamService : Service(), ConnectChecker {
+class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
 
   companion object {
     const val ACTION_START = "com.streamscene.START"
@@ -60,12 +62,42 @@ class StreamService : Service(), ConnectChecker {
   private var current = 0
   private var running = false
   private var wakeLock: PowerManager.WakeLock? = null
+  private var audioSrc: AudioSource? = null
+  private var controls: FloatingControls? = null
+  private var uiState = "connecting"
+  private var liveSince = 0L
+  private var viewers: Int? = null
+  private var kbps = 0L
+  private var micMuted = false
+
+  private val ticker = object : Runnable {
+    override fun run() {
+      pushUi()
+      main.postDelayed(this, 1000)
+    }
+  }
+  private val viewerPoll = object : Runnable {
+    override fun run() {
+      if (running && TwitchClient.loggedIn && uiState == "live") {
+        thread {
+          val v = TwitchClient.viewers()
+          main.post {
+            viewers = v
+            if (v != null) StreamState.send(org.json.JSONObject().put("state", "viewers").put("count", v))
+            pushUi()
+          }
+        }
+      }
+      main.postDelayed(this, 20000)
+    }
+  }
 
   override fun onBind(intent: Intent?): IBinder? = null
 
   override fun onCreate() {
     super.onCreate()
     instance = this
+    TwitchClient.init(this)
     val nm = getSystemService(NotificationManager::class.java)
     nm.createNotificationChannel(NotificationChannel(CHANNEL, "Стрим", NotificationManager.IMPORTANCE_LOW))
   }
@@ -116,6 +148,7 @@ class StreamService : Service(), ConnectChecker {
         cfg.audio == "game" -> InternalAudioSource(mp)
         else -> MixAudioSource(mp)
       }
+      audioSrc = audio
       val s = GenericStream(applicationContext, this, NoVideoSource(), audio)
       s.getGlInterface().setForceRender(true, cfg.fps)
 
@@ -145,6 +178,13 @@ class StreamService : Service(), ConnectChecker {
       s.startStream(cfg.url)
       fitVirtualDisplay(cfg)
       main.postDelayed({ fitVirtualDisplay(cfg) }, 800)
+
+      uiState = "connecting"; liveSince = 0L; viewers = null; kbps = 0L; micMuted = false
+      if (cfg.bubble) {
+        controls = FloatingControls(this, this).also { it.show() }
+      }
+      main.post(ticker)
+      main.postDelayed(viewerPoll, 15000)
 
       val pm = getSystemService(PowerManager::class.java)
       wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "StreamScene:stream").apply { acquire(6 * 60 * 60 * 1000L) }
@@ -185,6 +225,7 @@ class StreamService : Service(), ConnectChecker {
       overlay.setPosition(0f, 0f)
     }
     updateNotification()
+    pushUi()
     StreamState.emit("scene", sc.name) { put("index", current) }
   }
 
@@ -214,14 +255,14 @@ class StreamService : Service(), ConnectChecker {
     }
     return Notification.Builder(this, CHANNEL)
       .setSmallIcon(R.drawable.ic_notif)
-      .setContentTitle("🔴 СтримСцена")
+      .setContentTitle("СтримСцена")
       .setContentText(text)
       .setContentIntent(open)
       .setOngoing(true)
       .setOnlyAlertOnce(true)
-      .addAction(action("◀ Сцена", ACTION_PREV, 1))
-      .addAction(action("Сцена ▶", ACTION_NEXT, 2))
-      .addAction(action("■ Стоп", ACTION_STOP, 3))
+      .addAction(action("Пред. сцена", ACTION_PREV, 1))
+      .addAction(action("След. сцена", ACTION_NEXT, 2))
+      .addAction(action("Стоп", ACTION_STOP, 3))
       .build()
   }
 
@@ -235,6 +276,8 @@ class StreamService : Service(), ConnectChecker {
   private fun stopAll(error: String = "") {
     running = false
     main.removeCallbacksAndMessages(null)
+    controls?.hide()
+    controls = null
     try {
       stream?.let {
         if (it.isStreaming) it.stopStream()
@@ -268,7 +311,10 @@ class StreamService : Service(), ConnectChecker {
   override fun onConnectionSuccess() {
     main.post {
       statusText = "В эфире"
+      if (liveSince == 0L) liveSince = System.currentTimeMillis()
+      uiState = "live"
       updateNotification()
+      pushUi()
       StreamState.emit("live")
     }
   }
@@ -278,7 +324,9 @@ class StreamService : Service(), ConnectChecker {
       val s = stream ?: return@post
       if (running && s.getStreamClient().reTry(5000, reason, null)) {
         statusText = "Переподключение…"
+        uiState = "reconnecting"
         updateNotification()
+        pushUi()
         StreamState.emit("reconnecting", reason)
       } else {
         stopAll("Ошибка соединения: $reason")
@@ -287,12 +335,50 @@ class StreamService : Service(), ConnectChecker {
   }
 
   override fun onNewBitrate(bitrate: Long) {
-    StreamState.emit("bitrate") { put("kbps", bitrate / 1000) }
+    kbps = bitrate / 1000
+    StreamState.emit("bitrate") { put("kbps", kbps) }
   }
 
   override fun onDisconnect() {
-    if (running) StreamState.emit("reconnecting", "Связь потеряна")
+    if (running) main.post { uiState = "reconnecting"; pushUi(); StreamState.emit("reconnecting", "Связь потеряна") }
   }
+
+  // ---------- плавающий кружок ----------
+  private fun micLabel() = if (StreamState.config?.audio == "game") "Звук" else "Микрофон"
+
+  private fun pushUi() {
+    val c = controls ?: return
+    val cfg = StreamState.config ?: return
+    c.update(
+      LiveInfo(
+        state = uiState, viewers = viewers, kbps = kbps, targetKbps = cfg.bitrate / 1000,
+        uptimeMs = if (liveSince > 0) System.currentTimeMillis() - liveSince else 0L,
+        scenes = cfg.scenes.map { it.name }, current = current, micMuted = micMuted, micLabel = micLabel()
+      )
+    )
+  }
+
+  override fun onScene(index: Int) = switchScene(index)
+
+  override fun onToggleMic() {
+    micMuted = !micMuted
+    when (val a = audioSrc) {
+      is MixAudioSource -> a.microphoneVolume = if (micMuted) 0f else 1f
+      is MicrophoneSource -> if (micMuted) a.mute() else a.unMute()
+      is InternalAudioSource -> if (micMuted) a.mute() else a.unMute()
+      else -> {}
+    }
+    pushUi()
+    StreamState.send(org.json.JSONObject().put("state", "mic").put("muted", micMuted))
+  }
+
+  override fun onOpenApp() {
+    try {
+      startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+    } catch (_: Exception) {}
+  }
+
+  override fun onStop() = stopAll()
 
   override fun onAuthError() {
     main.post { stopAll("Twitch отклонил ключ трансляции — проверь ключ") }

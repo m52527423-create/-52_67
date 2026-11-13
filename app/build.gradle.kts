@@ -42,4 +42,5 @@ kotlin {
 
 dependencies {
   implementation("com.github.pedroSG94.RootEncoder:library:2.8.2")
+  implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

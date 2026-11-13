@@ -18,6 +18,7 @@ class StreamConfig(
   val bitrate: Int,        // бит/с
   val audio: String,       // mix | game | mic
   val gameLandscape: Boolean,
+  val bubble: Boolean,
   var scenes: List<SceneOut>,
   var current: Int
 )
@@ -28,6 +29,11 @@ object StreamState {
   @Volatile var listener: ((JSONObject) -> Unit)? = null
   @Volatile var state: String = "stopped"
   @Volatile var message: String = ""
+
+  /** Отправить событие в редактор, не меняя статус эфира. */
+  fun send(o: JSONObject) {
+    listener?.invoke(o)
+  }
 
   fun emit(state: String, message: String = "", extra: JSONObject.() -> Unit = {}) {
     if (state != "bitrate" && state != "scene") {
@@ -49,6 +55,7 @@ object StreamState {
       bitrate = o.optInt("bitrate", 3000) * 1000,
       audio = o.optString("audio", "mix"),
       gameLandscape = o.optBoolean("gameLandscape", true),
+      bubble = o.optBoolean("bubble", true),
       scenes = parseScenes(o.getJSONArray("scenes")),
       current = o.optInt("current", 0)
     )

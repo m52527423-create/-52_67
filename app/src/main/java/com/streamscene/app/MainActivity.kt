@@ -10,6 +10,7 @@ import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.DisplayMetrics
 import android.view.Display
 import android.view.ViewGroup
@@ -25,6 +26,7 @@ import org.json.JSONObject
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.concurrent.thread
 
 /**
  * Главный экран: редактор сцен (HTML в WebView) + управление стримом.
@@ -44,6 +46,7 @@ class MainActivity : Activity() {
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    TwitchClient.init(this)
     web = WebView(this)
     web.layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     web.setBackgroundColor(0xFF0E0E10.toInt())
@@ -94,6 +97,11 @@ class MainActivity : Activity() {
     web.addJavascriptInterface(Bridge(), "Native")
     StreamState.listener = { o -> runOnUiThread { if (pageReady) web.evaluateJavascript("window.onNative && window.onNative($o)", null) } }
     web.loadUrl("file:///android_asset/editor.html")
+  }
+
+  override fun onResume() {
+    super.onResume()
+    if (pageReady) StreamState.send(JSONObject().put("state", "resume"))
   }
 
   override fun onDestroy() {
@@ -155,6 +163,12 @@ class MainActivity : Activity() {
         }
       }
     }
+  }
+
+  private fun bringToFront() {
+    try {
+      startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+    } catch (_: Exception) {}
   }
 
   private fun kvFile(key: String) = File(filesDir, "kv_" + key.replace(Regex("[^a-zA-Z0-9_]"), "_") + ".txt")
@@ -219,6 +233,56 @@ class MainActivity : Activity() {
         return
       }
       runOnUiThread { StreamService.instance?.switchScene(index) }
+    }
+
+    // ---------- Twitch ----------
+    @JavascriptInterface
+    fun twInfo(): String = TwitchClient.info().toString()
+
+    @JavascriptInterface
+    fun twLogin(clientId: String) {
+      TwitchClient.startDeviceLogin(clientId.trim(),
+        onCode = { code, uri ->
+          StreamState.send(JSONObject().put("state", "tw").put("phase", "code").put("code", code).put("uri", uri))
+          runOnUiThread { try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(uri))) } catch (_: Exception) {} }
+        },
+        onDone = { ok, msg ->
+          StreamState.send(JSONObject().put("state", "tw").put("phase", "done").put("ok", ok).put("msg", msg))
+          if (ok) runOnUiThread { bringToFront() }
+        })
+    }
+
+    @JavascriptInterface
+    fun twCancel() = TwitchClient.cancelLogin()
+
+    @JavascriptInterface
+    fun twLogout() = TwitchClient.logout()
+
+    /** Асинхронный запрос к Twitch API; ответ придёт в onNative({state:'api', id, code, body}). */
+    @JavascriptInterface
+    fun twApi(id: Int, method: String, path: String, query: String, body: String) {
+      thread {
+        val r = TwitchClient.api(method, path, query, body.ifEmpty { null })
+        StreamState.send(JSONObject().put("state", "api").put("id", id).put("code", r.code).put("body", r.body))
+      }
+    }
+
+    @JavascriptInterface
+    fun openUrl(url: String) {
+      runOnUiThread { try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch (_: Exception) {} }
+    }
+
+    // ---------- плавающий кружок ----------
+    @JavascriptInterface
+    fun canOverlay(): Boolean = Settings.canDrawOverlays(this@MainActivity)
+
+    @JavascriptInterface
+    fun requestOverlay() {
+      runOnUiThread {
+        try {
+          startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        } catch (_: Exception) {}
+      }
     }
 
     @JavascriptInterface

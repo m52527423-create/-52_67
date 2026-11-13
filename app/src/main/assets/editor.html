@@ -77,6 +77,33 @@ canvas#cv{display:block;width:100%;height:100%;touch-action:none}
 .btn.stop{background:#e91916;border-color:#e91916}
 .f{display:block;font-size:13px;color:var(--mute);margin:10px 0 5px}
 select.inp{appearance:auto}
+.ic{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.add .btn .ic{width:24px;height:24px}
+.layer .th .ic{width:16px;height:16px}
+.rdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#fff;margin-right:6px}
+.acct{display:flex;align-items:center;gap:10px}
+.acct img{width:40px;height:40px;border-radius:50%;background:#26262c;object-fit:cover}
+.acct .nm{flex:1;min-width:0;font-weight:700}
+.acct .nm small{display:block;font-weight:400;color:var(--mute);font-size:12px}
+.code{font:800 32px/1.2 ui-monospace,Menlo,monospace;letter-spacing:4px;text-align:center;background:#26262c;border-radius:12px;padding:14px;margin:4px 0}
+.steps{margin:0;padding-left:20px;color:#d6d6de;font-size:14px}
+.steps li{margin:6px 0}
+.steps a{color:#bf94ff}
+.steps code{background:#26262c;border-radius:6px;padding:1px 6px}
+.sugg{background:var(--card2);border:1px solid var(--line);border-radius:10px;margin-top:6px;overflow:hidden}
+.sugg button{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;color:inherit}
+.sugg button:last-child{border-bottom:0}
+.sugg img{width:26px;height:36px;border-radius:4px;background:#333;object-fit:cover}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0}
+.tog small{display:block;color:var(--mute);font-size:12px}
+.sw{position:relative;width:46px;height:27px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#3a3a44;border-radius:999px;transition:.2s}
+.sw span:before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--acc)}
+.sw input:checked+span:before{transform:translateX(19px)}
+details.man{margin-top:4px}
+details.man summary{color:var(--mute);font-size:13px;cursor:pointer;padding:6px 0}
 @media (min-width:900px){
   body{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto auto 1fr}
   header{grid-column:1/3}.scenes{grid-column:1/3}
@@ -85,13 +112,47 @@ select.inp{appearance:auto}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3.2 3.8M6.6 6.6C3.8 8.3 2 12 2 12s3.6 6 10 6c2 0 3.8-.6 5.4-1.6"/></symbol>
+<symbol id="i-live" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
+<symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-fit" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="7" y="9" width="10" height="6" rx="1"/></symbol>
+<symbol id="i-fill" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="i-stretch" viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol>
+<symbol id="i-center" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-unlock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.7"/></symbol>
+<symbol id="i-flip" viewBox="0 0 24 24"><path d="M12 3v18M9 7l-6 5 6 5zM15 7l6 5-6 5z"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-10 9"/></symbol>
+<symbol id="i-text" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M9 20h6"/></symbol>
+<symbol id="i-banner" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="11" rx="2"/><path d="M8 15v6l4-3 4 3v-6"/></symbol>
+<symbol id="i-game" viewBox="0 0 24 24"><path d="M6.5 8h11a4.5 4.5 0 0 1 4.4 5.4l-.5 2.3a2.6 2.6 0 0 1-4.6 1L15 14.5H9l-1.8 2.2a2.6 2.6 0 0 1-4.6-1l-.5-2.3A4.5 4.5 0 0 1 6.5 8z"/><path d="M7.5 10.5v3M6 12h3"/><circle cx="16" cy="11" r=".9" fill="currentColor"/><circle cx="17.8" cy="12.8" r=".9" fill="currentColor"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 4v6h6"/><path d="M3.5 10A9 9 0 1 1 6 17.3"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+<symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3L20 3M16 7l3 3M14 9l2 2"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/></symbol>
+<symbol id="i-bubble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+</defs></svg>
 <header>
   <h1>Стрим<span>Сцена</span></h1>
   <button class="btn sm" id="btnOrient">16:9</button>
-  <button class="btn sm" id="btnLive2">👁</button>
-  <button class="btn sm pri" id="btnStream">🔴 В эфир</button>
+  <button class="btn sm" id="btnLive2" aria-label="Предпросмотр"><svg class="ic"><use href="#i-eye"/></svg></button>
+  <button class="btn sm pri" id="btnStream"><svg class="ic"><use href="#i-live"/></svg>В эфир</button>
 </header>
-<div id="statusBar" class="hidden"><span class="sdot"></span><span id="stText"></span><span class="sp"></span><button class="btn sm" id="btnHome">К игре ↗</button></div>
+<div id="statusBar" class="hidden"><span class="sdot"></span><span id="stText"></span><span class="sp"></span><button class="btn sm" id="btnHome">К игре <svg class="ic"><use href="#i-out"/></svg></button></div>
 
 <div class="scenes" id="scenes"></div>
 
@@ -101,24 +162,28 @@ select.inp{appearance:auto}
 </div>
 
 <div class="side">
+  <div class="panel" id="twCard">
+    <h3>Канал Twitch</h3>
+    <div id="twBody"></div>
+  </div>
   <div class="panel" id="selPanel">
     <h3><span id="selName">Ничего не выбрано</span><span class="sp"></span><span id="selSize" style="text-transform:none;letter-spacing:0"></span></h3>
     <div id="selBody">
       <div class="row">
-        <button class="btn" data-op="fit">⤢ Вписать</button>
-        <button class="btn" data-op="fill">⛶ Заполнить</button>
-        <button class="btn" data-op="stretch">↔ Растянуть</button>
+        <button class="btn" data-op="fit"><svg class="ic"><use href="#i-fit"/></svg>Вписать</button>
+        <button class="btn" data-op="fill"><svg class="ic"><use href="#i-fill"/></svg>Заполнить</button>
+        <button class="btn" data-op="stretch"><svg class="ic"><use href="#i-stretch"/></svg>Растянуть</button>
       </div>
       <div class="row" style="margin-top:6px">
-        <button class="btn" data-op="center">◎ По центру</button>
-        <button class="btn" data-op="lock" id="opLock">🔒 Пропорции</button>
-        <button class="btn" data-op="flip">⇋ Отразить</button>
+        <button class="btn" data-op="center"><svg class="ic"><use href="#i-center"/></svg>По центру</button>
+        <button class="btn" data-op="lock" id="opLock"><svg class="ic"><use href="#i-lock"/></svg>Пропорции</button>
+        <button class="btn" data-op="flip"><svg class="ic"><use href="#i-flip"/></svg>Отразить</button>
       </div>
       <div class="row" style="margin-top:6px">
-        <button class="btn" data-op="up">⬆ Выше</button>
-        <button class="btn" data-op="down">⬇ Ниже</button>
-        <button class="btn" data-op="dup">⧉ Копия</button>
-        <button class="btn bad" data-op="del">🗑</button>
+        <button class="btn" data-op="up"><svg class="ic"><use href="#i-up"/></svg>Выше</button>
+        <button class="btn" data-op="down"><svg class="ic"><use href="#i-down"/></svg>Ниже</button>
+        <button class="btn" data-op="dup"><svg class="ic"><use href="#i-copy"/></svg>Копия</button>
+        <button class="btn bad" data-op="del" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button>
       </div>
       <div class="sl"><label>Прозрачность</label><input type="range" id="opOpacity" min="10" max="100"></div>
       <div class="sl"><label>Скругление</label><input type="range" id="opRadius" min="0" max="50"></div>
@@ -129,8 +194,8 @@ select.inp{appearance:auto}
         <div class="sl"><label>Цвет плашки</label><input type="color" id="opBg"><button class="btn sm" id="opBgOff">Без плашки</button></div>
       </div>
       <div id="screenProps" class="hidden" style="margin-top:10px">
-        <button class="btn" style="width:100%" id="opSource">🎞 Для примера: подставить запись экрана из галереи</button>
-        <button class="btn" style="width:100%;margin-top:6px" id="opDemoSrc">🎮 Вернуть демо-игру</button>
+        <button class="btn" style="width:100%" id="opSource"><svg class="ic"><use href="#i-film"/></svg>Для примера: подставить запись экрана из галереи</button>
+        <button class="btn" style="width:100%;margin-top:6px" id="opDemoSrc"><svg class="ic"><use href="#i-game"/></svg>Вернуть демо-игру</button>
       </div>
     </div>
   </div>
@@ -138,10 +203,10 @@ select.inp{appearance:auto}
   <div class="panel">
     <h3>Добавить</h3>
     <div class="add">
-      <button class="btn" id="addImg"><i>🖼</i>Фото</button>
-      <button class="btn" id="addText"><i>🔤</i>Текст</button>
-      <button class="btn" id="addTpl"><i>🏷</i>Баннер</button>
-      <button class="btn" id="addScreen"><i>📱</i>Экран</button>
+      <button class="btn" id="addImg"><svg class="ic"><use href="#i-image"/></svg>Фото</button>
+      <button class="btn" id="addText"><svg class="ic"><use href="#i-text"/></svg>Текст</button>
+      <button class="btn" id="addTpl"><svg class="ic"><use href="#i-banner"/></svg>Баннер</button>
+      <button class="btn" id="addScreen"><svg class="ic"><use href="#i-game"/></svg>Экран</button>
     </div>
   </div>
 
@@ -154,17 +219,17 @@ select.inp{appearance:auto}
     <h3>Сцена</h3>
     <div class="sl" style="margin-top:0"><label>Фон сцены</label><input type="color" id="sceneBg"></div>
     <div class="row" style="margin-top:10px">
-      <button class="btn" id="scRename">✏️ Переименовать</button>
-      <button class="btn" id="scDup">⧉ Дублировать</button>
-      <button class="btn bad" id="scDel">🗑</button>
+      <button class="btn" id="scRename"><svg class="ic"><use href="#i-edit"/></svg>Переименовать</button>
+      <button class="btn" id="scDup"><svg class="ic"><use href="#i-copy"/></svg>Дублировать</button>
+      <button class="btn bad" id="scDel" aria-label="Удалить сцену"><svg class="ic"><use href="#i-trash"/></svg></button>
     </div>
-    <div class="row" style="margin-top:6px"><button class="btn" id="btnReset">↺ Сбросить всё к примеру</button></div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="btnReset"><svg class="ic"><use href="#i-reset"/></svg>Сбросить всё к примеру</button></div>
   </div>
   <div style="height:30px"></div>
 </div>
 
 <div id="live" class="hidden">
-  <div class="lv"><canvas id="lcv"></canvas><div class="badge" id="lvTime">● ТЕСТ 00:00</div><div class="note">Так увидят зрители · поверни телефон</div></div>
+  <div class="lv"><canvas id="lcv"></canvas><div class="badge"><span class="rdot"></span><span id="lvTime">ТЕСТ 00:00</span></div><div class="note">Так увидят зрители · поверни телефон</div></div>
   <div class="bar" id="lvBar"></div>
 </div>
 
@@ -179,6 +244,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const uid = () => Math.random().toString(36).slice(2, 9);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const NATIVE = window.Native || null;
+const I = (n, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}"><use href="#i-${n}"/></svg>`;
 const store = {
   get(k, d) {
     try { const v = NATIVE ? NATIVE.kvGet(k) : localStorage.getItem('ss_' + k); return v == null ? d : JSON.parse(v); } catch { return d; }
@@ -234,7 +300,7 @@ function drawGame(t) {
     gx.fillStyle = g; gx.fillRect(0, 0, GAME_W, GAME_H);
     gx.fillStyle = '#ffd23f'; gx.beginPath(); gx.arc(GAME_W / 2 + Math.sin(s * 2) * GAME_W * .3, GAME_H * .6 + Math.cos(s * 3) * 120, 40, 0, 7); gx.fill();
     gx.fillStyle = 'rgba(255,255,255,.85)'; gx.font = 'bold 44px sans-serif'; gx.textAlign = 'center';
-    gx.fillText('📱 Экран телефона', GAME_W / 2, GAME_H * .3); gx.font = '28px sans-serif'; gx.fillText('(вертикальная игра)', GAME_W / 2, GAME_H * .3 + 50); gx.textAlign = 'left';
+    gx.fillText('Экран телефона', GAME_W / 2, GAME_H * .3); gx.font = '28px sans-serif'; gx.fillText('(вертикальная игра)', GAME_W / 2, GAME_H * .3 + 50); gx.textAlign = 'left';
     return;
   }
   gx.save(); gx.scale(1, GAME_H / 540);
@@ -255,7 +321,7 @@ function drawGame(t) {
   for (let i = 0; i < 6; i++) { const cx = ((i * 230 - s * 200) % 1400 + 1400) % 1400 - 100; gx.fillStyle = '#ffd23f'; gx.beginPath(); gx.ellipse(cx, 300 + Math.sin(s * 3 + i) * 20, 12 * Math.abs(Math.cos(s * 3 + i)) + 2, 14, 0, 0, 7); gx.fill(); }
   // HUD
   gx.fillStyle = 'rgba(0,0,0,.45)'; gx.fillRect(20, 20, 260, 30); gx.fillStyle = '#3bea7a'; gx.fillRect(24, 24, 252 * (.6 + .3 * Math.sin(s * .7)), 22);
-  gx.fillStyle = '#fff'; gx.font = 'bold 22px sans-serif'; gx.fillText('💰 ' + (120 + Math.floor(s * 3)), 20, 80);
+  gx.fillStyle = '#ffd23f'; gx.beginPath(); gx.arc(32, 73, 11, 0, 7); gx.fill(); gx.fillStyle = '#fff'; gx.font = 'bold 22px sans-serif'; gx.fillText(String(120 + Math.floor(s * 3)), 50, 80);
   gx.strokeStyle = 'rgba(255,255,255,.8)'; gx.lineWidth = 3; gx.beginPath(); gx.arc(1110, 90, 60, 0, 7); gx.stroke();
   gx.fillStyle = 'rgba(0,0,0,.35)'; gx.fill(); gx.fillStyle = '#ff4f6d'; gx.fillRect(1105, 85, 10, 10);
   // кнопки управления
@@ -265,6 +331,21 @@ function drawGame(t) {
 }
 
 /* ================= Генерация готовых баннеров ================= */
+function heart(x, cx, cy, s) {
+  x.beginPath(); x.moveTo(cx, cy + s * .38);
+  x.bezierCurveTo(cx - s * .62, cy - s * .02, cx - s * .5, cy - s * .62, cx, cy - s * .3);
+  x.bezierCurveTo(cx + s * .5, cy - s * .62, cx + s * .62, cy - s * .02, cx, cy + s * .38); x.fill();
+}
+function gift(x, cx, cy, s) {
+  const w = s * .8, h = s * .55, top = cy - h / 2 + s * .08;
+  x.beginPath(); x.roundRect(cx - w / 2, top, w, h, s * .06); x.fill();
+  x.beginPath(); x.roundRect(cx - w / 2 - s * .06, top - s * .2, w + s * .12, s * .2, s * .05); x.fill();
+  x.save(); x.globalCompositeOperation = 'destination-out';
+  x.fillRect(cx - s * .05, top - s * .2, s * .1, h + s * .2); x.fillRect(cx - w / 2 - s * .06, top - s * .02, w + s * .12, s * .04); x.restore();
+  x.lineWidth = s * .07; x.strokeStyle = x.fillStyle;
+  x.beginPath(); x.ellipse(cx - s * .14, top - s * .3, s * .14, s * .08, -.4, 0, 7); x.stroke();
+  x.beginPath(); x.ellipse(cx + s * .14, top - s * .3, s * .14, s * .08, .4, 0, 7); x.stroke();
+}
 function makeBanner(kind) {
   const c = document.createElement('canvas'), x = c.getContext('2d');
   const rr = (X, Y, w, h, r) => { x.beginPath(); x.roundRect(X, Y, w, h, r); };
@@ -272,21 +353,21 @@ function makeBanner(kind) {
   const font = (sz, w = 900) => x.font = `${w} ${sz}px "Segoe UI",Roboto,sans-serif`;
   if (kind === 'follow') {
     c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#9147ff', '#ff4fa3', 900, 220); x.fill();
-    font(110); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('💜', 50, 115); font(72); x.fillText('ПОДПИШИСЬ!', 200, 90); font(40, 600); x.globalAlpha = .9; x.fillText('нажми сердечко под стримом', 200, 160);
+    x.fillStyle = '#fff'; heart(x, 115, 118, 120); x.textBaseline = 'middle'; font(72); x.fillText('ПОДПИШИСЬ!', 200, 90); font(40, 600); x.globalAlpha = .9; x.fillText('нажми сердечко под стримом', 200, 160);
   } else if (kind === 'nick') {
     c.width = 900; c.height = 140; rr(0, 0, 900, 140, 28); x.fillStyle = 'rgba(14,14,16,.88)'; x.fill();
     rr(0, 0, 18, 140, 9); x.fillStyle = '#9147ff'; x.fill();
     font(64); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('ТВОЙ_НИК', 50, 56); font(34, 600); x.fillStyle = '#bf94ff'; x.fillText('twitch.tv/твой_ник', 52, 108);
   } else if (kind === 'donate') {
     c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#00b37a', '#00d4ff', 900, 220); x.fill();
-    font(110); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('🎁', 50, 115); font(66); x.fillText('ПОДДЕРЖАТЬ', 200, 90); font(40, 600); x.fillText('ссылка в описании', 200, 160);
+    x.fillStyle = '#fff'; gift(x, 115, 115, 110); x.textBaseline = 'middle'; font(66); x.fillText('ПОДДЕРЖАТЬ', 200, 90); font(40, 600); x.fillText('ссылка в описании', 200, 160);
   } else if (kind === 'soon') {
     c.width = 1280; c.height = 720; x.fillStyle = grad('#1b0b3a', '#6f2bd9', 1280, 720); x.fillRect(0, 0, 1280, 720);
     x.globalAlpha = .15; for (let i = 0; i < 40; i++) { x.fillStyle = '#fff'; x.beginPath(); x.arc((i * 337) % 1280, (i * 211) % 720, (i % 5) * 6 + 4, 0, 7); x.fill(); } x.globalAlpha = 1;
-    font(110); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('СТРИМ СКОРО', 640, 300); x.fillText('НАЧНЁТСЯ', 640, 420); font(40, 600); x.globalAlpha = .8; x.fillText('устраивайся поудобнее ☕', 640, 530);
+    font(110); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('СТРИМ СКОРО', 640, 300); x.fillText('НАЧНЁТСЯ', 640, 420); font(40, 600); x.globalAlpha = .8; x.fillText('устраивайся поудобнее', 640, 530);
   } else if (kind === 'brb') {
     c.width = 1280; c.height = 720; x.fillStyle = grad('#0b2a3a', '#1f6f8b', 1280, 720); x.fillRect(0, 0, 1280, 720);
-    font(150); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('⏸', 640, 250); font(96); x.fillText('ОТОШЁЛ', 640, 410); font(44, 600); x.globalAlpha = .85; x.fillText('скоро вернусь, не уходи!', 640, 500);
+    x.fillStyle = '#fff'; x.beginPath(); x.roundRect(585, 185, 38, 130, 10); x.roundRect(657, 185, 38, 130, 10); x.fill(); x.textAlign = 'center'; x.textBaseline = 'middle'; font(96); x.fillText('ОТОШЁЛ', 640, 410); font(44, 600); x.globalAlpha = .85; x.fillText('скоро вернусь, не уходи!', 640, 500);
   } else if (kind === 'live') {
     c.width = 360; c.height = 120; rr(0, 0, 360, 120, 24); x.fillStyle = '#e91916'; x.fill();
     x.fillStyle = '#fff'; x.beginPath(); x.arc(65, 60, 20, 0, 7); x.fill(); font(64); x.textBaseline = 'middle'; x.fillText('LIVE', 110, 63);
@@ -338,16 +419,16 @@ function newLayer(type, extra) {
 function defaultScenes() {
   const g = fitRect(GAME_W / GAME_H, 'fit');
   return [
-    { id: uid(), name: '🎮 Игра', bg: '#0e0e10', layers: [
+    { id: uid(), name: 'Игра', bg: '#0e0e10', layers: [
       newLayer('screen', { name: 'Экран игры', ...g }),
-      newLayer('image', { name: 'Плашка с ником', src: makeBanner('nick'), x: 24, y: H - 110, w: 450, h: 70 }),
-      newLayer('image', { name: 'Значок LIVE', src: makeBanner('live'), x: W - 170, y: 24, w: 144, h: 48 })
+      newLayer('image', { name: 'Плашка с ником', tpl: 'nick', src: makeBanner('nick'), x: 24, y: H - 110, w: 450, h: 70 }),
+      newLayer('image', { name: 'Значок LIVE', tpl: 'live', src: makeBanner('live'), x: W - 170, y: 24, w: 144, h: 48 })
     ]},
-    { id: uid(), name: '⏳ Скоро начнём', bg: '#000000', layers: [
-      newLayer('image', { name: 'Скоро начнём', src: makeBanner('soon'), x: 0, y: 0, w: W, h: H, lock: false })
+    { id: uid(), name: 'Скоро начнём', bg: '#000000', layers: [
+      newLayer('image', { name: 'Скоро начнём', tpl: 'soon', src: makeBanner('soon'), x: 0, y: 0, w: W, h: H, lock: false })
     ]},
-    { id: uid(), name: '⏸ Перерыв', bg: '#000000', layers: [
-      newLayer('image', { name: 'Отошёл', src: makeBanner('brb'), x: 0, y: 0, w: W, h: H, lock: false }),
+    { id: uid(), name: 'Перерыв', bg: '#000000', layers: [
+      newLayer('image', { name: 'Отошёл', tpl: 'brb', src: makeBanner('brb'), x: 0, y: 0, w: W, h: H, lock: false }),
       newLayer('text', { name: 'Текст', text: 'Вернусь через 5 минут', color: '#ffffff', bg: '#9147ff', x: W / 2 - 300, y: H - 140, w: 600, h: 80, radius: 30 })
     ]}
   ];
@@ -360,9 +441,22 @@ function save() {
     if (isLive()) pushScenes();
   }, 400);
 }
+// старые версии: убираем эмодзи из названий и перерисовываем стандартные баннеры
+const TPL_BY_NAME = { 'Плашка с ником': 'nick', 'Значок LIVE': 'live', 'Скоро начнём': 'soon', 'Скоро начнём (фон)': 'soon', 'Отошёл': 'brb', 'Отошёл (фон)': 'brb', 'Подпишись': 'follow', 'Поддержать': 'donate' };
+function migrate() {
+  const strip = t => String(t || '').replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}]/gu, '').replace(/^\s+/, '').trim();
+  scenes.forEach(sc => {
+    sc.name = strip(sc.name) || 'Сцена';
+    sc.layers.forEach(l => {
+      if (l.type === 'text') l.text = strip(l.text);
+      const k = l.tpl || (l.type === 'image' && TPL_BY_NAME[l.name]);
+      if (k && !l.v2) { l.tpl = k; l.src = makeBanner(k); l.v2 = true; }
+    });
+  });
+}
 function load() {
   const p = store.get('proj', null);
-  if (p && p.scenes && p.scenes.length) { ORIENT = p.orient || 'h'; setGameAspect(p.gamePort); scenes = p.scenes; cur = clamp(p.cur || 0, 0, scenes.length - 1); }
+  if (p && p.scenes && p.scenes.length) { ORIENT = p.orient || 'h'; setGameAspect(p.gamePort); scenes = p.scenes; cur = clamp(p.cur || 0, 0, scenes.length - 1); migrate(); }
   else scenes = defaultScenes();
   applyOrient();
 }
@@ -424,7 +518,7 @@ function loop(t) {
   if (liveOn) {
     render(lctx, false);
     const s = Math.floor((Date.now() - liveStart) / 1000);
-    $('#lvTime').textContent = `● ТЕСТ ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+    $('#lvTime').textContent = `ТЕСТ ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   } else render(ctx, true);
   requestAnimationFrame(loop);
 }
@@ -491,7 +585,7 @@ cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', e
 
 /* ================= Интерфейс ================= */
 function updSize() { const s = selected(); $('#selSize').textContent = s ? `${Math.round(s.w)}×${Math.round(s.h)}` : ''; }
-const TYPE_ICON = { screen: '📱', image: '🖼', text: '🔤' };
+const TYPE_ICON = { screen: 'game', image: 'image', text: 'text' };
 function renderUI() {
   // сцены
   const sc = $('#scenes'); sc.innerHTML = '';
@@ -502,10 +596,10 @@ function renderUI() {
   $('#sceneBg').value = scene().bg || '#000000';
   // выбранный слой
   const s = selected();
-  $('#selName').textContent = s ? (TYPE_ICON[s.type] + ' ' + s.name) : 'Нажми на слой в превью';
+  $('#selName').innerHTML = s ? (I(TYPE_ICON[s.type]) + ' ' + esc(s.name)) : 'Нажми на слой в превью';
   $('#selBody').style.opacity = s ? 1 : .4; $('#selBody').style.pointerEvents = s ? '' : 'none';
   if (s) {
-    $('#opLock').classList.toggle('on', s.lock); $('#opLock').textContent = s.lock ? '🔒 Пропорции' : '🔓 Свободно';
+    $('#opLock').classList.toggle('on', s.lock); $('#opLock').innerHTML = s.lock ? I('lock') + 'Пропорции' : I('unlock') + 'Свободно';
     $('#opOpacity').value = Math.round(s.opacity * 100); $('#opRadius').value = s.radius;
     $('#textProps').classList.toggle('hidden', s.type !== 'text'); $('#screenProps').classList.toggle('hidden', s.type !== 'screen');
     if (s.type === 'text') { $('#opText').value = s.text; $('#opColor').value = s.color || '#ffffff'; $('#opBg').value = s.bg || '#9147ff'; }
@@ -516,8 +610,8 @@ function renderUI() {
   if (!layers().length) box.innerHTML = '<div style="color:var(--mute);text-align:center;padding:10px">Сцена пустая — добавь что-нибудь</div>';
   [...layers()].reverse().forEach(l => {
     const d = document.createElement('div'); d.className = 'layer' + (l.id === selId ? ' on' : '');
-    const th = l.type === 'image' ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${TYPE_ICON[l.type]}</div>`;
-    d.innerHTML = `${th}<div class="nm">${esc(l.name)}${l.type === 'text' ? ` — «${esc(l.text)}»` : ''}</div><button data-v>${l.visible ? '👁' : '🚫'}</button>`;
+    const th = l.type === 'image' ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${I(TYPE_ICON[l.type])}</div>`;
+    d.innerHTML = `${th}<div class="nm">${esc(l.name)}${l.type === 'text' ? ` — «${esc(l.text)}»` : ''}</div><button data-v aria-label="Видимость">${l.visible ? I('eye') : I('eyeoff')}</button>`;
     d.onclick = e => { if (e.target.closest('[data-v]')) { l.visible = !l.visible; save(); } else selId = l.id; renderUI(); };
     box.appendChild(d);
   });
@@ -584,7 +678,7 @@ $('#addTpl').onclick = () => sheet('Готовые баннеры', box => {
   TEMPLATES.forEach(([k, name]) => {
     const src = makeBanner(k), b = document.createElement('button');
     b.innerHTML = `<img src="${src}" alt=""><span>${esc(name)}</span>`;
-    b.onclick = () => { closeSheet(); const im = new Image(); im.onload = () => { if (k === 'soon' || k === 'brb') { const l = newLayer('image', { name, src, x: 0, y: 0, w: W, h: H, lock: false }); layers().push(l); selId = l.id; save(); renderUI(); } else addImageLayer(name, src, im.width, im.height); }; im.src = src; };
+    b.onclick = () => { closeSheet(); const im = new Image(); im.onload = () => { if (k === 'soon' || k === 'brb') { const l = newLayer('image', { name, tpl: k, v2: true, src, x: 0, y: 0, w: W, h: H, lock: false }); layers().push(l); selId = l.id; save(); renderUI(); } else addImageLayer(name, src, im.width, im.height); }; im.src = src; };
     g.appendChild(b);
   });
   box.appendChild(g);
@@ -642,7 +736,7 @@ $('#btnLive2').onclick = () => {
   const drawBar = () => {
     bar.innerHTML = '';
     scenes.forEach((s, i) => { const b = document.createElement('button'); b.className = 'btn' + (i === cur ? ' pri' : ''); b.textContent = s.name; b.onclick = () => { cur = i; drawBar(); }; bar.appendChild(b); });
-    const x = document.createElement('button'); x.className = 'btn bad'; x.textContent = '■ Стоп'; x.onclick = () => { liveOn = false; $('#live').classList.add('hidden'); save(); renderUI(); }; bar.appendChild(x);
+    const x = document.createElement('button'); x.className = 'btn bad'; x.innerHTML = I('stop') + 'Стоп'; x.onclick = () => { liveOn = false; $('#live').classList.add('hidden'); save(); renderUI(); }; bar.appendChild(x);
   };
   drawBar();
 };
@@ -658,12 +752,83 @@ const QUALITY = {
 };
 const AUDIO = { mix: 'Игра + микрофон', game: 'Только звук игры', mic: 'Только микрофон' };
 const INGEST = 'rtmp://ingest.global-contribute.live-video.net/app/';
-let streamCfg = Object.assign({ quality: '720p30', audio: 'mix' }, store.get('streamCfg', {}));
+let streamCfg = Object.assign({ quality: '720p30', audio: 'mix', bubble: true }, store.get('streamCfg', {}));
 if (!QUALITY[streamCfg.quality]) streamCfg.quality = '720p30';
-let liveState = INFO.state || 'stopped', liveMsg = INFO.msg || '', liveKbps = 0, wasLive = false;
+let liveState = INFO.state || 'stopped', liveMsg = INFO.msg || '', liveKbps = 0, liveViewers = null, wasLive = false;
 function isLive() { return ['connecting', 'live', 'reconnecting'].includes(liveState); }
 function outDims() { const q = QUALITY[streamCfg.quality]; return ORIENT === 'h' ? [q.long, q.short] : [q.short, q.long]; }
 
+/* ---------- Twitch: аккаунт и API ---------- */
+let TW = { loggedIn: false, clientId: '' };
+function twRefresh() { try { if (NATIVE) TW = JSON.parse(NATIVE.twInfo()); } catch {} renderTw(); }
+const apiWait = {}; let apiSeq = 0;
+function tw(method, path, query, body) {
+  return new Promise((res, rej) => {
+    const id = ++apiSeq; apiWait[id] = { res, rej };
+    NATIVE.twApi(id, method, path, query ? new URLSearchParams(query).toString() : '', body ? JSON.stringify(body) : '');
+    setTimeout(() => { if (apiWait[id]) { delete apiWait[id]; rej(new Error('Twitch не отвечает')); } }, 25000);
+  });
+}
+function plural(n, a, b, c) { n = Math.abs(n) % 100; const m = n % 10; return (n > 10 && n < 20) ? c : m === 1 ? a : (m >= 2 && m <= 4) ? b : c; }
+function renderTw() {
+  const box = $('#twBody'); if (!box) return;
+  if (!NATIVE) { box.innerHTML = '<div style="color:var(--mute);font-size:13px">Вход через Twitch работает в приложении на телефоне.</div>'; return; }
+  if (TW.loggedIn) {
+    box.innerHTML = `<div class="acct">${TW.avatar ? `<img src="${esc(TW.avatar)}" alt="">` : `<span class="btn" style="width:40px;height:40px;padding:0;border-radius:50%">${I('user')}</span>`}
+      <div class="nm">${esc(TW.displayName || TW.login)}<small>twitch.tv/${esc(TW.login)}</small></div>
+      <button class="btn sm" id="twOut" aria-label="Выйти">${I('logout')}</button></div>`;
+    box.querySelector('#twOut').onclick = () => sheetOpts('Выйти из Twitch?', [{ label: 'Выйти', cls: 'bad', fn: () => { NATIVE.twLogout(); twRefresh(); } }]);
+  } else {
+    box.innerHTML = `<button class="btn pri" style="width:100%" id="twIn">${I('user')}Войти через Twitch</button>
+      <div style="color:var(--mute);font-size:12px;margin-top:6px">Ключ трансляции, название и категория подтянутся сами.</div>`;
+    box.querySelector('#twIn').onclick = () => twLoginFlow();
+  }
+}
+let afterLogin = null;
+function twLoginFlow(then) {
+  afterLogin = then || null;
+  sheet('Вход через Twitch', box => {
+    box.innerHTML = `
+      <ol class="steps">
+        <li>Открой <a href="#" id="twDev">dev.twitch.tv/console</a> и нажми <b>Register Your Application</b>. Нужна включённая двухфакторка на Twitch.</li>
+        <li>Имя — любое. <b>OAuth Redirect URLs</b>: <code>http://localhost</code></li>
+        <li>Category — <b>Broadcaster Suite</b>, Client Type — <b>Public</b>. Нажми Create.</li>
+        <li>Открой приложение (Manage) и скопируй <b>Client ID</b> сюда.</li>
+      </ol>
+      <label class="f">Client ID</label>
+      <input class="inp" id="twCid" placeholder="например: abc123xyz…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn pri" id="twGo">${I('user')}Войти</button>
+      <button class="btn" id="twNo">Отмена</button>`;
+    const cid = box.querySelector('#twCid'); cid.value = TW.clientId || '';
+    if (TW.clientId) box.querySelector('.steps').style.display = 'none';
+    box.querySelector('#twDev').onclick = e => { e.preventDefault(); NATIVE.openUrl('https://dev.twitch.tv/console/apps/create'); };
+    box.querySelector('#twNo').onclick = closeSheet;
+    box.querySelector('#twGo').onclick = () => {
+      const v = cid.value.trim();
+      if (v.length < 10) { toast('Вставь Client ID из консоли Twitch'); cid.focus(); return; }
+      NATIVE.twLogin(v);
+      sheet('Подтверди вход', b2 => {
+        b2.innerHTML = `<div style="color:#d6d6de;font-size:14px">Открываю Twitch… Нажми там <b>Activate</b> / <b>Authorize</b>. Если попросит код — вот он:</div>
+          <div class="code" id="twCode">· · ·</div>
+          <button class="btn" id="twOpen">${I('out')}Открыть Twitch ещё раз</button>
+          <button class="btn" id="twStop">Отмена</button>`;
+        b2.querySelector('#twStop').onclick = () => { NATIVE.twCancel(); closeSheet(); };
+        b2.querySelector('#twOpen').onclick = () => { if (twUri) NATIVE.openUrl(twUri); };
+      });
+    };
+  });
+}
+let twUri = '';
+function onTwEvent(o) {
+  if (o.phase === 'code') { twUri = o.uri; const c = $('#twCode'); if (c) c.textContent = o.code; return; }
+  if (o.phase === 'done') {
+    twRefresh();
+    if (o.ok) { closeSheet(); toast('Вход выполнен: ' + (TW.displayName || TW.login)); const f = afterLogin; afterLogin = null; if (f) f(); }
+    else if (o.msg !== 'Вход отменён') { closeSheet(); toast(o.msg || 'Не получилось войти'); }
+  }
+}
+
+/* ---------- сборка сцен для эфира ---------- */
 function ensureImages() {
   const all = [];
   scenes.forEach(sc => sc.layers.forEach(l => { if (l.type === 'image') all.push(layerSrcEl(l)); }));
@@ -677,7 +842,6 @@ function buildScene(sc, EW, EH) {
   for (const l of sc.layers) {
     if (!l.visible) continue;
     if (l.type === 'screen') {
-      // вырезаем «окно», через которое будет виден экран телефона
       const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
       x.save(); x.globalCompositeOperation = 'destination-out'; x.globalAlpha = l.opacity;
       x.beginPath(); x.roundRect(l.x, l.y, l.w, l.h, r); x.fill(); x.restore();
@@ -693,26 +857,42 @@ function pushScenes() {
   pushT = setTimeout(async () => { if (!NATIVE || !isLive()) return; const out = await buildAll(); NATIVE.updateScenes(JSON.stringify(out), cur); }, 500);
 }
 
+/* ---------- статус эфира ---------- */
 function setStatus() {
   const bar = $('#statusBar'), live = isLive();
+  const parts = [];
+  if (liveState === 'live') {
+    parts.push('В ЭФИРЕ');
+    if (liveViewers != null) parts.push(`${liveViewers} ${plural(liveViewers, 'зритель', 'зрителя', 'зрителей')}`);
+    if (liveKbps) parts.push(`${(liveKbps / 1000).toFixed(1)} Мбит/с`);
+    parts.push(scene().name);
+  }
   const txt = {
     connecting: 'Подключаюсь к Twitch…',
-    live: 'В ЭФИРЕ' + (liveKbps ? ` · ${liveKbps} кбит/с` : '') + ` · ${scene().name}`,
+    live: parts.join(' · '),
     reconnecting: 'Переподключение…' + (liveMsg ? ' (' + liveMsg + ')' : ''),
-    error: '⚠️ ' + (liveMsg || 'Ошибка')
+    error: liveMsg || 'Ошибка'
   }[liveState];
-  bar.classList.toggle('hidden', !txt);
   bar.className = (txt ? '' : 'hidden ') + (liveState === 'live' ? 'live' : liveState === 'error' ? 'err' : 'warn');
-  $('#stText').textContent = txt || '';
+  $('#stText').innerHTML = (liveState === 'error' ? I('warn') + ' ' : '') + esc(txt || '');
   $('#btnHome').classList.toggle('hidden', !live);
-  const b = $('#btnStream'); b.textContent = live ? '■ Стоп' : '🔴 В эфир'; b.classList.toggle('stop', live); b.classList.toggle('pri', !live);
+  const b = $('#btnStream');
+  b.innerHTML = live ? I('stop') + 'Стоп' : I('live') + 'В эфир';
+  b.classList.toggle('stop', live); b.classList.toggle('pri', !live);
 }
 window.onNative = o => {
-  if (o.state === 'bitrate') { liveKbps = o.kbps; setStatus(); return; }
-  if (o.state === 'scene') { if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); } setStatus(); return; }
+  switch (o.state) {
+    case 'api': { const w = apiWait[o.id]; if (!w) return; delete apiWait[o.id]; let j = null; try { j = JSON.parse(o.body); } catch {} if (o.code >= 200 && o.code < 300) w.res(j); else w.rej(new Error((j && j.message) || ('Ошибка ' + o.code))); if (o.code === 401) twRefresh(); return; }
+    case 'tw': onTwEvent(o); return;
+    case 'resume': twRefresh(); return;
+    case 'viewers': liveViewers = o.count; setStatus(); return;
+    case 'mic': toast(o.muted ? 'Микрофон выключен' : 'Микрофон включён'); return;
+    case 'bitrate': liveKbps = o.kbps; setStatus(); return;
+    case 'scene': if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); } setStatus(); return;
+  }
   liveState = o.state; liveMsg = o.msg || '';
   if (liveState === 'live' && !wasLive) { wasLive = true; toast('Ты в эфире! Сворачивай и запускай игру'); }
-  if (!isLive()) { wasLive = false; liveKbps = 0; }
+  if (!isLive()) { wasLive = false; liveKbps = 0; liveViewers = null; }
   setStatus();
 };
 window.onBack = () => {
@@ -723,49 +903,117 @@ window.onBack = () => {
 $('#statusBar').onclick = e => { if (liveState === 'error' && !e.target.closest('button')) { liveState = 'stopped'; setStatus(); } };
 $('#btnHome').onclick = () => NATIVE && NATIVE.goHome();
 $('#btnStream').onclick = () => {
-  if (isLive()) return sheetOpts('Остановить стрим?', [{ label: '■ Остановить стрим', cls: 'bad', fn: () => NATIVE && NATIVE.stop() }]);
+  if (isLive()) return sheetOpts('Остановить стрим?', [{ label: 'Остановить стрим', cls: 'bad', fn: () => NATIVE && NATIVE.stop() }]);
   openStreamSheet();
 };
-function openStreamSheet() {
+
+/* ---------- окно запуска эфира ---------- */
+async function openStreamSheet() {
   if (!NATIVE) return toast('Стрим запускается только в приложении на телефоне');
-  sheet('Стрим на Twitch', box => {
+  twRefresh();
+  let chan = null, catSel = null, catT = null;
+  sheet('Эфир на Twitch', box => {
     const opt = (o, v) => Object.entries(o).map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(typeof t === 'string' ? t : t.label)}</option>`).join('');
     box.innerHTML = `
-      <label class="f" style="margin-top:0">Ключ трансляции</label>
-      <div style="display:flex;gap:6px"><input class="inp" id="skKey" type="password" placeholder="live_123456789_..." autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" id="skEye" style="width:auto">👁</button></div>
-      <a href="https://dashboard.twitch.tv/settings/stream" style="font-size:13px;color:#bf94ff;display:block;margin-top:6px">Где взять ключ: Twitch → Панель автора → Настройки → Трансляция → «Основной ключ трансляции» ↗</a>
+      ${TW.loggedIn ? `
+        <div class="acct">${TW.avatar ? `<img src="${esc(TW.avatar)}" alt="">` : ''}<div class="nm">${esc(TW.displayName || TW.login)}<small>ключ трансляции возьмём автоматически</small></div></div>
+        <label class="f">Название стрима</label><input class="inp" id="skTitle" maxlength="140" placeholder="Загружаю…">
+        <label class="f">Категория</label><input class="inp" id="skCat" placeholder="Начни вводить название игры" autocomplete="off"><div id="skSugg" class="sugg hidden"></div>
+      ` : `
+        <button class="btn pri" id="skLogin">${I('user')}Войти через Twitch</button>
+        <details class="man"><summary>или вставить ключ трансляции вручную</summary>
+          <div style="display:flex;gap:6px;margin-top:6px"><input class="inp" id="skKey" type="password" placeholder="live_123456789_..." autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" id="skEye" style="width:auto" aria-label="Показать">${I('eye')}</button></div>
+          <a href="#" id="skKeyHelp" style="font-size:13px;color:#bf94ff;display:block;margin-top:6px">Где взять: Панель автора → Настройки → Трансляция</a>
+        </details>`}
       <label class="f">Качество</label><select class="inp" id="skQ">${opt(QUALITY, streamCfg.quality)}</select>
       <label class="f">Звук</label><select class="inp" id="skA">${opt(AUDIO, streamCfg.audio)}</select>
       <label class="f">Как держишь телефон в игре</label><select class="inp" id="skG"><option value="land"${GAME_PORT ? '' : ' selected'}>Горизонтально (большинство игр)</option><option value="port"${GAME_PORT ? ' selected' : ''}>Вертикально</option></select>
-      <div style="height:6px"></div>
-      <button class="btn pri" id="skGo">🔴 Начать стрим</button>
+      <div class="tog"><div>Плавающий кружок поверх игры<small>зрители, соединение, сцены, микрофон</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
+      <button class="btn pri" id="skGo">${I('live')}Начать стрим</button>
       <button class="btn" id="skNo">Отмена</button>
-      <p style="font-size:12px;color:var(--mute);margin:4px 0 0">Android спросит разрешение на запись экрана — выбери <b>«Весь экран»</b>. Сцены переключаются кнопками в шторке уведомлений, прямо из игры.</p>`;
-    const key = box.querySelector('#skKey'); key.value = store.get('key', '');
-    box.querySelector('#skEye').onclick = () => key.type = key.type === 'password' ? 'text' : 'password';
+      <p style="font-size:12px;color:var(--mute);margin:4px 0 0">Android спросит разрешение на запись экрана — выбери <b>«Весь экран»</b>.</p>`;
     box.querySelector('#skNo').onclick = closeSheet;
+    if (TW.loggedIn) {
+      const t = box.querySelector('#skTitle'), c = box.querySelector('#skCat'), sg = box.querySelector('#skSugg');
+      tw('GET', 'channels', { broadcaster_id: TW.userId }).then(r => {
+        chan = (r && r.data && r.data[0]) || {};
+        t.value = chan.title || ''; t.placeholder = 'Название стрима';
+        c.value = chan.game_name || ''; catSel = chan.game_id ? { id: chan.game_id, name: chan.game_name } : null;
+      }).catch(e => { t.placeholder = 'Название стрима'; toast(e.message); });
+      c.oninput = () => {
+        catSel = null; clearTimeout(catT); const q = c.value.trim();
+        if (q.length < 2) { sg.classList.add('hidden'); return; }
+        catT = setTimeout(async () => {
+          try {
+            const r = await tw('GET', 'search/categories', { query: q, first: 6 });
+            sg.innerHTML = '';
+            (r.data || []).forEach(g => {
+              const b = document.createElement('button');
+              b.innerHTML = `<img src="${esc(String(g.box_art_url || '').replace(/\d+x\d+|\{width\}x\{height\}/, '52x72'))}" alt=""><span>${esc(g.name)}</span>`;
+              b.onclick = () => { catSel = { id: g.id, name: g.name }; c.value = g.name; sg.classList.add('hidden'); };
+              sg.appendChild(b);
+            });
+            sg.classList.toggle('hidden', !(r.data || []).length);
+          } catch (e) { toast(e.message); }
+        }, 300);
+      };
+    } else {
+      box.querySelector('#skLogin').onclick = () => twLoginFlow(() => openStreamSheet());
+      const key = box.querySelector('#skKey'); key.value = store.get('key', '');
+      box.querySelector('#skEye').onclick = () => key.type = key.type === 'password' ? 'text' : 'password';
+      box.querySelector('#skKeyHelp').onclick = e => { e.preventDefault(); NATIVE.openUrl('https://dashboard.twitch.tv/settings/stream'); };
+    }
     box.querySelector('#skGo').onclick = async () => {
-      const k = key.value.trim().replace(/^.*\/app\//, '');
-      if (k.length < 10) { toast('Вставь ключ трансляции из Twitch'); key.focus(); return; }
-      store.set('key', k);
       streamCfg.quality = box.querySelector('#skQ').value; streamCfg.audio = box.querySelector('#skA').value;
+      streamCfg.bubble = box.querySelector('#skBub').checked;
       store.set('streamCfg', streamCfg);
       const port = box.querySelector('#skG').value === 'port';
+      let key = '';
+      const go = box.querySelector('#skGo'); go.disabled = true;
+      try {
+        if (TW.loggedIn) {
+          const title = box.querySelector('#skTitle').value.trim(), catText = box.querySelector('#skCat').value.trim();
+          const patch = {};
+          if (chan && title && title !== chan.title) patch.title = title;
+          if (catSel && chan && catSel.id !== chan.game_id) patch.game_id = catSel.id;
+          if (catText && !catSel) { toast('Выбери категорию из списка'); go.disabled = false; return; }
+          if (Object.keys(patch).length) await tw('PATCH', 'channels', { broadcaster_id: TW.userId }, patch);
+          const r = await tw('GET', 'streams/key', { broadcaster_id: TW.userId });
+          key = r && r.data && r.data[0] && r.data[0].stream_key;
+          if (!key) throw new Error('Twitch не отдал ключ трансляции');
+        } else {
+          key = box.querySelector('#skKey').value.trim().replace(/^.*\/app\//, '');
+          if (key.length < 10) { toast('Войди через Twitch или вставь ключ'); go.disabled = false; return; }
+          store.set('key', key);
+        }
+      } catch (e) { toast(e.message); go.disabled = false; return; }
       if (port !== GAME_PORT) {
         setGameAspect(port);
         scenes.forEach(sc => sc.layers.forEach(l => { if (l.type === 'screen') Object.assign(l, fitRect(natAR(l), 'fit')); }));
         save(); renderUI();
       }
-      closeSheet();
-      liveState = 'connecting'; liveMsg = ''; setStatus();
-      try {
-        const out = await buildAll(), q = QUALITY[streamCfg.quality], [w, h] = outDims();
-        NATIVE.start(JSON.stringify({ url: INGEST + k, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, scenes: out, current: cur }));
-      } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
+      if (streamCfg.bubble && !NATIVE.canOverlay()) {
+        sheet('Разреши кружок поверх игры', b2 => {
+          b2.innerHTML = `<div style="color:#d6d6de;font-size:14px">Чтобы кружок со зрителями был виден в игре, включи для СтримСцены <b>«Поверх других приложений»</b>, вернись и нажми «Запустить».</div>
+            <button class="btn" id="ovSet">${I('out')}Открыть настройки</button>
+            <button class="btn pri" id="ovGo">${I('live')}Запустить</button>`;
+          b2.querySelector('#ovSet').onclick = () => NATIVE.requestOverlay();
+          b2.querySelector('#ovGo').onclick = () => { closeSheet(); launch(key, NATIVE.canOverlay()); };
+        });
+        return;
+      }
+      closeSheet(); launch(key, streamCfg.bubble);
     };
   });
 }
-if (NATIVE && isLive()) cur = clamp(INFO.current || 0, 0, 99);
+async function launch(key, bubble) {
+  liveState = 'connecting'; liveMsg = ''; setStatus();
+  try {
+    const out = await buildAll(), q = QUALITY[streamCfg.quality], [w, h] = outDims();
+    NATIVE.start(JSON.stringify({ url: INGEST + key, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur }));
+  } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
+}
+twRefresh();
 
 load(); if (NATIVE && isLive()) cur = clamp(INFO.current || 0, 0, scenes.length - 1); renderUI(); setStatus(); requestAnimationFrame(loop);
 </script>

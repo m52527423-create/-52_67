@@ -42,8 +42,13 @@ object TwitchClient {
   val userId get() = prefs.getString("userId", "") ?: ""
   val loggedIn get() = access.isNotEmpty() && userId.isNotEmpty()
 
-  fun info(): JSONObject = JSONObject()
+  /** Client ID, встроенный в приложение (res/values/twitch.xml), иначе введённый вручную. */
+  fun builtInClientId(ctx: Context): String = ctx.getString(R.string.twitch_client_id).trim()
+  fun effectiveClientId(ctx: Context): String = builtInClientId(ctx).ifEmpty { clientId }
+
+  fun info(ctx: Context): JSONObject = JSONObject()
     .put("clientId", clientId)
+    .put("builtIn", builtInClientId(ctx).isNotEmpty())
     .put("loggedIn", loggedIn)
     .put("userId", userId)
     .put("login", prefs.getString("login", ""))
@@ -108,6 +113,15 @@ object TwitchClient {
   }
 
   fun cancelLogin() { loginCancelled = true }
+
+  /** Вход через страницу Twitch: проверяем токен и сохраняем канал. Возвращает текст ошибки или null. */
+  fun completeImplicitLogin(cid: String, token: String): String? {
+    val v = exec(Request.Builder().url("https://id.twitch.tv/oauth2/validate").header("Authorization", "OAuth $token").build())
+    if (v.code != 200) return "Twitch не подтвердил вход: ${msgOf(v.body)}"
+    clientId = cid
+    prefs.edit().putString("access", token).remove("refresh").apply()
+    return if (fetchUser()) null else "Не удалось получить данные канала"
+  }
 
   private fun fetchUser(): Boolean {
     val r = rawApi("GET", "users", "", null)

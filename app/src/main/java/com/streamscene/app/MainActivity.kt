@@ -237,7 +237,15 @@ class MainActivity : Activity() {
 
     // ---------- Twitch ----------
     @JavascriptInterface
-    fun twInfo(): String = TwitchClient.info().toString()
+    fun twInfo(): String = TwitchClient.info(this@MainActivity).toString()
+
+    /** Вход через страницу Twitch внутри приложения (логин, пароль, код). */
+    @JavascriptInterface
+    fun twWebLogin(clientId: String) {
+      runOnUiThread {
+        startActivity(Intent(this@MainActivity, LoginActivity::class.java).putExtra(LoginActivity.EXTRA_CLIENT_ID, clientId))
+      }
+    }
 
     @JavascriptInterface
     fun twLogin(clientId: String) {

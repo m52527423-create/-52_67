@@ -746,34 +746,26 @@ function plural(n, a, b, c) { n = Math.abs(n) % 100; const m = n % 10; return (n
 let afterLogin = null;
 function twLoginFlow(then) {
   afterLogin = then || null;
+  // Client ID встроен в приложение — сразу открываем страницу входа Twitch
+  if (TW.builtIn) { NATIVE.twWebLogin(''); return; }
   sheet('Вход через Twitch', box => {
     box.innerHTML = `
+      <div class="note" style="font-size:13px">Один раз нужен Client ID приложения с dev.twitch.tv. Потом вход — обычная страница Twitch: логин, пароль, код.</div>
       <ol class="steps">
-        <li>Открой <a href="#" id="twDev">dev.twitch.tv/console</a> и нажми <b>Register Your Application</b>. Нужна включённая двухфакторка на Twitch.</li>
-        <li>Имя — любое. <b>OAuth Redirect URLs</b>: <code>http://localhost</code></li>
-        <li>Category — <b>Broadcaster Suite</b>, Client Type — <b>Public</b>. Нажми Create.</li>
-        <li>Открой приложение (Manage) и скопируй <b>Client ID</b> сюда.</li>
+        <li>Открой <a href="#" id="twDev">dev.twitch.tv/console</a> → <b>Register Your Application</b>.</li>
+        <li><b>OAuth Redirect URLs</b>: <code>http://localhost</code>, Category — <b>Broadcaster Suite</b>, Client Type — <b>Public</b>.</li>
+        <li>Create → Manage → скопируй <b>Client ID</b>.</li>
       </ol>
-      <label class="f">Client ID</label>
-      <input class="inp" id="twCid" placeholder="например: abc123xyz…" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button class="btn pri" id="twGo">${I('user')}Войти</button>
+      <input class="inp" id="twCid" placeholder="Client ID" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn pri" id="twGo">${I('user')}Продолжить</button>
       <button class="btn" id="twNo">Отмена</button>`;
     const cid = box.querySelector('#twCid'); cid.value = TW.clientId || '';
-    if (TW.clientId) box.querySelector('.steps').style.display = 'none';
     box.querySelector('#twDev').onclick = e => { e.preventDefault(); NATIVE.openUrl('https://dev.twitch.tv/console/apps/create'); };
     box.querySelector('#twNo').onclick = closeSheet;
     box.querySelector('#twGo').onclick = () => {
       const v = cid.value.trim();
-      if (v.length < 10) { toast('Вставь Client ID из консоли Twitch'); cid.focus(); return; }
-      NATIVE.twLogin(v);
-      sheet('Подтверди вход', b2 => {
-        b2.innerHTML = `<div style="color:#d6d6de;font-size:14px">Открываю Twitch… Нажми там <b>Activate</b> / <b>Authorize</b>. Если попросит код — вот он:</div>
-          <div class="code" id="twCode">· · ·</div>
-          <button class="btn" id="twOpen">${I('out')}Открыть Twitch ещё раз</button>
-          <button class="btn" id="twStop">Отмена</button>`;
-        b2.querySelector('#twStop').onclick = () => { NATIVE.twCancel(); closeSheet(); };
-        b2.querySelector('#twOpen').onclick = () => { if (twUri) NATIVE.openUrl(twUri); };
-      });
+      if (v.length < 10) { toast('Вставь Client ID'); cid.focus(); return; }
+      closeSheet(); NATIVE.twWebLogin(v);
     };
   });
 }

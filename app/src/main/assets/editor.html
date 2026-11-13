@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0e0e10">
+<title>СтримСцена</title>
+<style>
+:root{--bg:#0e0e10;--card:#18181b;--card2:#232329;--line:#2f2f37;--text:#efeff1;--mute:#a0a0ad;--acc:#9147ff;--acc2:#772ce8;--bad:#ff4f4f;--ok:#00c896}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(14,14,16,.95);backdrop-filter:blur(8px);z-index:10}
+header h1{font-size:16px;margin:0;flex:1;white-space:nowrap}
+header h1 span{color:var(--acc)}
+.btn{border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:8px 11px;font-weight:600;display:inline-flex;align-items:center;gap:6px;justify-content:center;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--acc);border-color:var(--acc)}
+.btn.bad{background:#3a1717;border-color:#5a2222;color:#ff9a9a}
+.btn.on{background:#3b2a5c;border-color:var(--acc)}
+.btn.sm{padding:6px 9px;font-size:13px}
+#screenProps .btn{white-space:normal;text-align:center}
+.scenes{display:flex;gap:6px;overflow-x:auto;padding:10px 12px 4px;scrollbar-width:none}
+.scenes::-webkit-scrollbar{display:none}
+.scene{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-weight:600}
+.scene.on{background:var(--acc);border-color:var(--acc)}
+.stagewrap{padding:8px 12px;position:relative}
+.stage{position:relative;margin:0 auto;background:repeating-conic-gradient(#1c1c21 0 25%,#141418 0 50%) 0 0/20px 20px;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+canvas#cv{display:block;width:100%;height:100%;touch-action:none}
+.hint{color:var(--mute);font-size:12px;text-align:center;margin:6px 0 0}
+.panel{margin:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.panel h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.panel h3 .sp{flex:1}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row .btn{flex:1 1 auto}
+.sl{display:flex;align-items:center;gap:10px;margin-top:10px}
+.sl label{color:var(--mute);font-size:13px;width:92px}
+.sl input[type=range]{flex:1;accent-color:var(--acc)}
+.inp{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none}
+.inp:focus{border-color:var(--acc)}
+.layers{display:flex;flex-direction:column;gap:6px}
+.layer{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.layer.on{border-color:var(--acc);background:#2a2238}
+.layer .th{width:44px;height:26px;border-radius:5px;background:#000 center/contain no-repeat;flex:none;display:grid;place-items:center;font-size:15px}
+.layer .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.layer button{background:none;border:0;padding:4px 6px;font-size:16px}
+.add{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.add .btn{flex-direction:column;gap:3px;padding:10px 4px;font-size:12px}
+.add .btn i{font-style:normal;font-size:20px}
+.tpl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tpl button{border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:5px;align-items:center;font-size:12px}
+.tpl img{width:100%;aspect-ratio:3/1;object-fit:contain;background:#0a0a0c;border-radius:6px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:#2b2b33;border:1px solid var(--line);padding:10px 16px;border-radius:12px;z-index:90;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+#sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:flex;align-items:flex-end;justify-content:center}
+#sheet{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-width:560px;padding:16px;border-top:1px solid var(--line);animation:up .2s ease;max-height:85vh;overflow:auto}
+@keyframes up{from{transform:translateY(100%)}}
+#sheet h4{margin:0 0 10px;font-size:17px}
+#sheet .opts{display:flex;flex-direction:column;gap:8px}
+#sheet .btn{width:100%;padding:12px}
+/* live preview */
+#live{position:fixed;inset:0;background:#000;z-index:70;display:flex;flex-direction:column}
+#live .lv{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#live canvas{max-width:100%;max-height:100%}
+#live .bar{display:flex;gap:6px;padding:10px;overflow-x:auto;background:#0e0e10;border-top:1px solid var(--line);align-items:center}
+#live .badge{position:absolute;top:12px;left:12px;background:#e91916;color:#fff;font-weight:800;border-radius:6px;padding:4px 8px;font-size:13px}
+#live .note{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.6);color:#ddd;border-radius:6px;padding:4px 8px;font-size:12px}
+#statusBar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1d1424;border-bottom:1px solid #3b2a5c;font-size:13px}
+#statusBar .sp{flex:1}
+#statusBar .sdot{width:10px;height:10px;border-radius:50%;background:var(--mute)}
+#statusBar.live .sdot{background:#e91916;box-shadow:0 0 0 4px rgba(233,25,22,.25)}
+#statusBar.warn .sdot{background:#ffb31a}
+#statusBar.err{background:#2a1414}
+#statusBar.err .sdot{background:var(--bad)}
+.btn.stop{background:#e91916;border-color:#e91916}
+.f{display:block;font-size:13px;color:var(--mute);margin:10px 0 5px}
+select.inp{appearance:auto}
+@media (min-width:900px){
+  body{display:grid;grid-template-columns:1fr 380px;grid-template-rows:auto auto 1fr}
+  header{grid-column:1/3}.scenes{grid-column:1/3}
+  .stagewrap{grid-column:1}.side{grid-column:2;grid-row:3/5;overflow:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Стрим<span>Сцена</span></h1>
+  <button class="btn sm" id="btnOrient">16:9</button>
+  <button class="btn sm" id="btnLive2">👁</button>
+  <button class="btn sm pri" id="btnStream">🔴 В эфир</button>
+</header>
+<div id="statusBar" class="hidden"><span class="sdot"></span><span id="stText"></span><span class="sp"></span><button class="btn sm" id="btnHome">К игре ↗</button></div>
+
+<div class="scenes" id="scenes"></div>
+
+<div class="stagewrap">
+  <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+  <p class="hint">Тяни слой пальцем · уголки — размер · двумя пальцами — масштаб</p>
+</div>
+
+<div class="side">
+  <div class="panel" id="selPanel">
+    <h3><span id="selName">Ничего не выбрано</span><span class="sp"></span><span id="selSize" style="text-transform:none;letter-spacing:0"></span></h3>
+    <div id="selBody">
+      <div class="row">
+        <button class="btn" data-op="fit">⤢ Вписать</button>
+        <button class="btn" data-op="fill">⛶ Заполнить</button>
+        <button class="btn" data-op="stretch">↔ Растянуть</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" data-op="center">◎ По центру</button>
+        <button class="btn" data-op="lock" id="opLock">🔒 Пропорции</button>
+        <button class="btn" data-op="flip">⇋ Отразить</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button class="btn" data-op="up">⬆ Выше</button>
+        <button class="btn" data-op="down">⬇ Ниже</button>
+        <button class="btn" data-op="dup">⧉ Копия</button>
+        <button class="btn bad" data-op="del">🗑</button>
+      </div>
+      <div class="sl"><label>Прозрачность</label><input type="range" id="opOpacity" min="10" max="100"></div>
+      <div class="sl"><label>Скругление</label><input type="range" id="opRadius" min="0" max="50"></div>
+      <div id="textProps" class="hidden">
+        <div style="height:10px"></div>
+        <input class="inp" id="opText" placeholder="Текст">
+        <div class="sl"><label>Цвет текста</label><input type="color" id="opColor"></div>
+        <div class="sl"><label>Цвет плашки</label><input type="color" id="opBg"><button class="btn sm" id="opBgOff">Без плашки</button></div>
+      </div>
+      <div id="screenProps" class="hidden" style="margin-top:10px">
+        <button class="btn" style="width:100%" id="opSource">🎞 Для примера: подставить запись экрана из галереи</button>
+        <button class="btn" style="width:100%;margin-top:6px" id="opDemoSrc">🎮 Вернуть демо-игру</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Добавить</h3>
+    <div class="add">
+      <button class="btn" id="addImg"><i>🖼</i>Фото</button>
+      <button class="btn" id="addText"><i>🔤</i>Текст</button>
+      <button class="btn" id="addTpl"><i>🏷</i>Баннер</button>
+      <button class="btn" id="addScreen"><i>📱</i>Экран</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Слои <span class="sp"></span><span style="text-transform:none;letter-spacing:0">сверху вниз</span></h3>
+    <div class="layers" id="layers"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Сцена</h3>
+    <div class="sl" style="margin-top:0"><label>Фон сцены</label><input type="color" id="sceneBg"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="scRename">✏️ Переименовать</button>
+      <button class="btn" id="scDup">⧉ Дублировать</button>
+      <button class="btn bad" id="scDel">🗑</button>
+    </div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="btnReset">↺ Сбросить всё к примеру</button></div>
+  </div>
+  <div style="height:30px"></div>
+</div>
+
+<div id="live" class="hidden">
+  <div class="lv"><canvas id="lcv"></canvas><div class="badge" id="lvTime">● ТЕСТ 00:00</div><div class="note">Так увидят зрители · поверни телефон</div></div>
+  <div class="bar" id="lvBar"></div>
+</div>
+
+<input type="file" id="fileImg" accept="image/*" class="hidden">
+<input type="file" id="fileSrc" accept="video/*,image/*" class="hidden">
+<div id="toast"></div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const NATIVE = window.Native || null;
+const store = {
+  get(k, d) {
+    try { const v = NATIVE ? NATIVE.kvGet(k) : localStorage.getItem('ss_' + k); return v == null ? d : JSON.parse(v); } catch { return d; }
+  },
+  set(k, v) {
+    try { const j = JSON.stringify(v); if (NATIVE) NATIVE.kvSet(k, j); else localStorage.setItem('ss_' + k, j); return true; } catch { return false; }
+  }
+};
+let INFO = { screenLong: 2400, screenShort: 1080, state: 'stopped', msg: '', current: 0 };
+try { if (NATIVE) INFO = JSON.parse(NATIVE.info()); } catch {}
+let toastT;
+function toast(t) { const e = $('#toast'); e.textContent = t; e.className = 'show'; clearTimeout(toastT); toastT = setTimeout(() => e.className = '', 2200); }
+function closeSheet() { $('#sheetBg')?.remove(); }
+function sheet(title, build) {
+  closeSheet();
+  const bg = document.createElement('div'); bg.id = 'sheetBg';
+  bg.innerHTML = `<div id="sheet"><h4>${esc(title)}</h4><div class="opts"></div></div>`;
+  bg.onclick = e => { if (e.target === bg) closeSheet(); };
+  document.body.appendChild(bg); build(bg.querySelector('.opts'));
+}
+function sheetOpts(title, opts) {
+  sheet(title, box => [...opts, { label: 'Отмена' }].forEach(o => {
+    const b = document.createElement('button'); b.className = 'btn ' + (o.cls || ''); b.textContent = o.label;
+    b.onclick = () => { closeSheet(); o.fn && o.fn(); }; box.appendChild(b);
+  }));
+}
+function askText(title, val, cb) {
+  sheet(title, box => {
+    box.innerHTML = `<input class="inp" value="${esc(val)}"><button class="btn pri">OK</button><button class="btn">Отмена</button>`;
+    const [inp, ok, no] = box.children;
+    ok.onclick = () => { closeSheet(); cb(inp.value.trim()); }; no.onclick = closeSheet;
+    inp.onkeydown = e => { if (e.key === 'Enter') ok.click(); };
+    setTimeout(() => { inp.focus(); inp.select(); }, 50);
+  });
+}
+
+/* ================= Источник «экран игры» (демо) ================= */
+// Демонстрационная «игра» в формате экрана телефона 20:9
+let GAME_W = 1200, GAME_H = 540, GAME_PORT = false;
+const game = document.createElement('canvas');
+function setGameAspect(port) {
+  GAME_PORT = !!port;
+  const k = INFO.screenShort / INFO.screenLong;
+  if (GAME_PORT) { GAME_W = Math.round(1200 * k); GAME_H = 1200; } else { GAME_W = 1200; GAME_H = Math.round(1200 * k); }
+  game.width = GAME_W; game.height = GAME_H;
+}
+setGameAspect(false);
+const gx = game.getContext('2d');
+function drawGame(t) {
+  const s = t / 1000;
+  if (GAME_PORT) {
+    const g = gx.createLinearGradient(0, 0, 0, GAME_H); g.addColorStop(0, '#3b1d6e'); g.addColorStop(1, '#0f5f7a');
+    gx.fillStyle = g; gx.fillRect(0, 0, GAME_W, GAME_H);
+    gx.fillStyle = '#ffd23f'; gx.beginPath(); gx.arc(GAME_W / 2 + Math.sin(s * 2) * GAME_W * .3, GAME_H * .6 + Math.cos(s * 3) * 120, 40, 0, 7); gx.fill();
+    gx.fillStyle = 'rgba(255,255,255,.85)'; gx.font = 'bold 44px sans-serif'; gx.textAlign = 'center';
+    gx.fillText('📱 Экран телефона', GAME_W / 2, GAME_H * .3); gx.font = '28px sans-serif'; gx.fillText('(вертикальная игра)', GAME_W / 2, GAME_H * .3 + 50); gx.textAlign = 'left';
+    return;
+  }
+  gx.save(); gx.scale(1, GAME_H / 540);
+  const sky = gx.createLinearGradient(0, 0, 0, 540); sky.addColorStop(0, '#2b5fd9'); sky.addColorStop(1, '#f2a65a');
+  gx.fillStyle = sky; gx.fillRect(0, 0, GAME_W, 540);
+  gx.fillStyle = '#ffe9a8'; gx.beginPath(); gx.arc(980, 120, 50, 0, 7); gx.fill();
+  const hills = (col, amp, base, speed, f) => {
+    gx.fillStyle = col; gx.beginPath(); gx.moveTo(0, 540);
+    for (let x = 0; x <= GAME_W; x += 20) gx.lineTo(x, base - Math.sin((x + s * speed) * f) * amp - Math.sin((x + s * speed) * f * 2.3) * amp * .4);
+    gx.lineTo(GAME_W, 540); gx.fill();
+  };
+  hills('#5a3d7a', 60, 330, 30, .006); hills('#3a2a55', 45, 400, 80, .009); hills('#1f2a3a', 25, 470, 200, .012);
+  // персонаж
+  const px = 360, py = 430 - Math.abs(Math.sin(s * 4)) * 60;
+  gx.fillStyle = '#ff4f6d'; gx.fillRect(px - 22, py - 44, 44, 44);
+  gx.fillStyle = '#fff'; gx.fillRect(px + 4, py - 34, 10, 10);
+  // монеты
+  for (let i = 0; i < 6; i++) { const cx = ((i * 230 - s * 200) % 1400 + 1400) % 1400 - 100; gx.fillStyle = '#ffd23f'; gx.beginPath(); gx.ellipse(cx, 300 + Math.sin(s * 3 + i) * 20, 12 * Math.abs(Math.cos(s * 3 + i)) + 2, 14, 0, 0, 7); gx.fill(); }
+  // HUD
+  gx.fillStyle = 'rgba(0,0,0,.45)'; gx.fillRect(20, 20, 260, 30); gx.fillStyle = '#3bea7a'; gx.fillRect(24, 24, 252 * (.6 + .3 * Math.sin(s * .7)), 22);
+  gx.fillStyle = '#fff'; gx.font = 'bold 22px sans-serif'; gx.fillText('💰 ' + (120 + Math.floor(s * 3)), 20, 80);
+  gx.strokeStyle = 'rgba(255,255,255,.8)'; gx.lineWidth = 3; gx.beginPath(); gx.arc(1110, 90, 60, 0, 7); gx.stroke();
+  gx.fillStyle = 'rgba(0,0,0,.35)'; gx.fill(); gx.fillStyle = '#ff4f6d'; gx.fillRect(1105, 85, 10, 10);
+  // кнопки управления
+  gx.fillStyle = 'rgba(255,255,255,.18)'; gx.beginPath(); gx.arc(130, 440, 70, 0, 7); gx.fill(); gx.beginPath(); gx.arc(1080, 450, 50, 0, 7); gx.fill();
+  gx.fillStyle = 'rgba(255,255,255,.75)'; gx.font = 'bold 18px sans-serif'; gx.textAlign = 'center'; gx.fillText('Здесь будет экран телефона', GAME_W / 2, 30); gx.textAlign = 'left';
+  gx.restore();
+}
+
+/* ================= Генерация готовых баннеров ================= */
+function makeBanner(kind) {
+  const c = document.createElement('canvas'), x = c.getContext('2d');
+  const rr = (X, Y, w, h, r) => { x.beginPath(); x.roundRect(X, Y, w, h, r); };
+  const grad = (a, b, w, h) => { const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
+  const font = (sz, w = 900) => x.font = `${w} ${sz}px "Segoe UI",Roboto,sans-serif`;
+  if (kind === 'follow') {
+    c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#9147ff', '#ff4fa3', 900, 220); x.fill();
+    font(110); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('💜', 50, 115); font(72); x.fillText('ПОДПИШИСЬ!', 200, 90); font(40, 600); x.globalAlpha = .9; x.fillText('нажми сердечко под стримом', 200, 160);
+  } else if (kind === 'nick') {
+    c.width = 900; c.height = 140; rr(0, 0, 900, 140, 28); x.fillStyle = 'rgba(14,14,16,.88)'; x.fill();
+    rr(0, 0, 18, 140, 9); x.fillStyle = '#9147ff'; x.fill();
+    font(64); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('ТВОЙ_НИК', 50, 56); font(34, 600); x.fillStyle = '#bf94ff'; x.fillText('twitch.tv/твой_ник', 52, 108);
+  } else if (kind === 'donate') {
+    c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#00b37a', '#00d4ff', 900, 220); x.fill();
+    font(110); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('🎁', 50, 115); font(66); x.fillText('ПОДДЕРЖАТЬ', 200, 90); font(40, 600); x.fillText('ссылка в описании', 200, 160);
+  } else if (kind === 'soon') {
+    c.width = 1280; c.height = 720; x.fillStyle = grad('#1b0b3a', '#6f2bd9', 1280, 720); x.fillRect(0, 0, 1280, 720);
+    x.globalAlpha = .15; for (let i = 0; i < 40; i++) { x.fillStyle = '#fff'; x.beginPath(); x.arc((i * 337) % 1280, (i * 211) % 720, (i % 5) * 6 + 4, 0, 7); x.fill(); } x.globalAlpha = 1;
+    font(110); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('СТРИМ СКОРО', 640, 300); x.fillText('НАЧНЁТСЯ', 640, 420); font(40, 600); x.globalAlpha = .8; x.fillText('устраивайся поудобнее ☕', 640, 530);
+  } else if (kind === 'brb') {
+    c.width = 1280; c.height = 720; x.fillStyle = grad('#0b2a3a', '#1f6f8b', 1280, 720); x.fillRect(0, 0, 1280, 720);
+    font(150); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('⏸', 640, 250); font(96); x.fillText('ОТОШЁЛ', 640, 410); font(44, 600); x.globalAlpha = .85; x.fillText('скоро вернусь, не уходи!', 640, 500);
+  } else if (kind === 'live') {
+    c.width = 360; c.height = 120; rr(0, 0, 360, 120, 24); x.fillStyle = '#e91916'; x.fill();
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(65, 60, 20, 0, 7); x.fill(); font(64); x.textBaseline = 'middle'; x.fillText('LIVE', 110, 63);
+  }
+  return c.toDataURL('image/png');
+}
+const TEMPLATES = [['follow', 'Подпишись'], ['nick', 'Плашка с ником'], ['donate', 'Поддержать'], ['live', 'Значок LIVE'], ['soon', 'Скоро начнём (фон)'], ['brb', 'Отошёл (фон)']];
+
+/* ================= Состояние ================= */
+let ORIENT = 'h';
+let W = 1280, H = 720;
+let scenes = [], cur = 0, selId = null;
+const imgs = new Map();           // id -> HTMLImageElement | HTMLVideoElement
+let customSource = null;          // пользовательское видео/фото для «экрана»
+
+function layerSrcEl(l) {
+  if (l.type === 'screen') return customSource || game;
+  if (l.type === 'image') {
+    let im = imgs.get(l.src);
+    if (!im) { im = new Image(); im.src = l.src; imgs.set(l.src, im); }
+    return im;
+  }
+  return null;
+}
+function natAR(l) {
+  if (l.type === 'screen') {
+    const s = customSource;
+    if (s && s.videoWidth) return s.videoWidth / s.videoHeight;
+    if (s && s.naturalWidth) return s.naturalWidth / s.naturalHeight;
+    return GAME_W / GAME_H;
+  }
+  if (l.type === 'image') { const im = layerSrcEl(l); return im.naturalWidth ? im.naturalWidth / im.naturalHeight : l.w / l.h; }
+  return l.w / l.h;
+}
+const scene = () => scenes[cur];
+const layers = () => scene().layers;          // нижний слой — первый
+const selected = () => layers().find(l => l.id === selId) || null;
+
+function fitRect(ar, mode) {
+  if (mode === 'stretch') return { x: 0, y: 0, w: W, h: H };
+  const wide = ar > W / H;
+  let w, h;
+  if ((mode === 'fit') === wide) { w = W; h = W / ar; } else { h = H; w = H * ar; }
+  return { x: (W - w) / 2, y: (H - h) / 2, w, h };
+}
+function newLayer(type, extra) {
+  return Object.assign({ id: uid(), type, x: 0, y: 0, w: 200, h: 100, opacity: 1, radius: 0, visible: true, lock: true, flip: false }, extra);
+}
+function defaultScenes() {
+  const g = fitRect(GAME_W / GAME_H, 'fit');
+  return [
+    { id: uid(), name: '🎮 Игра', bg: '#0e0e10', layers: [
+      newLayer('screen', { name: 'Экран игры', ...g }),
+      newLayer('image', { name: 'Плашка с ником', src: makeBanner('nick'), x: 24, y: H - 110, w: 450, h: 70 }),
+      newLayer('image', { name: 'Значок LIVE', src: makeBanner('live'), x: W - 170, y: 24, w: 144, h: 48 })
+    ]},
+    { id: uid(), name: '⏳ Скоро начнём', bg: '#000000', layers: [
+      newLayer('image', { name: 'Скоро начнём', src: makeBanner('soon'), x: 0, y: 0, w: W, h: H, lock: false })
+    ]},
+    { id: uid(), name: '⏸ Перерыв', bg: '#000000', layers: [
+      newLayer('image', { name: 'Отошёл', src: makeBanner('brb'), x: 0, y: 0, w: W, h: H, lock: false }),
+      newLayer('text', { name: 'Текст', text: 'Вернусь через 5 минут', color: '#ffffff', bg: '#9147ff', x: W / 2 - 300, y: H - 140, w: 600, h: 80, radius: 30 })
+    ]}
+  ];
+}
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    if (!store.set('proj', { orient: ORIENT, gamePort: GAME_PORT, scenes, cur })) toast('Не хватило места для сохранения картинок');
+    if (isLive()) pushScenes();
+  }, 400);
+}
+function load() {
+  const p = store.get('proj', null);
+  if (p && p.scenes && p.scenes.length) { ORIENT = p.orient || 'h'; setGameAspect(p.gamePort); scenes = p.scenes; cur = clamp(p.cur || 0, 0, scenes.length - 1); }
+  else scenes = defaultScenes();
+  applyOrient();
+}
+
+/* ================= Отрисовка ================= */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const lcv = $('#lcv'), lctx = lcv.getContext('2d');
+let guides = [];
+function applyOrient() {
+  [W, H] = ORIENT === 'h' ? [1280, 720] : [720, 1280];
+  cv.width = lcv.width = W; cv.height = lcv.height = H;
+  $('#btnOrient').textContent = ORIENT === 'h' ? '16:9' : '9:16';
+  sizeStage();
+}
+function sizeStage() {
+  const st = $('#stage'), maxW = st.parentElement.clientWidth - 24, maxH = window.innerHeight * (ORIENT === 'h' ? .42 : .55);
+  let w = maxW, h = w * H / W; if (h > maxH) { h = maxH; w = h * W / H; }
+  st.style.width = w + 'px'; st.style.height = h + 'px';
+}
+window.addEventListener('resize', sizeStage);
+
+function drawLayer(c, l) {
+  if (!l.visible) return;
+  c.save(); c.globalAlpha = l.opacity;
+  const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
+  if (r > 0 && l.type !== 'text') { c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.clip(); }
+  if (l.flip) { c.translate(l.x * 2 + l.w, 0); c.scale(-1, 1); }
+  if (l.type === 'text') {
+    if (l.bg) { c.fillStyle = l.bg; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.fill(); }
+    let fs = l.h * .6; c.font = `800 ${fs}px "Segoe UI",Roboto,sans-serif`;
+    const tw = c.measureText(l.text || ' ').width, maxW = l.w * .92;
+    if (tw > maxW) { fs *= maxW / tw; c.font = `800 ${fs}px "Segoe UI",Roboto,sans-serif`; }
+    c.fillStyle = l.color || '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (!l.bg) { c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = fs * .15; c.shadowOffsetY = fs * .05; }
+    c.fillText(l.text || '', l.x + l.w / 2, l.y + l.h / 2 + fs * .03);
+  } else {
+    const el = layerSrcEl(l);
+    try { if (el && (el.width || el.naturalWidth || el.videoWidth)) c.drawImage(el, l.x, l.y, l.w, l.h); } catch {}
+  }
+  c.restore();
+}
+function render(c, withUI) {
+  c.fillStyle = scene().bg || '#000'; c.fillRect(0, 0, W, H);
+  layers().forEach(l => drawLayer(c, l));
+  if (!withUI) return;
+  const s = selected(), k = W / cv.clientWidth;
+  guides.forEach(g => { c.strokeStyle = '#ff4fa3'; c.lineWidth = 2 * k; c.setLineDash([8 * k, 6 * k]); c.beginPath(); if (g.v != null) { c.moveTo(g.v, 0); c.lineTo(g.v, H); } else { c.moveTo(0, g.h); c.lineTo(W, g.h); } c.stroke(); });
+  c.setLineDash([]);
+  if (s) {
+    c.strokeStyle = '#9147ff'; c.lineWidth = 3 * k; c.strokeRect(s.x, s.y, s.w, s.h);
+    corners(s).forEach(([x, y]) => { c.fillStyle = '#fff'; c.beginPath(); c.arc(x, y, 9 * k, 0, 7); c.fill(); c.strokeStyle = '#9147ff'; c.lineWidth = 3 * k; c.stroke(); });
+  }
+}
+function corners(l) { return [[l.x, l.y], [l.x + l.w, l.y], [l.x, l.y + l.h], [l.x + l.w, l.y + l.h]]; }
+
+let liveOn = false, liveStart = 0;
+function loop(t) {
+  drawGame(t);
+  if (liveOn) {
+    render(lctx, false);
+    const s = Math.floor((Date.now() - liveStart) / 1000);
+    $('#lvTime').textContent = `● ТЕСТ ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  } else render(ctx, true);
+  requestAnimationFrame(loop);
+}
+
+/* ================= Жесты ================= */
+const ptrs = new Map();
+let mode = null, start = null;
+function toCanvas(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
+function hit(p) { const ls = layers(); for (let i = ls.length - 1; i >= 0; i--) { const l = ls[i]; if (l.visible && p.x >= l.x && p.x <= l.x + l.w && p.y >= l.y && p.y <= l.y + l.h) return l; } return null; }
+cv.addEventListener('pointerdown', e => {
+  cv.setPointerCapture(e.pointerId); const p = toCanvas(e); ptrs.set(e.pointerId, p);
+  const s = selected();
+  if (ptrs.size === 2 && s) {
+    const [a, b] = [...ptrs.values()];
+    mode = 'pinch'; start = { d: Math.hypot(a.x - b.x, a.y - b.y), dx: Math.abs(a.x - b.x), dy: Math.abs(a.y - b.y), r: { ...s } }; return;
+  }
+  if (ptrs.size > 1) return;
+  const tol = 26 * W / cv.clientWidth;
+  if (s) {
+    const ci = corners(s).findIndex(([x, y]) => Math.hypot(p.x - x, p.y - y) < tol);
+    if (ci >= 0) { mode = 'resize'; start = { ci, r: { ...s } }; return; }
+  }
+  const l = hit(p);
+  if (l) { selId = l.id; mode = 'move'; start = { p, r: { ...l } }; }
+  else { selId = null; mode = null; }
+  renderUI();
+});
+cv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const p = toCanvas(e); ptrs.set(e.pointerId, p);
+  const s = selected(); if (!s || !mode) return;
+  guides = [];
+  if (mode === 'move') {
+    let x = start.r.x + p.x - start.p.x, y = start.r.y + p.y - start.p.y;
+    const th = 14 * W / cv.clientWidth;
+    for (const [val, off] of [[0, 0], [W / 2, s.w / 2], [W, s.w]]) {
+      for (const edge of [0, s.w / 2, s.w]) if (Math.abs(x + edge - val) < th && edge === off) { x = val - edge; guides.push({ v: val }); }
+    }
+    for (const [val, off] of [[0, 0], [H / 2, s.h / 2], [H, s.h]]) {
+      for (const edge of [0, s.h / 2, s.h]) if (Math.abs(y + edge - val) < th && edge === off) { y = val - edge; guides.push({ h: val }); }
+    }
+    s.x = x; s.y = y;
+  } else if (mode === 'resize') {
+    const r = start.r, c = corners(r), [ax, ay] = c[3 - start.ci];
+    let w = Math.max(30, Math.abs(p.x - ax)), h = Math.max(20, Math.abs(p.y - ay));
+    if (s.lock) { const ar = r.w / r.h; if (w / h > ar) h = w / ar; else w = h * ar; }
+    s.w = w; s.h = h; s.x = p.x < ax ? ax - w : ax; s.y = p.y < ay ? ay - h : ay;
+  } else if (mode === 'pinch' && ptrs.size >= 2) {
+    const [a, b] = [...ptrs.values()], r = start.r;
+    let kx, ky;
+    if (s.lock) { kx = ky = Math.hypot(a.x - b.x, a.y - b.y) / start.d; }
+    else { kx = start.dx > 40 ? Math.abs(a.x - b.x) / start.dx : 1; ky = start.dy > 40 ? Math.abs(a.y - b.y) / start.dy : 1; }
+    const w = Math.max(30, r.w * kx), h = Math.max(20, r.h * ky), cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    s.w = w; s.h = h; s.x = cx - w / 2; s.y = cy - h / 2;
+  }
+  updSize();
+});
+function endPtr(e) {
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 0) { if (mode) save(); mode = null; guides = []; }
+  else if (mode === 'pinch') mode = null;
+}
+cv.addEventListener('pointerup', endPtr); cv.addEventListener('pointercancel', endPtr);
+
+/* ================= Интерфейс ================= */
+function updSize() { const s = selected(); $('#selSize').textContent = s ? `${Math.round(s.w)}×${Math.round(s.h)}` : ''; }
+const TYPE_ICON = { screen: '📱', image: '🖼', text: '🔤' };
+function renderUI() {
+  // сцены
+  const sc = $('#scenes'); sc.innerHTML = '';
+  scenes.forEach((s, i) => { const b = document.createElement('button'); b.className = 'scene' + (i === cur ? ' on' : ''); b.textContent = s.name; b.onclick = () => { cur = i; selId = null; if (isLive() && NATIVE) NATIVE.setScene(i); save(); renderUI(); }; sc.appendChild(b); });
+  const add = document.createElement('button'); add.className = 'scene'; add.textContent = '＋ Сцена';
+  add.onclick = () => askText('Новая сцена', 'Сцена ' + (scenes.length + 1), n => { if (!n) return; scenes.push({ id: uid(), name: n, bg: '#000000', layers: [] }); cur = scenes.length - 1; selId = null; save(); renderUI(); });
+  sc.appendChild(add);
+  $('#sceneBg').value = scene().bg || '#000000';
+  // выбранный слой
+  const s = selected();
+  $('#selName').textContent = s ? (TYPE_ICON[s.type] + ' ' + s.name) : 'Нажми на слой в превью';
+  $('#selBody').style.opacity = s ? 1 : .4; $('#selBody').style.pointerEvents = s ? '' : 'none';
+  if (s) {
+    $('#opLock').classList.toggle('on', s.lock); $('#opLock').textContent = s.lock ? '🔒 Пропорции' : '🔓 Свободно';
+    $('#opOpacity').value = Math.round(s.opacity * 100); $('#opRadius').value = s.radius;
+    $('#textProps').classList.toggle('hidden', s.type !== 'text'); $('#screenProps').classList.toggle('hidden', s.type !== 'screen');
+    if (s.type === 'text') { $('#opText').value = s.text; $('#opColor').value = s.color || '#ffffff'; $('#opBg').value = s.bg || '#9147ff'; }
+  }
+  updSize();
+  // слои
+  const box = $('#layers'); box.innerHTML = '';
+  if (!layers().length) box.innerHTML = '<div style="color:var(--mute);text-align:center;padding:10px">Сцена пустая — добавь что-нибудь</div>';
+  [...layers()].reverse().forEach(l => {
+    const d = document.createElement('div'); d.className = 'layer' + (l.id === selId ? ' on' : '');
+    const th = l.type === 'image' ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${TYPE_ICON[l.type]}</div>`;
+    d.innerHTML = `${th}<div class="nm">${esc(l.name)}${l.type === 'text' ? ` — «${esc(l.text)}»` : ''}</div><button data-v>${l.visible ? '👁' : '🚫'}</button>`;
+    d.onclick = e => { if (e.target.closest('[data-v]')) { l.visible = !l.visible; save(); } else selId = l.id; renderUI(); };
+    box.appendChild(d);
+  });
+}
+function op(name) {
+  const s = selected(); if (!s) return;
+  const ls = layers(), i = ls.indexOf(s);
+  switch (name) {
+    case 'fit': case 'fill': case 'stretch': Object.assign(s, fitRect(natAR(s), name)); if (name === 'stretch') s.lock = false; break;
+    case 'center': s.x = (W - s.w) / 2; s.y = (H - s.h) / 2; break;
+    case 'lock': s.lock = !s.lock; if (s.lock && s.type !== 'text') { const ar = natAR(s), cx = s.x + s.w / 2, cy = s.y + s.h / 2; s.h = s.w / ar; s.x = cx - s.w / 2; s.y = cy - s.h / 2; } break;
+    case 'flip': s.flip = !s.flip; break;
+    case 'up': if (i < ls.length - 1) { ls.splice(i, 1); ls.splice(i + 1, 0, s); } break;
+    case 'down': if (i > 0) { ls.splice(i, 1); ls.splice(i - 1, 0, s); } break;
+    case 'dup': { const c = { ...s, id: uid(), name: s.name + ' (копия)', x: s.x + 30, y: s.y + 30 }; ls.splice(i + 1, 0, c); selId = c.id; break; }
+    case 'del': ls.splice(i, 1); selId = null; break;
+  }
+  save(); renderUI();
+}
+$$('[data-op]').forEach(b => b.onclick = () => op(b.dataset.op));
+$('#opOpacity').oninput = e => { const s = selected(); if (s) { s.opacity = e.target.value / 100; save(); } };
+$('#opRadius').oninput = e => { const s = selected(); if (s) { s.radius = +e.target.value; save(); } };
+$('#opText').oninput = e => { const s = selected(); if (s) { s.text = e.target.value; save(); } };
+$('#opText').onchange = renderUI;
+$('#opColor').oninput = e => { const s = selected(); if (s) { s.color = e.target.value; save(); } };
+$('#opBg').oninput = e => { const s = selected(); if (s) { s.bg = e.target.value; save(); } };
+$('#opBgOff').onclick = () => { const s = selected(); if (s) { s.bg = null; save(); } };
+$('#sceneBg').oninput = e => { scene().bg = e.target.value; save(); };
+
+// добавление
+function readImage(file, maxSide = 1600) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        const k = Math.min(1, maxSide / Math.max(im.width, im.height)), c = document.createElement('canvas');
+        c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        res({ src: c.toDataURL(/jpe?g/.test(file.type) ? 'image/jpeg' : 'image/png', .9), w: c.width, h: c.height });
+      };
+      im.onerror = () => rej(new Error('Не удалось открыть картинку')); im.src = fr.result;
+    };
+    fr.onerror = () => rej(fr.error); fr.readAsDataURL(file);
+  });
+}
+function addImageLayer(name, src, w, h) {
+  const k = Math.min(1, (W * .5) / w, (H * .5) / h), lw = w * k, lh = h * k;
+  const l = newLayer('image', { name, src, x: (W - lw) / 2, y: (H - lh) / 2, w: lw, h: lh });
+  layers().push(l); selId = l.id; save(); renderUI();
+}
+$('#addImg').onclick = () => $('#fileImg').click();
+$('#fileImg').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const r = await readImage(f); addImageLayer(f.name.replace(/\.[^.]+$/, '').slice(0, 30) || 'Фото', r.src, r.w, r.h); toast('Добавлено — растяни за уголки'); }
+  catch (err) { toast(err.message); }
+};
+$('#addText').onclick = () => askText('Текст на стрим', 'Всем привет!', t => {
+  if (!t) return; const l = newLayer('text', { name: 'Текст', text: t, color: '#ffffff', bg: '#9147ff', x: W / 2 - 280, y: H / 2 - 40, w: 560, h: 80, radius: 30, lock: false });
+  layers().push(l); selId = l.id; save(); renderUI();
+});
+$('#addTpl').onclick = () => sheet('Готовые баннеры', box => {
+  const g = document.createElement('div'); g.className = 'tpl';
+  TEMPLATES.forEach(([k, name]) => {
+    const src = makeBanner(k), b = document.createElement('button');
+    b.innerHTML = `<img src="${src}" alt=""><span>${esc(name)}</span>`;
+    b.onclick = () => { closeSheet(); const im = new Image(); im.onload = () => { if (k === 'soon' || k === 'brb') { const l = newLayer('image', { name, src, x: 0, y: 0, w: W, h: H, lock: false }); layers().push(l); selId = l.id; save(); renderUI(); } else addImageLayer(name, src, im.width, im.height); }; im.src = src; };
+    g.appendChild(b);
+  });
+  box.appendChild(g);
+  const c = document.createElement('button'); c.className = 'btn'; c.textContent = 'Отмена'; c.onclick = closeSheet; box.appendChild(c);
+});
+$('#addScreen').onclick = () => {
+  if (layers().some(l => l.type === 'screen')) return toast('Экран игры уже есть в этой сцене');
+  const l = newLayer('screen', { name: 'Экран игры', ...fitRect(natAR({ type: 'screen' }), 'fit') });
+  layers().unshift(l); selId = l.id; save(); renderUI();
+};
+// источник экрана
+$('#opSource').onclick = () => $('#fileSrc').click();
+$('#fileSrc').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = URL.createObjectURL(f);
+  if (f.type.startsWith('video')) {
+    const v = document.createElement('video'); v.src = url; v.muted = true; v.loop = true; v.playsInline = true;
+    v.onloadedmetadata = () => { customSource = v; v.play().catch(() => {}); toast('Теперь вместо демо — твоё видео. Нажми «Вписать»'); };
+    v.onerror = () => toast('Это видео браузер открыть не смог');
+  } else {
+    const im = new Image(); im.onload = () => { customSource = im; toast('Теперь вместо демо — твоё фото. Нажми «Вписать»'); }; im.src = url;
+  }
+};
+$('#opDemoSrc').onclick = () => { customSource = null; toast('Вернул демо-игру'); };
+
+// сцена
+$('#scRename').onclick = () => askText('Название сцены', scene().name, n => { if (n) { scene().name = n; save(); renderUI(); } });
+$('#scDup').onclick = () => { const s = JSON.parse(JSON.stringify(scene())); s.id = uid(); s.name += ' (копия)'; s.layers.forEach(l => l.id = uid()); scenes.splice(cur + 1, 0, s); cur++; selId = null; save(); renderUI(); };
+$('#scDel').onclick = () => {
+  if (scenes.length < 2) return toast('Должна остаться хотя бы одна сцена');
+  sheetOpts(`Удалить «${scene().name}»?`, [{ label: 'Удалить', cls: 'bad', fn: () => { scenes.splice(cur, 1); cur = Math.max(0, cur - 1); selId = null; save(); renderUI(); } }]);
+};
+$('#btnReset').onclick = () => sheetOpts('Сбросить все сцены к примеру?', [{ label: 'Сбросить', cls: 'bad', fn: () => { scenes = defaultScenes(); cur = 0; selId = null; save(); renderUI(); } }]);
+$('#btnOrient').onclick = () => sheetOpts('Формат стрима', [
+  { label: '16:9 — горизонтальный (Twitch, обычно)', fn: () => setOrient('h') },
+  { label: '9:16 — вертикальный (мобильные зрители)', fn: () => setOrient('v') }
+]);
+function setOrient(o) {
+  if (o === ORIENT) return;
+  const [ow, oh] = [W, H]; ORIENT = o; applyOrient();
+  // переносим слои пропорционально, чтобы ничего не уехало за кадр
+  scenes.forEach(s => s.layers.forEach(l => {
+    const full = Math.abs(l.w - ow) < 2 && Math.abs(l.h - oh) < 2;
+    if (full) Object.assign(l, { x: 0, y: 0, w: W, h: H });
+    else if (l.type === 'screen') Object.assign(l, fitRect(natAR(l), 'fit'));
+    else { const k = Math.min(W / ow, H / oh); l.w *= k; l.h *= k; l.x = l.x / ow * W; l.y = l.y / oh * H; l.x = clamp(l.x, 0, W - l.w); l.y = clamp(l.y, 0, H - l.h); }
+  }));
+  save(); renderUI();
+}
+
+// режим «эфир»
+$('#btnLive2').onclick = () => {
+  liveOn = true; liveStart = Date.now(); selId = null; $('#live').classList.remove('hidden');
+  const bar = $('#lvBar'); bar.innerHTML = '';
+  const drawBar = () => {
+    bar.innerHTML = '';
+    scenes.forEach((s, i) => { const b = document.createElement('button'); b.className = 'btn' + (i === cur ? ' pri' : ''); b.textContent = s.name; b.onclick = () => { cur = i; drawBar(); }; bar.appendChild(b); });
+    const x = document.createElement('button'); x.className = 'btn bad'; x.textContent = '■ Стоп'; x.onclick = () => { liveOn = false; $('#live').classList.add('hidden'); save(); renderUI(); }; bar.appendChild(x);
+  };
+  drawBar();
+};
+
+
+/* ================= Стрим на Twitch (только в приложении) ================= */
+const QUALITY = {
+  '720p30':  { long: 1280, short: 720,  fps: 30, kbps: 3000, label: '720p · 30 к/с (рекомендую)' },
+  '720p60':  { long: 1280, short: 720,  fps: 60, kbps: 4500, label: '720p · 60 к/с (плавнее)' },
+  '1080p30': { long: 1920, short: 1080, fps: 30, kbps: 4500, label: '1080p · 30 к/с' },
+  '1080p60': { long: 1920, short: 1080, fps: 60, kbps: 6000, label: '1080p · 60 к/с (нужен быстрый интернет)' },
+  '540p30':  { long: 960,  short: 540,  fps: 30, kbps: 1800, label: '540p · 30 к/с (слабый интернет)' }
+};
+const AUDIO = { mix: 'Игра + микрофон', game: 'Только звук игры', mic: 'Только микрофон' };
+const INGEST = 'rtmp://ingest.global-contribute.live-video.net/app/';
+let streamCfg = Object.assign({ quality: '720p30', audio: 'mix' }, store.get('streamCfg', {}));
+if (!QUALITY[streamCfg.quality]) streamCfg.quality = '720p30';
+let liveState = INFO.state || 'stopped', liveMsg = INFO.msg || '', liveKbps = 0, wasLive = false;
+function isLive() { return ['connecting', 'live', 'reconnecting'].includes(liveState); }
+function outDims() { const q = QUALITY[streamCfg.quality]; return ORIENT === 'h' ? [q.long, q.short] : [q.short, q.long]; }
+
+function ensureImages() {
+  const all = [];
+  scenes.forEach(sc => sc.layers.forEach(l => { if (l.type === 'image') all.push(layerSrcEl(l)); }));
+  return Promise.all(all.map(im => im.complete && im.naturalWidth ? null : new Promise(r => { im.onload = im.onerror = r; })));
+}
+function buildScene(sc, EW, EH) {
+  const c = document.createElement('canvas'); c.width = EW; c.height = EH;
+  const x = c.getContext('2d'); x.scale(EW / W, EH / H);
+  x.fillStyle = sc.bg || '#000'; x.fillRect(0, 0, W, H);
+  let screen = null;
+  for (const l of sc.layers) {
+    if (!l.visible) continue;
+    if (l.type === 'screen') {
+      // вырезаем «окно», через которое будет виден экран телефона
+      const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
+      x.save(); x.globalCompositeOperation = 'destination-out'; x.globalAlpha = l.opacity;
+      x.beginPath(); x.roundRect(l.x, l.y, l.w, l.h, r); x.fill(); x.restore();
+      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip };
+    } else drawLayer(x, l);
+  }
+  return { name: sc.name, screen, overlay: c.toDataURL('image/png') };
+}
+async function buildAll() { await ensureImages(); const [EW, EH] = outDims(); return scenes.map(sc => buildScene(sc, EW, EH)); }
+let pushT;
+function pushScenes() {
+  clearTimeout(pushT);
+  pushT = setTimeout(async () => { if (!NATIVE || !isLive()) return; const out = await buildAll(); NATIVE.updateScenes(JSON.stringify(out), cur); }, 500);
+}
+
+function setStatus() {
+  const bar = $('#statusBar'), live = isLive();
+  const txt = {
+    connecting: 'Подключаюсь к Twitch…',
+    live: 'В ЭФИРЕ' + (liveKbps ? ` · ${liveKbps} кбит/с` : '') + ` · ${scene().name}`,
+    reconnecting: 'Переподключение…' + (liveMsg ? ' (' + liveMsg + ')' : ''),
+    error: '⚠️ ' + (liveMsg || 'Ошибка')
+  }[liveState];
+  bar.classList.toggle('hidden', !txt);
+  bar.className = (txt ? '' : 'hidden ') + (liveState === 'live' ? 'live' : liveState === 'error' ? 'err' : 'warn');
+  $('#stText').textContent = txt || '';
+  $('#btnHome').classList.toggle('hidden', !live);
+  const b = $('#btnStream'); b.textContent = live ? '■ Стоп' : '🔴 В эфир'; b.classList.toggle('stop', live); b.classList.toggle('pri', !live);
+}
+window.onNative = o => {
+  if (o.state === 'bitrate') { liveKbps = o.kbps; setStatus(); return; }
+  if (o.state === 'scene') { if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); } setStatus(); return; }
+  liveState = o.state; liveMsg = o.msg || '';
+  if (liveState === 'live' && !wasLive) { wasLive = true; toast('Ты в эфире! Сворачивай и запускай игру'); }
+  if (!isLive()) { wasLive = false; liveKbps = 0; }
+  setStatus();
+};
+window.onBack = () => {
+  if ($('#sheetBg')) { closeSheet(); return true; }
+  if (liveOn) { liveOn = false; $('#live').classList.add('hidden'); renderUI(); return true; }
+  return false;
+};
+$('#statusBar').onclick = e => { if (liveState === 'error' && !e.target.closest('button')) { liveState = 'stopped'; setStatus(); } };
+$('#btnHome').onclick = () => NATIVE && NATIVE.goHome();
+$('#btnStream').onclick = () => {
+  if (isLive()) return sheetOpts('Остановить стрим?', [{ label: '■ Остановить стрим', cls: 'bad', fn: () => NATIVE && NATIVE.stop() }]);
+  openStreamSheet();
+};
+function openStreamSheet() {
+  if (!NATIVE) return toast('Стрим запускается только в приложении на телефоне');
+  sheet('Стрим на Twitch', box => {
+    const opt = (o, v) => Object.entries(o).map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(typeof t === 'string' ? t : t.label)}</option>`).join('');
+    box.innerHTML = `
+      <label class="f" style="margin-top:0">Ключ трансляции</label>
+      <div style="display:flex;gap:6px"><input class="inp" id="skKey" type="password" placeholder="live_123456789_..." autocomplete="off" autocapitalize="off" spellcheck="false"><button class="btn" id="skEye" style="width:auto">👁</button></div>
+      <a href="https://dashboard.twitch.tv/settings/stream" style="font-size:13px;color:#bf94ff;display:block;margin-top:6px">Где взять ключ: Twitch → Панель автора → Настройки → Трансляция → «Основной ключ трансляции» ↗</a>
+      <label class="f">Качество</label><select class="inp" id="skQ">${opt(QUALITY, streamCfg.quality)}</select>
+      <label class="f">Звук</label><select class="inp" id="skA">${opt(AUDIO, streamCfg.audio)}</select>
+      <label class="f">Как держишь телефон в игре</label><select class="inp" id="skG"><option value="land"${GAME_PORT ? '' : ' selected'}>Горизонтально (большинство игр)</option><option value="port"${GAME_PORT ? ' selected' : ''}>Вертикально</option></select>
+      <div style="height:6px"></div>
+      <button class="btn pri" id="skGo">🔴 Начать стрим</button>
+      <button class="btn" id="skNo">Отмена</button>
+      <p style="font-size:12px;color:var(--mute);margin:4px 0 0">Android спросит разрешение на запись экрана — выбери <b>«Весь экран»</b>. Сцены переключаются кнопками в шторке уведомлений, прямо из игры.</p>`;
+    const key = box.querySelector('#skKey'); key.value = store.get('key', '');
+    box.querySelector('#skEye').onclick = () => key.type = key.type === 'password' ? 'text' : 'password';
+    box.querySelector('#skNo').onclick = closeSheet;
+    box.querySelector('#skGo').onclick = async () => {
+      const k = key.value.trim().replace(/^.*\/app\//, '');
+      if (k.length < 10) { toast('Вставь ключ трансляции из Twitch'); key.focus(); return; }
+      store.set('key', k);
+      streamCfg.quality = box.querySelector('#skQ').value; streamCfg.audio = box.querySelector('#skA').value;
+      store.set('streamCfg', streamCfg);
+      const port = box.querySelector('#skG').value === 'port';
+      if (port !== GAME_PORT) {
+        setGameAspect(port);
+        scenes.forEach(sc => sc.layers.forEach(l => { if (l.type === 'screen') Object.assign(l, fitRect(natAR(l), 'fit')); }));
+        save(); renderUI();
+      }
+      closeSheet();
+      liveState = 'connecting'; liveMsg = ''; setStatus();
+      try {
+        const out = await buildAll(), q = QUALITY[streamCfg.quality], [w, h] = outDims();
+        NATIVE.start(JSON.stringify({ url: INGEST + k, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, scenes: out, current: cur }));
+      } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
+    };
+  });
+}
+if (NATIVE && isLive()) cur = clamp(INFO.current || 0, 0, 99);
+
+load(); if (NATIVE && isLive()) cur = clamp(INFO.current || 0, 0, scenes.length - 1); renderUI(); setStatus(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

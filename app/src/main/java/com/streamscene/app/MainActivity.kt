@@ -49,7 +49,7 @@ class MainActivity : Activity() {
     TwitchClient.init(this)
     web = WebView(this)
     web.layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-    web.setBackgroundColor(0xFF0E0E10.toInt())
+    web.setBackgroundColor(0xFF0B0B0D.toInt())
     setContentView(web)
     // отступы под системные панели (Android 15 рисует под ними)
     web.setOnApplyWindowInsetsListener { v, insets ->

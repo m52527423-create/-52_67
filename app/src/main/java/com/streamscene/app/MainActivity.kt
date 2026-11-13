@@ -293,6 +293,16 @@ class MainActivity : Activity() {
       }
     }
 
+    /** «О приложении» — там в меню ⋮ есть «Разрешить ограниченные настройки» (Android 13+). */
+    @JavascriptInterface
+    fun openAppSettings() {
+      runOnUiThread {
+        try {
+          startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        } catch (_: Exception) {}
+      }
+    }
+
     @JavascriptInterface
     fun goHome() {
       runOnUiThread {

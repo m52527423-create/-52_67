@@ -107,7 +107,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       ACTION_START -> {
         startForegroundTyped()
         val code = intent.getIntExtra(EXTRA_CODE, 0)
-        val data: Intent? = if (Build.VERSION.SDK_INT >= 33) {
+        // типизированный вариант надёжен только с Android 14 (на 13 бывают сбои)
+        val data: Intent? = if (Build.VERSION.SDK_INT >= 34) {
           intent.getParcelableExtra(EXTRA_DATA, Intent::class.java)
         } else {
           @Suppress("DEPRECATION") intent.getParcelableExtra(EXTRA_DATA)

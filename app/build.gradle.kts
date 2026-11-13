@@ -8,7 +8,7 @@ android {
 
   defaultConfig {
     applicationId = "com.streamscene.app"
-    minSdk = 29          // Android 10+: нужен для захвата звука игры
+    minSdk = 30          // Android 11+
     targetSdk = 35
     versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1)
     versionName = "0.1." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")

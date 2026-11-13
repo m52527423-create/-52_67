@@ -20,6 +20,14 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .hidden{display:none!important}
 .ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+@font-face{font-family:"SS Montserrat";src:url(fonts/montserrat.ttf);font-weight:100 900}
+@font-face{font-family:"SS Rubik";src:url(fonts/rubik.ttf);font-weight:300 900}
+@font-face{font-family:"SS Oswald";src:url(fonts/oswald.ttf);font-weight:200 700}
+@font-face{font-family:"SS Unbounded";src:url(fonts/unbounded.ttf);font-weight:200 900}
+@font-face{font-family:"SS Russo";src:url(fonts/russo.ttf)}
+@font-face{font-family:"SS Pixel";src:url(fonts/pixel.ttf)}
+@font-face{font-family:"SS Comfortaa";src:url(fonts/comfortaa.ttf);font-weight:300 700}
+@font-face{font-family:"SS Caveat";src:url(fonts/caveat.ttf);font-weight:400 700}
 /* ---------- верхняя панель ---------- */
 .top{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;border-bottom:1px solid var(--line);background:var(--bg)}
 .brand{flex:1;display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;letter-spacing:.2px}
@@ -40,6 +48,8 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .btn.sm{height:30px;padding:0 10px;font-size:12px}
 .btn.big{height:46px;font-size:15px;width:100%}
 .btn.icon{width:36px;padding:0}
+.btn.sm.icon{width:30px}
+.btn.on{border-color:var(--acc);background:var(--acc-d)}
 .btn:disabled{opacity:.45}
 .inp{height:36px;width:100%;background:var(--s2);border:1px solid var(--line2);border-radius:var(--rc);padding:0 10px;outline:none}
 .inp:focus{border-color:var(--acc)}
@@ -210,6 +220,18 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
 <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
 <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+<symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-4 4v-4H4z"/><path d="M8 9h8M8 12h5"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 1 0-12 0c0 6-3 8-3 8h18s-3-2-3-8"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+<symbol id="i-ticker" viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 12h6M15 12h3"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+<symbol id="i-speed" viewBox="0 0 24 24"><path d="M4 18a9 9 0 1 1 16 0"/><path d="M12 14l4-5"/></symbol>
+<symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/></symbol>
 </defs></svg>
 <header class="top">
   <div class="brand"><span class="mark"></span>СтримСцена</div>
@@ -223,7 +245,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
   <div class="stage" id="stage"><canvas id="cv"></canvas></div>
   <div class="stagemeta">
     <span id="metaFmt">16:9</span><span id="metaSel"></span><span class="sp"></span>
-    <button class="btn sm" id="btnPreview"><svg class="ic"><use href="#i-eye"/></svg>Предпросмотр</button>
+    <button class="btn sm icon" id="btnUndo" aria-label="Отменить"><svg class="ic"><use href="#i-undo"/></svg></button><button class="btn sm icon" id="btnRedo" aria-label="Повторить"><svg class="ic"><use href="#i-redo"/></svg></button><button class="btn sm icon" id="btnGrid" aria-label="Сетка"><svg class="ic"><use href="#i-grid"/></svg></button><button class="btn sm icon" id="btnPreview" aria-label="Предпросмотр"><svg class="ic"><use href="#i-eye"/></svg></button>
   </div>
 </div>
 
@@ -277,10 +299,53 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
       </div>
 
       <div class="group" id="gText">
-        <div class="ghead">Текст</div>
-        <div class="item col"><input class="inp" id="pText" placeholder="Текст"></div>
-        <div class="item"><div class="lbl">Цвет текста</div><input type="color" id="pColor"></div>
-        <div class="item"><div class="lbl">Плашка под текстом</div><input type="color" id="pBg"><label class="sw"><input type="checkbox" id="pBgOn"><span></span></label></div>
+        <div class="ghead" id="gTextHead">Текст</div>
+        <div class="item col" id="rowText"><input class="inp" id="pText" placeholder="Текст"></div>
+        <div class="item col" id="rowFont"><span class="lab">Шрифт</span><select class="inp" id="pFont"></select></div>
+        <div class="item" id="rowColor"><div class="lbl">Цвет текста</div><input type="color" id="pColor"></div>
+        <div class="item" id="rowStroke"><div class="lbl">Обводка</div><input type="color" id="pStrokeColor"><label class="sw"><input type="checkbox" id="pStrokeOn"><span></span></label></div>
+        <div class="item" id="rowStrokeW"><div class="lbl" style="flex:none;width:118px">Толщина обводки</div><input type="range" id="pStroke" min="2" max="25"><span class="val" id="vStroke"></span></div>
+        <div class="item" id="rowBg"><div class="lbl">Плашка</div><input type="color" id="pBg"><label class="sw"><input type="checkbox" id="pBgOn"><span></span></label></div>
+      </div>
+
+      <div class="group" id="gChat">
+        <div class="ghead">Чат</div>
+        <div class="item col"><span class="lab">Размер текста</span><div class="seg txt" id="pChatSize"><button data-v="s">Мелкий</button><button data-v="m">Средний</button><button data-v="l">Крупный</button></div></div>
+        <div class="item"><div class="lbl" style="flex:none;width:118px">Фон</div><input type="range" id="pBgAlpha" min="0" max="100"><span class="val" id="vBgAlpha"></span></div>
+        <div class="item"><div class="lbl note">Сообщения появятся во время эфира. Нужен вход через Twitch или ник канала во вкладке «Эфир».</div></div>
+      </div>
+
+      <div class="group" id="gCam">
+        <div class="ghead">Камера</div>
+        <div class="item col"><span class="lab">Форма</span><div class="seg txt" id="pShape"><button data-v="rect">Прямоугольник</button><button data-v="circle">Круг</button></div></div>
+        <div class="item col"><span class="lab">Камера</span><div class="seg txt" id="pFacing"><button data-v="front">Фронтальная</button><button data-v="back">Основная</button></div></div>
+        <div class="item"><div class="lbl">Рамка</div><input type="color" id="pBorder"><label class="sw"><input type="checkbox" id="pBorderOn"><span></span></label></div>
+        <div class="item"><div class="lbl">Зеркально</div><label class="sw"><input type="checkbox" id="pMirror"><span></span></label></div>
+        <div class="item"><div class="lbl">Поворот картинки<small>если камера в эфире повёрнута</small></div><button class="btn sm" id="pRot"><svg class="ic"><use href="#i-reset"/></svg><span id="vRot">0°</span></button></div>
+      </div>
+
+      <div class="group" id="gAlerts">
+        <div class="ghead">Алерты</div>
+        <div class="item"><div class="lbl">Фолловы</div><label class="sw"><input type="checkbox" data-kind="follow"><span></span></label></div>
+        <div class="item"><div class="lbl">Подписки и подарки</div><label class="sw"><input type="checkbox" data-kind="sub"><span></span></label></div>
+        <div class="item"><div class="lbl">Биты</div><label class="sw"><input type="checkbox" data-kind="cheer"><span></span></label></div>
+        <div class="item"><div class="lbl">Рейды</div><label class="sw"><input type="checkbox" data-kind="raid"><span></span></label></div>
+        <div class="item"><div class="lbl">Звук<small>слышно и в эфире</small></div><label class="sw"><input type="checkbox" id="pSound"><span></span></label></div>
+        <div class="item"><div class="lbl" style="flex:none;width:118px">Показывать</div><input type="range" id="pSeconds" min="3" max="15"><span class="val" id="vSeconds"></span></div>
+        <div class="gbody"><button class="btn" style="width:100%" id="pAlertDemo"><svg class="ic"><use href="#i-eye"/></svg>Показать пример</button></div>
+      </div>
+
+      <div class="group" id="gTicker">
+        <div class="ghead">Бегущая строка</div>
+        <div class="item"><div class="lbl" style="flex:none;width:118px">Скорость</div><input type="range" id="pSpeed" min="3" max="30"><span class="val" id="vSpeed"></span></div>
+      </div>
+
+      <div class="group" id="gCrop">
+        <div class="ghead">Обрезка краёв<span class="sp"></span><button class="btn sm" id="pCropReset">Сбросить</button></div>
+        <div class="item"><div class="lbl" style="flex:none;width:80px">Слева</div><input type="range" data-crop="cl" min="0" max="45"><span class="val" data-cv="cl"></span></div>
+        <div class="item"><div class="lbl" style="flex:none;width:80px">Справа</div><input type="range" data-crop="cr" min="0" max="45"><span class="val" data-cv="cr"></span></div>
+        <div class="item"><div class="lbl" style="flex:none;width:80px">Сверху</div><input type="range" data-crop="ct" min="0" max="45"><span class="val" data-cv="ct"></span></div>
+        <div class="item"><div class="lbl" style="flex:none;width:80px">Снизу</div><input type="range" data-crop="cb" min="0" max="45"><span class="val" data-cv="cb"></span></div>
       </div>
 
       <div class="group" id="gScreen">
@@ -317,6 +382,19 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
       </div>
     </div>
     <div class="group">
+      <div class="ghead">Живые слои<span class="sp"></span><span class="hint">обновляются в эфире, всегда поверх</span></div>
+      <div class="gbody tiles">
+        <button class="tile" data-add="camera"><svg class="ic"><use href="#i-camera"/></svg>Камера</button>
+        <button class="tile" data-add="chat"><svg class="ic"><use href="#i-chat"/></svg>Чат</button>
+        <button class="tile" data-add="alerts"><svg class="ic"><use href="#i-bell"/></svg>Алерты</button>
+        <button class="tile" data-add="timer"><svg class="ic"><use href="#i-timer"/></svg>Таймер эфира</button>
+        <button class="tile" data-add="clock"><svg class="ic"><use href="#i-clock"/></svg>Часы</button>
+        <button class="tile" data-add="viewers"><svg class="ic"><use href="#i-eye"/></svg>Зрители</button>
+        <button class="tile" data-add="ticker"><svg class="ic"><use href="#i-ticker"/></svg>Бегущая строка</button>
+        <button class="tile" id="addGif"><svg class="ic"><use href="#i-film"/></svg>GIF</button>
+      </div>
+    </div>
+    <div class="group">
       <div class="ghead">Готовые баннеры</div>
       <div class="gbody tpl" id="tplGrid"></div>
     </div>
@@ -339,6 +417,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 </div>
 
 <input type="file" id="fileImg" accept="image/*" class="hidden">
+<input type="file" id="fileGif" accept="image/gif" class="hidden">
 <input type="file" id="fileSrc" accept="video/*,image/*" class="hidden">
 <div id="toast"></div>
 <script>
@@ -500,7 +579,7 @@ let customSource = null;          // пользовательское видео
 
 function layerSrcEl(l) {
   if (l.type === 'screen') return customSource || game;
-  if (l.type === 'image') {
+  if (l.type === 'image' || l.type === 'gif') {
     let im = imgs.get(l.src);
     if (!im) { im = new Image(); im.src = l.src; imgs.set(l.src, im); }
     return im;
@@ -514,7 +593,7 @@ function natAR(l) {
     if (s && s.naturalWidth) return s.naturalWidth / s.naturalHeight;
     return GAME_W / GAME_H;
   }
-  if (l.type === 'image') { const im = layerSrcEl(l); return im.naturalWidth ? im.naturalWidth / im.naturalHeight : l.w / l.h; }
+  if (l.type === 'image' || l.type === 'gif') { const im = layerSrcEl(l); return im.naturalWidth ? im.naturalWidth / im.naturalHeight : l.w / l.h; }
   return l.w / l.h;
 }
 const scene = () => scenes[cur];
@@ -549,7 +628,36 @@ function defaultScenes() {
   ];
 }
 let saveT;
+let hist = [], histPos = -1, histT = null, restoring = false;
+const srcIds = new Map(), srcById = new Map();
+function snap() {
+  return JSON.stringify({ scenes, cur }, (k, v) => {
+    if ((k === 'src') && typeof v === 'string' && v.length > 200) {
+      let id = srcIds.get(v); if (id == null) { id = srcIds.size + 1; srcIds.set(v, id); srcById.set(id, v); }
+      return '@src:' + id;
+    }
+    return k.startsWith('_') ? undefined : v;
+  });
+}
+function histPush() {
+  if (restoring) return;
+  const sn = snap();
+  if (hist[histPos] === sn) return;
+  hist = hist.slice(0, histPos + 1); hist.push(sn);
+  if (hist.length > 40) hist.shift();
+  histPos = hist.length - 1; updHistBtns();
+}
+function histGo(d) {
+  const i = histPos + d; if (i < 0 || i >= hist.length) return;
+  histPos = i; restoring = true;
+  const o = JSON.parse(hist[i], (k, v) => (k === 'src' && typeof v === 'string' && v.startsWith('@src:')) ? srcById.get(+v.slice(5)) : v);
+  scenes = o.scenes; cur = clamp(o.cur, 0, scenes.length - 1);
+  if (!layers().some(l => l.id === selId)) selId = null;
+  renderUI(); save(); restoring = false; updHistBtns();
+}
+function updHistBtns() { const u = $('#btnUndo'), r = $('#btnRedo'); if (u) { u.disabled = histPos <= 0; r.disabled = histPos >= hist.length - 1; } }
 function save() {
+  clearTimeout(histT); histT = setTimeout(histPush, 500);
   clearTimeout(saveT);
   saveT = setTimeout(() => {
     if (!store.set('proj', { orient: ORIENT, gamePort: GAME_PORT, scenes, cur })) toast('Не хватило места для сохранения картинок');
@@ -592,31 +700,174 @@ function sizeStage() {
 }
 window.addEventListener('resize', sizeStage);
 
-function drawLayer(c, l) {
-  if (!l.visible) return;
-  c.save(); c.globalAlpha = l.opacity;
-  const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
-  if (r > 0 && l.type !== 'text') { c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.clip(); }
-  if (l.flip) { c.translate(l.x * 2 + l.w, 0); c.scale(-1, 1); }
-  if (l.type === 'text') {
-    if (l.bg) { c.fillStyle = l.bg; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.fill(); }
-    let fs = l.h * .6; c.font = `800 ${fs}px "Segoe UI",Roboto,sans-serif`;
-    const tw = c.measureText(l.text || ' ').width, maxW = l.w * .92;
-    if (tw > maxW) { fs *= maxW / tw; c.font = `800 ${fs}px "Segoe UI",Roboto,sans-serif`; }
-    c.fillStyle = l.color || '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    if (!l.bg) { c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = fs * .15; c.shadowOffsetY = fs * .05; }
-    c.fillText(l.text || '', l.x + l.w / 2, l.y + l.h / 2 + fs * .03);
-  } else {
-    const el = layerSrcEl(l);
-    try { if (el && (el.width || el.naturalWidth || el.videoWidth)) c.drawImage(el, l.x, l.y, l.w, l.h); } catch {}
+/* ================= Шрифты и отрисовка слоёв ================= */
+const FONTS = {
+  system: { name: 'Системный', css: '"Segoe UI",Roboto,sans-serif', w: 800 },
+  montserrat: { name: 'Montserrat', css: '"SS Montserrat"', w: 800 },
+  rubik: { name: 'Rubik', css: '"SS Rubik"', w: 700 },
+  oswald: { name: 'Oswald (узкий)', css: '"SS Oswald"', w: 600 },
+  unbounded: { name: 'Unbounded (широкий)', css: '"SS Unbounded"', w: 700 },
+  russo: { name: 'Russo One', css: '"SS Russo"', w: 400 },
+  pixel: { name: 'Пиксельный', css: '"SS Pixel"', w: 400 },
+  comfortaa: { name: 'Comfortaa (округлый)', css: '"SS Comfortaa"', w: 700 },
+  caveat: { name: 'Caveat (рукописный)', css: '"SS Caveat"', w: 700 }
+};
+const fontOf = (id, px) => { const f = FONTS[id] || FONTS.system; return `${f.w} ${px}px ${f.css}`; };
+const DYN = new Set(['camera', 'chat', 'alerts', 'timer', 'clock', 'viewers', 'ticker', 'gif']);
+const isDyn = l => DYN.has(l.type);
+const drawOrder = () => { const ls = layers(); return [...ls.filter(l => !isDyn(l)), ...ls.filter(isDyn)]; };
+const ICON_PATHS = {
+  eye: 'M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6z',
+  heart: 'M12 20.5C3 14.5 2 9 5 6.2 7.5 4 10.5 4.8 12 7.5 13.5 4.8 16.5 4 19 6.2 22 9 21 14.5 12 20.5z',
+  star: 'M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 16.8 6.4 20.1l1.4-6.3L3 9.5l6.4-.6z',
+  gift: 'M4 11h16v10H4zM3 7.5h18V11H3zM12 7.5V21',
+  gem: 'M7 4h10l4.5 5.5L12 21 2.5 9.5z',
+  raid: 'M12 2.5c4.5 3.5 5 8.5 3.5 13.5h-7C7 11 7.5 6 12 2.5zM9 17.5l3 4.5 3-4.5z',
+  person: 'M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4 21a8 8 0 0 1 16 0z'
+};
+const iconCache = {};
+function drawIcon(c, name, x, y, size, color) {
+  const p = iconCache[name] || (iconCache[name] = new Path2D(ICON_PATHS[name]));
+  c.save(); c.translate(x, y); c.scale(size / 24, size / 24); c.fillStyle = color; c.fill(p, 'evenodd'); c.restore();
+}
+function fmtClock(d = new Date()) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function fmtElapsed(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
+const T0 = Date.now() - 4523000;
+function cornerR(l) { return Math.min((l.radius || 0) / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2); }
+function hexA(hex, a) { const n = parseInt(String(hex || '#000000').slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+
+function drawTextBox(c, l, text, icon) {
+  const r = cornerR(l);
+  if (l.bg) { c.fillStyle = l.bg; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.fill(); }
+  text = text || ' ';
+  let fs = l.h * .6; c.font = fontOf(l.font, fs);
+  let tw = c.measureText(text).width + (icon ? fs * 1.15 : 0);
+  const maxW = l.w * .92;
+  if (tw > maxW) { fs *= maxW / tw; c.font = fontOf(l.font, fs); tw = c.measureText(text).width + (icon ? fs * 1.15 : 0); }
+  let x = l.x + l.w / 2 - tw / 2; const cy = l.y + l.h / 2 + fs * .03;
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  if (icon) { drawIcon(c, icon, x, l.y + l.h / 2 - fs * .45, fs * .9, l.color || '#fff'); x += fs * 1.15; }
+  if (l.stroke > 0) { c.lineJoin = 'round'; c.lineWidth = fs * l.stroke * 2; c.strokeStyle = l.strokeColor || '#000'; c.strokeText(text, x, cy); }
+  c.fillStyle = l.color || '#fff';
+  if (!l.bg && !(l.stroke > 0)) { c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = fs * .15; c.shadowOffsetY = fs * .05; }
+  c.fillText(text, x, cy);
+  c.shadowColor = 'transparent'; c.shadowBlur = 0; c.shadowOffsetY = 0;
+}
+function drawTicker(c, l, t) {
+  const r = cornerR(l);
+  if (l.bg) { c.fillStyle = l.bg; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.fill(); }
+  const fs = l.h * .58; c.font = fontOf(l.font, fs);
+  const text = (l.text || 'Бегущая строка') + '     •     ';
+  const tw = Math.max(10, c.measureText(text).width);
+  const off = (t / 1000) * 1.8 * l.h * (l.speed || 1);
+  c.save(); c.beginPath(); c.rect(l.x, l.y, l.w, l.h); c.clip();
+  c.textAlign = 'left'; c.textBaseline = 'middle';
+  for (let x = l.x - (off % tw); x < l.x + l.w; x += tw) {
+    if (l.stroke > 0) { c.lineJoin = 'round'; c.lineWidth = fs * l.stroke * 2; c.strokeStyle = l.strokeColor || '#000'; c.strokeText(text, x, l.y + l.h / 2); }
+    c.fillStyle = l.color || '#fff'; c.fillText(text, x, l.y + l.h / 2);
   }
   c.restore();
 }
+const DEMO_CHAT = [['NightOwl', '#7ab8ff', 'всем привет!'], ['pelmen_master', '#ff7a7a', 'го ещё катку'], ['KoshkaGamer', '#7aff9e', 'это было мощно'], ['Lera_plays', '#ffd27a', 'какой у тебя телефон?'], ['ZvezdaTV', '#d17aff', 'GG']];
+function drawChatDemo(c, l) {
+  const r = cornerR(l);
+  if ((l.bgAlpha ?? .45) > 0) { c.fillStyle = hexA(l.bg || '#000000', l.bgAlpha ?? .45); c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.fill(); }
+  const fs = H * ({ s: .026, m: .034, l: .046 }[l.chatSize || 'm']), pad = fs * .6;
+  c.save(); c.beginPath(); c.rect(l.x, l.y, l.w, l.h); c.clip();
+  c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = fs * .12;
+  let y = l.y + l.h - pad;
+  for (let i = DEMO_CHAT.length - 1; i >= 0 && y - fs > l.y; i--) {
+    const [n, col, m] = DEMO_CHAT[i];
+    c.font = fontOf(l.font, fs).replace(/^\d+/, '800'); const nw = c.measureText(n + ': ').width;
+    c.fillStyle = col; c.fillText(n + ': ', l.x + pad, y);
+    c.font = fontOf(l.font, fs).replace(/^\d+/, '500'); c.fillStyle = l.color || '#fff';
+    let msg = m; while (msg.length > 1 && c.measureText(msg).width > l.w - pad * 2 - nw) msg = msg.slice(0, -2) + '…';
+    c.fillText(msg, l.x + pad + nw, y);
+    y -= fs * 1.4;
+  }
+  c.restore();
+}
+const ALERT_DEMO = [['follow', 'heart', '#9147ff', 'Pelmen_TV', 'новый фолловер'], ['sub', 'star', '#f5a524', 'NightOwl', 'подписка · 3 месяца'], ['cheer', 'gem', '#3e9bff', 'KoshkaGamer', '500 битов'], ['raid', 'raid', '#e5484d', 'ZvezdaTV', 'рейд · 42 зрителя']];
+function drawAlertDemo(c, l, t) {
+  let k = 1, idx = 0;
+  if (l._demo) {
+    const dt = Date.now() - l._demo, total = (l.seconds || 6) * 1000 + 700;
+    if (dt > total * 2) delete l._demo;
+    else { idx = Math.floor(dt / total) % ALERT_DEMO.length; const d = dt % total; k = d < 330 ? d / 330 : d > total - 360 ? Math.max(0, (total - d) / 360) : 1; }
+  }
+  const [, ic, acc, name, title] = ALERT_DEMO[idx];
+  c.save(); c.globalAlpha *= k; c.translate(0, l.h * .3 * (1 - k) * .4);
+  const rr = Math.min(l.h * .22, Math.max(cornerR(l), l.h * .12));
+  c.fillStyle = hexA(l.bg || '#141418', .94); c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, rr); c.fill();
+  const g = c.createLinearGradient(l.x, 0, l.x + l.w, 0); g.addColorStop(0, hexA(acc, .35)); g.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = g; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, rr); c.fill();
+  c.fillStyle = acc; c.beginPath(); c.roundRect(l.x, l.y, l.h * .06, l.h, rr); c.fill();
+  const isz = l.h * .5, icx = l.x + l.h * .2;
+  c.fillStyle = hexA(acc, .22); c.beginPath(); c.arc(icx + isz / 2, l.y + l.h / 2, isz * .75, 0, 7); c.fill();
+  drawIcon(c, ic, icx, l.y + l.h / 2 - isz / 2, isz, acc);
+  const left = icx + isz + l.h * .28, fs = l.h * .32;
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.font = fontOf(l.font, fs); c.fillStyle = l.color || '#fff'; c.fillText(name, left, l.y + l.h / 2 - fs * .05);
+  c.font = `500 ${fs * .62}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(255,255,255,.78)'; c.fillText(title, left, l.y + l.h / 2 + fs * .8);
+  c.restore();
+}
+function camPath(c, l) {
+  c.beginPath();
+  if (l.shape === 'circle') c.arc(l.x + l.w / 2, l.y + l.h / 2, Math.min(l.w, l.h) / 2, 0, Math.PI * 2);
+  else c.roundRect(l.x, l.y, l.w, l.h, cornerR(l));
+}
+function drawCamDemo(c, l) {
+  c.save(); camPath(c, l); c.clip();
+  const g = c.createLinearGradient(l.x, l.y, l.x + l.w, l.y + l.h); g.addColorStop(0, '#2c2c36'); g.addColorStop(1, '#16161b');
+  c.fillStyle = g; c.fillRect(l.x, l.y, l.w, l.h);
+  const s = Math.min(l.w, l.h) * .7;
+  drawIcon(c, 'person', l.x + l.w / 2 - s / 2, l.y + l.h / 2 - s / 2 + s * .08, s, '#4a4a56');
+  c.font = `700 ${Math.min(l.w, l.h) * .1}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(255,255,255,.55)'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillText('Камера', l.x + l.w / 2, l.y + l.h * .85);
+  if (l.border) { camPath(c, l); c.lineWidth = Math.min(l.w, l.h) * .08; c.strokeStyle = l.border; c.stroke(); }
+  c.restore();
+}
+function drawLayer(c, l, t = performance.now()) {
+  if (!l.visible) return;
+  c.save(); c.globalAlpha = l.opacity;
+  switch (l.type) {
+    case 'text': drawTextBox(c, l, l.text || ''); break;
+    case 'timer': drawTextBox(c, l, fmtElapsed(Date.now() - T0)); break;
+    case 'clock': drawTextBox(c, l, fmtClock()); break;
+    case 'viewers': drawTextBox(c, l, '128', 'eye'); break;
+    case 'ticker': drawTicker(c, l, t); break;
+    case 'chat': drawChatDemo(c, l); break;
+    case 'alerts': drawAlertDemo(c, l, t); break;
+    case 'camera': drawCamDemo(c, l); break;
+    default: {
+      const r = cornerR(l);
+      if (r > 0) { c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.clip(); }
+      if (l.flip) { c.translate(l.x * 2 + l.w, 0); c.scale(-1, 1); }
+      const el = layerSrcEl(l);
+      const nw = el && (el.videoWidth || el.naturalWidth || el.width), nh = el && (el.videoHeight || el.naturalHeight || el.height);
+      if (nw && nh) {
+        const cl = (l.cl || 0) / 100, cr = (l.cr || 0) / 100, ct = (l.ct || 0) / 100, cb = (l.cb || 0) / 100;
+        try { c.drawImage(el, cl * nw, ct * nh, nw * Math.max(.05, 1 - cl - cr), nh * Math.max(.05, 1 - ct - cb), l.x, l.y, l.w, l.h); } catch {}
+      }
+    }
+  }
+  c.restore();
+}
+let gridOn = false;
 function render(c, withUI) {
   c.fillStyle = scene().bg || '#000'; c.fillRect(0, 0, W, H);
-  layers().forEach(l => drawLayer(c, l));
+  const t = performance.now();
+  drawOrder().forEach(l => drawLayer(c, l, t));
   if (!withUI) return;
   const s = selected(), k = W / cv.clientWidth;
+  if (gridOn) {
+    c.save(); c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = 1 * k;
+    for (let i = 1; i < 8; i++) { c.beginPath(); c.moveTo(W * i / 8, 0); c.lineTo(W * i / 8, H); c.moveTo(0, H * i / 8); c.lineTo(W, H * i / 8); c.stroke(); }
+    c.strokeStyle = 'rgba(145,71,255,.55)'; c.lineWidth = 1.5 * k;
+    for (const f of [1 / 3, 2 / 3]) { c.beginPath(); c.moveTo(W * f, 0); c.lineTo(W * f, H); c.moveTo(0, H * f); c.lineTo(W, H * f); c.stroke(); }
+    c.restore();
+  }
   guides.forEach(g => { c.strokeStyle = '#ff4fa3'; c.lineWidth = 2 * k; c.setLineDash([8 * k, 6 * k]); c.beginPath(); if (g.v != null) { c.moveTo(g.v, 0); c.lineTo(g.v, H); } else { c.moveTo(0, g.h); c.lineTo(W, g.h); } c.stroke(); });
   c.setLineDash([]);
   if (s) {
@@ -641,7 +892,7 @@ function loop(t) {
 const ptrs = new Map();
 let mode = null, start = null;
 function toCanvas(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
-function hit(p) { const ls = layers(); for (let i = ls.length - 1; i >= 0; i--) { const l = ls[i]; if (l.visible && p.x >= l.x && p.x <= l.x + l.w && p.y >= l.y && p.y <= l.y + l.h) return l; } return null; }
+function hit(p) { const ls = drawOrder(); for (let i = ls.length - 1; i >= 0; i--) { const l = ls[i]; if (l.visible && p.x >= l.x && p.x <= l.x + l.w && p.y >= l.y && p.y <= l.y + l.h) return l; } return null; }
 cv.addEventListener('pointerdown', e => {
   cv.setPointerCapture(e.pointerId); const p = toCanvas(e); ptrs.set(e.pointerId, p);
   const s = selected();
@@ -667,13 +918,15 @@ cv.addEventListener('pointermove', e => {
   guides = [];
   if (mode === 'move') {
     let x = start.r.x + p.x - start.p.x, y = start.r.y + p.y - start.p.y;
-    const th = 14 * W / cv.clientWidth;
-    for (const [val, off] of [[0, 0], [W / 2, s.w / 2], [W, s.w]]) {
-      for (const edge of [0, s.w / 2, s.w]) if (Math.abs(x + edge - val) < th && edge === off) { x = val - edge; guides.push({ v: val }); }
-    }
-    for (const [val, off] of [[0, 0], [H / 2, s.h / 2], [H, s.h]]) {
-      for (const edge of [0, s.h / 2, s.h]) if (Math.abs(y + edge - val) < th && edge === off) { y = val - edge; guides.push({ h: val }); }
-    }
+    const th = 12 * W / cv.clientWidth;
+    const vx = [0, W / 2, W], vy = [0, H / 2, H];
+    if (gridOn) { vx.push(W / 3, W * 2 / 3); vy.push(H / 3, H * 2 / 3); }
+    layers().forEach(o => { if (o === s || !o.visible) return; vx.push(o.x, o.x + o.w / 2, o.x + o.w); vy.push(o.y, o.y + o.h / 2, o.y + o.h); });
+    let bx = null, by = null;
+    for (const v of vx) for (const e of [0, s.w / 2, s.w]) { const d = Math.abs(x + e - v); if (d < th && (!bx || d < bx.d)) bx = { d, x: v - e, v }; }
+    for (const v of vy) for (const e of [0, s.h / 2, s.h]) { const d = Math.abs(y + e - v); if (d < th && (!by || d < by.d)) by = { d, y: v - e, v }; }
+    if (bx) { x = bx.x; guides.push({ v: bx.v }); }
+    if (by) { y = by.y; guides.push({ h: by.v }); }
     s.x = x; s.y = y;
   } else if (mode === 'resize') {
     const r = start.r, c = corners(r), [ax, ay] = c[3 - start.ci];
@@ -736,7 +989,8 @@ const QUALITY = {
 };
 const AUDIO = { mix: 'Игра + микрофон', game: 'Только звук игры', mic: 'Только микрофон' };
 const INGEST = 'rtmp://ingest.global-contribute.live-video.net/app/';
-let streamCfg = Object.assign({ quality: '720p30', audio: 'mix', bubble: true }, store.get('streamCfg', {}));
+let streamCfg = Object.assign({ quality: '720p30', audio: 'mix', bubble: true, autoBitrate: true, testMode: false, gameVol: 100, micVol: 100, noise: true, hideOnLock: true, hideInApp: true, chatChannel: '' }, store.get('streamCfg', {}));
+let devStat = null, speedRes = null, speedBusy = false, privacyNow = false, liveTarget = 0, liveMax = 0;
 if (!QUALITY[streamCfg.quality]) streamCfg.quality = '720p30';
 let liveState = INFO.state || 'stopped', liveMsg = INFO.msg || '', liveKbps = 0, liveViewers = null, wasLive = false;
 function isLive() { return ['connecting', 'live', 'reconnecting'].includes(liveState); }
@@ -796,23 +1050,39 @@ function ensureImages() {
   scenes.forEach(sc => sc.layers.forEach(l => { if (l.type === 'image') all.push(layerSrcEl(l)); }));
   return Promise.all(all.map(im => im.complete && im.naturalWidth ? null : new Promise(r => { im.onload = im.onerror = r; })));
 }
+function widgetOut(l) {
+  return {
+    type: l.type, x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, opacity: l.opacity, radius: l.radius || 0,
+    font: l.font || 'system', color: l.color || '#ffffff', bg: l.bg || null, stroke: l.stroke || 0, strokeColor: l.strokeColor || '#000000',
+    text: l.text || '', shape: l.shape || 'rect', facing: l.facing || 'front', border: l.border || null, rot: l.rot || 0,
+    mirror: l.mirror !== false, chatSize: l.chatSize || 'm', bgAlpha: l.bgAlpha ?? .45,
+    kinds: l.kinds || ['follow', 'sub', 'gift', 'cheer', 'raid'], sound: l.sound !== false, seconds: l.seconds || 6,
+    speed: l.speed || 1, gif: l.type === 'gif' ? l.src : ''
+  };
+}
 function buildScene(sc, EW, EH) {
   const c = document.createElement('canvas'); c.width = EW; c.height = EH;
   const x = c.getContext('2d'); x.scale(EW / W, EH / H);
   x.fillStyle = sc.bg || '#000'; x.fillRect(0, 0, W, H);
-  let screen = null;
+  let screen = null; const widgets = [];
   for (const l of sc.layers) {
     if (!l.visible) continue;
+    if (isDyn(l)) { widgets.push(widgetOut(l)); continue; }
     if (l.type === 'screen') {
       const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
       x.save(); x.globalCompositeOperation = 'destination-out'; x.globalAlpha = l.opacity;
       x.beginPath(); x.roundRect(l.x, l.y, l.w, l.h, r); x.fill(); x.restore();
-      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip };
+      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip, cl: (l.cl || 0) / 100, ct: (l.ct || 0) / 100, cr: (l.cr || 0) / 100, cb: (l.cb || 0) / 100 };
     } else drawLayer(x, l);
   }
-  return { name: sc.name, screen, overlay: c.toDataURL('image/png') };
+  return { name: sc.name, screen, overlay: c.toDataURL('image/png'), widgets };
 }
-async function buildAll() { await ensureImages(); const [EW, EH] = outDims(); return scenes.map(sc => buildScene(sc, EW, EH)); }
+async function loadFonts() {
+  if (!document.fonts) return;
+  const used = new Set(); scenes.forEach(sc => sc.layers.forEach(l => { if (l.font) used.add(l.font); }));
+  await Promise.all([...used].map(id => { const f = FONTS[id]; return f ? document.fonts.load(`${f.w} 40px ${f.css}`).catch(() => {}) : null; }));
+}
+async function buildAll() { await ensureImages(); await loadFonts(); const [EW, EH] = outDims(); return scenes.map(sc => buildScene(sc, EW, EH)); }
 let pushT;
 function pushScenes() {
   clearTimeout(pushT);
@@ -833,8 +1103,8 @@ $$('nav.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 function onCanvasSelect() { if (tab === 'layers' || tab === 'add') setTab('props'); }
 
 /* ================= Отрисовка интерфейса ================= */
-const TYPE_ICON = { screen: 'game', image: 'image', text: 'text' };
-const TYPE_NAME = { screen: 'экран игры', image: 'картинка', text: 'текст' };
+const TYPE_ICON = { screen: 'game', image: 'image', text: 'text', camera: 'camera', chat: 'chat', alerts: 'bell', timer: 'timer', clock: 'clock', viewers: 'eye', ticker: 'ticker', gif: 'film' };
+const TYPE_NAME = { screen: 'экран игры', image: 'картинка', text: 'текст', camera: 'камера', chat: 'чат', alerts: 'алерты', timer: 'таймер эфира', clock: 'часы', viewers: 'счётчик зрителей', ticker: 'бегущая строка', gif: 'GIF' };
 function updSize() {
   const s = selected();
   $('#metaSel').textContent = s ? `${s.name} ${Math.round(s.w)}×${Math.round(s.h)}` : '';
@@ -861,8 +1131,8 @@ function renderLayers() {
   if (!layers().length) { box.innerHTML = '<div class="empty">Сцена пустая. Добавь слой во вкладке «Добавить».</div>'; return; }
   [...layers()].reverse().forEach(l => {
     const d = document.createElement('div'); d.className = 'layer' + (l.id === selId ? ' on' : '');
-    const th = l.type === 'image' ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${I(TYPE_ICON[l.type])}</div>`;
-    d.innerHTML = `${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${TYPE_NAME[l.type]}${l.visible ? '' : ' · скрыт'}</small></div>
+    const th = (l.type === 'image' || l.type === 'gif') ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${I(TYPE_ICON[l.type])}</div>`;
+    d.innerHTML = `${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${TYPE_NAME[l.type]}${isDyn(l) ? ' · живой' : ''}${l.visible ? '' : ' · скрыт'}</small></div>
       <button class="tb${l.visible ? '' : ' off'}" data-v aria-label="Видимость">${I(l.visible ? 'eye' : 'eyeoff')}</button>
       <button class="tb" data-e aria-label="Свойства">${I('chev')}</button>`;
     d.onclick = e => {
@@ -873,21 +1143,56 @@ function renderLayers() {
     box.appendChild(d);
   });
 }
+const TEXTY = new Set(['text', 'timer', 'clock', 'viewers', 'ticker']);
+const show = (id, on) => $(id).classList.toggle('hidden', !on);
+function setSegVal(id, v) { $$(`${id} button`).forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
 function renderProps() {
   const s = selected();
   $('#propsEmpty').classList.toggle('hidden', !!s);
   $('#propsBody').classList.toggle('hidden', !s);
   if (!s) return;
-  $('#pName').textContent = s.name; $('#pType').textContent = TYPE_NAME[s.type];
+  const t = s.type;
+  $('#pName').textContent = s.name; $('#pType').textContent = TYPE_NAME[t] + (isDyn(s) ? ' · живой слой' : '');
   $('#pLock').checked = !!s.lock; $('#pFlip').checked = !!s.flip;
+  $('#pFlip').closest('.item').classList.toggle('hidden', isDyn(s));
   $('#pOpacity').value = Math.round(s.opacity * 100); $('#vOpacity').textContent = Math.round(s.opacity * 100) + '%';
   $('#pRadius').value = s.radius; $('#vRadius').textContent = s.radius + '%';
-  $('#gText').classList.toggle('hidden', s.type !== 'text');
-  $('#gScreen').classList.toggle('hidden', s.type !== 'screen');
-  if (s.type === 'text') {
-    if (document.activeElement !== $('#pText')) $('#pText').value = s.text;
-    $('#pColor').value = s.color || '#ffffff'; $('#pBg').value = s.bg || s.lastBg || '#9147ff'; $('#pBgOn').checked = !!s.bg;
+  $('#pRadius').closest('.item').classList.toggle('hidden', t === 'camera' && s.shape === 'circle');
+  // текст и оформление
+  const textGroup = TEXTY.has(t) || t === 'chat' || t === 'alerts';
+  show('#gText', textGroup);
+  if (textGroup) {
+    $('#gTextHead').textContent = t === 'text' ? 'Текст' : 'Оформление';
+    show('#rowText', t === 'text' || t === 'ticker');
+    show('#rowColor', t !== 'alerts');
+    show('#rowStroke', TEXTY.has(t)); show('#rowStrokeW', TEXTY.has(t) && s.stroke > 0);
+    show('#rowBg', true);
+    if (document.activeElement !== $('#pText')) $('#pText').value = s.text || '';
+    $('#pFont').value = s.font || 'system';
+    $('#pColor').value = s.color || '#ffffff';
+    $('#pStrokeOn').checked = s.stroke > 0; $('#pStrokeColor').value = s.strokeColor || '#000000';
+    $('#pStroke').value = Math.round((s.stroke || s.lastStroke || .08) * 100); $('#vStroke').textContent = $('#pStroke').value + '%';
+    $('#pBg').value = s.bg || s.lastBg || '#9147ff'; $('#pBgOn').checked = !!s.bg;
   }
+  show('#gChat', t === 'chat');
+  if (t === 'chat') { setSegVal('#pChatSize', s.chatSize || 'm'); const a = Math.round((s.bgAlpha ?? .45) * 100); $('#pBgAlpha').value = a; $('#vBgAlpha').textContent = a + '%'; }
+  show('#gCam', t === 'camera');
+  if (t === 'camera') {
+    setSegVal('#pShape', s.shape || 'rect'); setSegVal('#pFacing', s.facing || 'front');
+    $('#pBorderOn').checked = !!s.border; $('#pBorder').value = s.border || s.lastBorder || '#9147ff';
+    $('#pMirror').checked = s.mirror !== false; $('#vRot').textContent = (s.rot || 0) + '°';
+  }
+  show('#gAlerts', t === 'alerts');
+  if (t === 'alerts') {
+    const k = s.kinds || ['follow', 'sub', 'cheer', 'raid'];
+    $$('[data-kind]').forEach(i => i.checked = k.includes(i.dataset.kind));
+    $('#pSound').checked = s.sound !== false; $('#pSeconds').value = s.seconds || 6; $('#vSeconds').textContent = (s.seconds || 6) + ' с';
+  }
+  show('#gTicker', t === 'ticker');
+  if (t === 'ticker') { $('#pSpeed').value = Math.round((s.speed || 1) * 10); $('#vSpeed').textContent = (s.speed || 1).toFixed(1) + '×'; }
+  show('#gCrop', t === 'image' || t === 'screen');
+  if (t === 'image' || t === 'screen') ['cl', 'cr', 'ct', 'cb'].forEach(k => { $(`[data-crop="${k}"]`).value = s[k] || 0; $(`[data-cv="${k}"]`).textContent = (s[k] || 0) + '%'; });
+  show('#gScreen', t === 'screen');
 }
 function renderUI() {
   renderScenes(); renderLayers(); renderProps(); updSize();
@@ -922,6 +1227,30 @@ $('#pText').oninput = e => { const s = selected(); if (s) { s.text = e.target.va
 $('#pText').onchange = renderUI;
 $('#pColor').oninput = e => { const s = selected(); if (s) { s.color = e.target.value; save(); } };
 $('#pBg').oninput = e => { const s = selected(); if (s) { s.lastBg = e.target.value; if (s.bg) s.bg = e.target.value; save(); } };
+(function fontsSelect() { $('#pFont').innerHTML = Object.entries(FONTS).map(([k, f]) => `<option value="${k}">${esc(f.name)}</option>`).join(''); })();
+$('#pFont').onchange = e => { const s = selected(); if (!s) return; s.font = e.target.value; const f = FONTS[s.font]; if (document.fonts) document.fonts.load(`${f.w} 40px ${f.css}`).then(() => {}); save(); };
+$('#pStrokeOn').onchange = e => { const s = selected(); if (!s) return; s.stroke = e.target.checked ? (s.lastStroke || .08) : 0; save(); renderProps(); };
+$('#pStrokeColor').oninput = e => { const s = selected(); if (s) { s.strokeColor = e.target.value; save(); } };
+$('#pStroke').oninput = e => { const s = selected(); if (!s) return; s.stroke = s.lastStroke = e.target.value / 100; $('#vStroke').textContent = e.target.value + '%'; save(); };
+$$('#pChatSize button').forEach(b => b.onclick = () => { const s = selected(); if (!s) return; s.chatSize = b.dataset.v; setSegVal('#pChatSize', s.chatSize); save(); });
+$('#pBgAlpha').oninput = e => { const s = selected(); if (!s) return; s.bgAlpha = e.target.value / 100; $('#vBgAlpha').textContent = e.target.value + '%'; save(); };
+$$('#pShape button').forEach(b => b.onclick = () => {
+  const s = selected(); if (!s) return; s.shape = b.dataset.v;
+  if (s.shape === 'circle') { const d = Math.min(s.w, s.h), cx = s.x + s.w / 2, cy = s.y + s.h / 2; s.w = s.h = d; s.x = cx - d / 2; s.y = cy - d / 2; s.lock = true; }
+  save(); renderUI();
+});
+$$('#pFacing button').forEach(b => b.onclick = () => { const s = selected(); if (!s) return; s.facing = b.dataset.v; s.mirror = s.facing === 'front'; save(); renderProps(); });
+$('#pBorderOn').onchange = e => { const s = selected(); if (!s) return; s.border = e.target.checked ? (s.lastBorder || $('#pBorder').value) : null; save(); };
+$('#pBorder').oninput = e => { const s = selected(); if (!s) return; s.lastBorder = e.target.value; if (s.border) s.border = e.target.value; save(); };
+$('#pMirror').onchange = e => { const s = selected(); if (s) { s.mirror = e.target.checked; save(); } };
+$('#pRot').onclick = () => { const s = selected(); if (!s) return; s.rot = ((s.rot || 0) + 90) % 360; $('#vRot').textContent = s.rot + '°'; save(); };
+$$('[data-kind]').forEach(i => i.onchange = () => { const s = selected(); if (!s) return; s.kinds = $$('[data-kind]').filter(x => x.checked).map(x => x.dataset.kind); if (s.kinds.includes('sub')) s.kinds.push('gift'); save(); });
+$('#pSound').onchange = e => { const s = selected(); if (s) { s.sound = e.target.checked; save(); } };
+$('#pSeconds').oninput = e => { const s = selected(); if (!s) return; s.seconds = +e.target.value; $('#vSeconds').textContent = s.seconds + ' с'; save(); };
+$('#pAlertDemo').onclick = () => { const s = selected(); if (s) s._demo = Date.now(); };
+$('#pSpeed').oninput = e => { const s = selected(); if (!s) return; s.speed = e.target.value / 10; $('#vSpeed').textContent = s.speed.toFixed(1) + '×'; save(); };
+$$('[data-crop]').forEach(i => i.oninput = () => { const s = selected(); if (!s) return; s[i.dataset.crop] = +i.value; $(`[data-cv="${i.dataset.crop}"]`).textContent = i.value + '%'; save(); });
+$('#pCropReset').onclick = () => { const s = selected(); if (!s) return; ['cl', 'cr', 'ct', 'cb'].forEach(k => s[k] = 0); save(); renderProps(); };
 $('#pBgOn').onchange = e => { const s = selected(); if (s) { s.bg = e.target.checked ? (s.lastBg || $('#pBg').value) : null; save(); } };
 ['nX', 'nY', 'nW', 'nH'].forEach(id => {
   $('#' + id).onchange = e => {
@@ -937,9 +1266,9 @@ $('#pBgOn').onchange = e => { const s = selected(); if (s) { s.bg = e.target.che
 $('#sceneBg').oninput = e => { scene().bg = e.target.value; save(); };
 
 /* ================= Добавить ================= */
-function addImageLayer(name, src, w, h, extra = {}) {
+function addImageLayer(name, src, w, h, extra = {}, type = 'image') {
   const k = Math.min(1, (W * .5) / w, (H * .5) / h), lw = w * k, lh = h * k;
-  const l = newLayer('image', { name, src, x: (W - lw) / 2, y: (H - lh) / 2, w: lw, h: lh, ...extra });
+  const l = newLayer(type, { name, src, x: (W - lw) / 2, y: (H - lh) / 2, w: lw, h: lh, ...extra });
   layers().push(l); selId = l.id; save(); renderUI(); setTab('props');
 }
 $('#addImg').onclick = () => $('#fileImg').click();
@@ -952,6 +1281,37 @@ $('#addText').onclick = () => askText('Текст на стрим', 'Всем п
   if (!t) return; const l = newLayer('text', { name: 'Текст', text: t, color: '#ffffff', bg: '#9147ff', x: W / 2 - 280, y: H / 2 - 40, w: 560, h: 80, radius: 30, lock: false });
   layers().push(l); selId = l.id; save(); renderUI(); setTab('props');
 });
+const LIVE_DEFAULTS = () => ({
+  camera: { name: 'Камера', w: H * .36, h: H * .36, shape: 'circle', facing: 'front', mirror: true, rot: 0, border: '#9147ff', lock: true, pos: 'br' },
+  chat: { name: 'Чат', w: W * .28, h: H * .5, font: 'system', color: '#ffffff', bg: '#000000', bgAlpha: .45, chatSize: 'm', radius: 6, lock: false, pos: 'r' },
+  alerts: { name: 'Алерты', w: W * .42, h: H * .15, font: 'montserrat', color: '#ffffff', kinds: ['follow', 'sub', 'gift', 'cheer', 'raid'], sound: true, seconds: 6, radius: 20, lock: false, pos: 't' },
+  timer: { name: 'Таймер эфира', w: W * .17, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
+  clock: { name: 'Часы', w: W * .12, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
+  viewers: { name: 'Зрители', w: W * .13, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#e5484d', radius: 20, lock: false, pos: 'tr' },
+  ticker: { name: 'Бегущая строка', w: W, h: H * .075, font: 'rubik', color: '#ffffff', bg: '#9147ff', text: 'Добро пожаловать на стрим! Подписывайся, чтобы не пропустить эфиры', speed: 1, lock: false, pos: 'b' }
+});
+function placeAt(o) {
+  const m = H * .03;
+  const map = { br: [W - o.w - m, H - o.h - m], r: [W - o.w - m, (H - o.h) / 2], t: [(W - o.w) / 2, m], tl: [m, m], tr: [W - o.w - m, m], b: [0, H - o.h] };
+  const [x, y] = map[o.pos] || [(W - o.w) / 2, (H - o.h) / 2]; return { x, y };
+}
+$$('[data-add]').forEach(b => b.onclick = () => {
+  const type = b.dataset.add, d = LIVE_DEFAULTS()[type];
+  if (type === 'camera' && layers().some(l => l.type === 'camera')) return toast('Камера уже есть в этой сцене');
+  const { pos, ...rest } = d;
+  const l = newLayer(type, { ...rest, ...placeAt(d) });
+  layers().push(l); selId = l.id; save(); renderUI(); setTab('props');
+  if ((type === 'alerts' || type === 'viewers' || type === 'chat') && !TW.loggedIn) toast(type === 'chat' ? 'Чат появится в эфире: войди через Twitch или укажи ник канала во вкладке «Эфир»' : 'Заработает в эфире после входа через Twitch');
+  if (type === 'camera') toast('При запуске эфира Android спросит доступ к камере');
+});
+$('#addGif').onclick = () => $('#fileGif').click();
+$('#fileGif').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  if (f.size > 4 * 1024 * 1024) return toast('GIF слишком большой — до 4 МБ');
+  const fr = new FileReader();
+  fr.onload = () => { const im = new Image(); im.onload = () => addImageLayer(f.name.replace(/\.[^.]+$/, '').slice(0, 30) || 'GIF', fr.result, im.naturalWidth, im.naturalHeight, {}, 'gif'); im.src = fr.result; };
+  fr.readAsDataURL(f);
+};
 $('#addScreen').onclick = () => {
   if (layers().some(l => l.type === 'screen')) return toast('Экран игры уже есть в этой сцене');
   const l = newLayer('screen', { name: 'Экран игры', ...fitRect(natAR({ type: 'screen' }), 'fit') });
@@ -998,6 +1358,11 @@ $('#scDel').onclick = () => {
 };
 $('#btnReset').onclick = () => sheetOpts('Сбросить все сцены к примеру?', [{ label: 'Сбросить', cls: 'danger', fn: () => { scenes = defaultScenes(); cur = 0; selId = null; save(); renderUI(); } }]);
 
+$('#btnUndo').onclick = () => histGo(-1);
+$('#btnRedo').onclick = () => histGo(1);
+$('#btnGrid').onclick = () => { gridOn = !gridOn; $('#btnGrid').classList.toggle('on', gridOn); store.set('grid', gridOn); };
+gridOn = !!store.get('grid', false); $('#btnGrid').classList.toggle('on', gridOn);
+
 /* ================= Предпросмотр ================= */
 $('#btnPreview').onclick = () => {
   liveOn = true; liveStart = Date.now(); selId = null; $('#live').classList.remove('hidden');
@@ -1016,6 +1381,7 @@ function renderTw() { if (tab === 'live') renderLive(); }
 function fmtUp(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
 function renderLive() {
   const p = $('#livePane');
+  if (NATIVE && !isLive()) { try { devStat = JSON.parse(NATIVE.deviceStatus()); } catch {} }
   const opt = (o, v) => Object.entries(o).map(([k, t]) => `<option value="${k}"${k === v ? ' selected' : ''}>${esc(typeof t === 'string' ? t : t.label)}</option>`).join('');
   const live = isLive();
   let html = '';
@@ -1056,18 +1422,58 @@ function renderLive() {
   }
   html += `</div>`;
 
-  // видео и звук
-  html += `<div class="group"><div class="ghead">Видео и звук</div>
+  if (live) html += `<div class="group"><div class="ghead">Управление эфиром</div>
+      <div class="gbody" style="display:flex;gap:8px">
+        <button class="btn${privacyNow ? ' on' : ''}" style="flex:1" id="lvPriv">${I(privacyNow ? 'eye' : 'eyeoff')}${privacyNow ? 'Показать экран' : 'Скрыть экран'}</button>
+        <button class="btn" style="flex:1" id="lvTest">${I('bell')}Тестовый алерт</button>
+      </div></div>`;
+  if (TW.loggedIn && TW.needRelogin) html += `<div class="group"><div class="item"><span style="color:var(--warn)">${I('warn')}</span><div class="lbl">Для алертов нужен новый вход в Twitch<small>приложение получило новые возможности</small></div><button class="btn sm pri" id="twRe">Войти</button></div></div>`;
+  if (!TW.loggedIn && NATIVE) html += `<div class="group"><div class="ghead">Чат на стриме</div>
+      <div class="item col"><span class="lab">Ник канала для чата (без входа)</span><input class="inp" id="skChan" placeholder="например: pelmen_tv" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(streamCfg.chatChannel || '')}"></div></div>`;
+
+  // проверка перед эфиром
+  if (!live) {
+    const b = devStat;
+    const batTxt = b ? (b.battery >= 0 ? `${b.battery}%${b.charging ? ' · заряжается' : ''}` : '—') : '—';
+    const hot = b && (b.thermal >= 2 || b.temp >= 42);
+    const sp = speedRes;
+    const spTxt = speedBusy ? 'Проверяю…' : sp ? (sp.ok ? `${sp.mbps.toFixed(1)} Мбит/с` : 'Не удалось') : 'не проверено';
+    const rec = sp && sp.ok ? recommendQuality(sp.mbps) : null;
+    html += `<div class="group"><div class="ghead">Проверка перед эфиром</div>
+      <div class="item">${I('speed')}<div class="lbl">Интернет (отдача)<small>${esc(sp && !sp.ok ? sp.msg : rec ? 'Рекомендую: ' + QUALITY[rec].label.split(' (')[0] : 'нужно примерно 4–7 Мбит/с для 720p')}</small></div><span class="val">${esc(spTxt)}</span></div>
+      <div class="gbody" style="display:flex;gap:8px;padding-top:0">
+        <button class="btn" style="flex:1" id="spGo" ${speedBusy ? 'disabled' : ''}>${I('speed')}Проверить скорость</button>
+        ${rec && rec !== streamCfg.quality ? `<button class="btn pri" style="flex:1" id="spApply">Применить ${QUALITY[rec].label.split(' ·')[0]}</button>` : ''}
+      </div>
+      <div class="item">${I('battery')}<div class="lbl">Батарея${b && b.battery >= 0 && b.battery < 30 && !b.charging ? '<small style="color:var(--warn)">лучше подключить зарядку</small>' : ''}</div><span class="val">${batTxt}</span></div>
+      <div class="item">${I('warn')}<div class="lbl">Нагрев${hot ? '<small style="color:var(--warn)">телефон тёплый — сними чехол</small>' : ''}</div><span class="val">${b ? (b.temp ? b.temp.toFixed(0) + '°C' : 'норма') : '—'}</span></div>
+    </div>`;
+  }
+
+  // видео
+  html += `<div class="group"><div class="ghead">Видео</div>
     <div class="item col"><span class="lab">Формат кадра</span>
       <div class="seg txt" id="segFmt"><button data-v="h">16:9 · горизонтально</button><button data-v="v">9:16 · вертикально</button></div></div>
     <div class="item col"><span class="lab">Как держишь телефон в игре</span>
       <div class="seg txt" id="segGame"><button data-v="land">Горизонтально</button><button data-v="port">Вертикально</button></div></div>
-    <div class="item col"><span class="lab">Качество</span><select class="inp" id="skQ">${opt(QUALITY, streamCfg.quality)}</select></div>
-    <div class="item col"><span class="lab">Звук</span><select class="inp" id="skA">${opt(AUDIO, streamCfg.audio)}</select></div>
+    <div class="item col"><span class="lab">Качество</span><select class="inp" id="skQ" ${live ? 'disabled' : ''}>${opt(QUALITY, streamCfg.quality)}</select></div>
+    <div class="item"><div class="lbl">Автокачество<small>снижает битрейт, если интернет проседает, и поднимает обратно</small></div><label class="sw"><input type="checkbox" id="skAuto"${streamCfg.autoBitrate ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item"><div class="lbl">Пробный эфир<small>уходит на Twitch, но зрители его не видят</small></div><label class="sw"><input type="checkbox" id="skTest"${streamCfg.testMode ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
   </div>`;
 
-  html += `<div class="group"><div class="ghead">Во время эфира</div>
-    <div class="item"><div class="lbl">Плавающий кружок поверх игры<small>зрители, соединение, сцены, микрофон, стоп</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
+  // звук
+  html += `<div class="group"><div class="ghead">Звук</div>
+    <div class="item col"><span class="lab">Что слышат зрители</span><select class="inp" id="skA" ${live ? 'disabled' : ''}>${opt(AUDIO, streamCfg.audio)}</select></div>
+    <div class="item ${streamCfg.audio === 'mic' ? 'hidden' : ''}"><div class="lbl" style="flex:none;width:100px">Игра</div><input type="range" id="skGameVol" min="0" max="150" value="${streamCfg.gameVol}"><span class="val" id="vGameVol">${streamCfg.gameVol}%</span></div>
+    <div class="item ${streamCfg.audio === 'game' ? 'hidden' : ''}"><div class="lbl" style="flex:none;width:100px">Микрофон</div><input type="range" id="skMicVol" min="0" max="150" value="${streamCfg.micVol}"><span class="val" id="vMicVol">${streamCfg.micVol}%</span></div>
+    <div class="item ${streamCfg.audio === 'game' ? 'hidden' : ''}"><div class="lbl">Шумоподавление микрофона</div><label class="sw"><input type="checkbox" id="skNoise"${streamCfg.noise ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+  </div>`;
+
+  // приватность и кружок
+  html += `<div class="group"><div class="ghead">Приватность и кружок</div>
+    <div class="item"><div class="lbl">Скрывать экран, когда телефон заблокирован<small>зрители видят заставку «Секунду…»</small></div><label class="sw"><input type="checkbox" id="skLock"${streamCfg.hideOnLock ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item"><div class="lbl">Скрывать, пока открыта СтримСцена<small>зрители не увидят редактор и ключи</small></div><label class="sw"><input type="checkbox" id="skInApp"${streamCfg.hideInApp ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item"><div class="lbl">Плавающий кружок поверх игры<small>зрители, соединение, чат, сцены, микрофон</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
   </div>`;
 
   if (!live) html += `<button class="btn pri big" id="skGo">${I('live')}Начать эфир</button>
@@ -1087,7 +1493,22 @@ function renderLive() {
     save(); renderUI(); setSeg('segGame', b.dataset.v);
   });
   $('#skQ').onchange = e => { streamCfg.quality = e.target.value; store.set('streamCfg', streamCfg); renderUI(); };
-  $('#skA').onchange = e => { streamCfg.audio = e.target.value; store.set('streamCfg', streamCfg); };
+  $('#skA').onchange = e => { streamCfg.audio = e.target.value; store.set('streamCfg', streamCfg); renderLive(); };
+  const saveCfg = () => store.set('streamCfg', streamCfg);
+  $('#skAuto').onchange = e => { streamCfg.autoBitrate = e.target.checked; saveCfg(); };
+  $('#skTest').onchange = e => { streamCfg.testMode = e.target.checked; saveCfg(); };
+  $('#skNoise').onchange = e => { streamCfg.noise = e.target.checked; saveCfg(); };
+  $('#skLock').onchange = e => { streamCfg.hideOnLock = e.target.checked; saveCfg(); };
+  $('#skInApp').onchange = e => { streamCfg.hideInApp = e.target.checked; saveCfg(); };
+  const vol = () => { saveCfg(); if (NATIVE && live) NATIVE.setVolumes(streamCfg.gameVol / 100, streamCfg.micVol / 100); };
+  $('#skGameVol').oninput = e => { streamCfg.gameVol = +e.target.value; $('#vGameVol').textContent = e.target.value + '%'; vol(); };
+  $('#skMicVol').oninput = e => { streamCfg.micVol = +e.target.value; $('#vMicVol').textContent = e.target.value + '%'; vol(); };
+  if ($('#skChan')) $('#skChan').onchange = e => { streamCfg.chatChannel = e.target.value.trim().replace(/^.*twitch\.tv\//, '').replace(/^@/, ''); saveCfg(); };
+  if ($('#twRe')) $('#twRe').onclick = () => twLoginFlow(() => setTab('live'));
+  if ($('#lvPriv')) $('#lvPriv').onclick = () => NATIVE && NATIVE.setPrivacy(!privacyNow);
+  if ($('#lvTest')) $('#lvTest').onclick = () => { if (!scenes.some(sc => sc.layers.some(l => l.type === 'alerts'))) return toast('Добавь слой «Алерты» в сцену (вкладка «Добавить») и перезапусти эфир'); NATIVE && NATIVE.testAlert(); };
+  if ($('#spGo')) $('#spGo').onclick = () => { if (!NATIVE) return toast('Проверка работает в приложении'); speedBusy = true; speedRes = null; NATIVE.speedTest(); renderLive(); };
+  if ($('#spApply')) $('#spApply').onclick = () => { streamCfg.quality = recommendQuality(speedRes.mbps); saveCfg(); renderUI(); renderLive(); toast('Качество: ' + QUALITY[streamCfg.quality].label.split(' (')[0]); };
   $('#skBub').onchange = e => { streamCfg.bubble = e.target.checked; store.set('streamCfg', streamCfg); if (e.target.checked && NATIVE && !NATIVE.canOverlay()) overlayHelp(() => toast('Готово, кружок появится в эфире'), () => { streamCfg.bubble = false; store.set('streamCfg', streamCfg); renderLive(); }); };
   if (live) {
     $('#lvHome').onclick = () => NATIVE && NATIVE.goHome();
@@ -1138,6 +1559,8 @@ function updLiveStats() {
   $('#stKbps').textContent = liveKbps ? (liveKbps / 1000).toFixed(1) : '—';
   $('#stUp').textContent = liveSince ? fmtUp(Date.now() - liveSince) : '—';
   $('#lvState').textContent = { connecting: 'подключение…', live: 'соединение в норме', reconnecting: 'переподключение…' }[liveState] || '';
+  if (liveState === 'live' && liveTarget && liveMax && liveTarget < liveMax * .95) $('#lvState').textContent = `автокачество: ${(liveTarget / 1000).toFixed(1)} из ${(liveMax / 1000).toFixed(1)} Мбит/с`;
+  if (privacyNow) $('#lvState').textContent = 'экран скрыт заставкой';
 }
 setInterval(() => { if (tab === 'live' && isLive()) updLiveStats(); }, 1000);
 
@@ -1169,11 +1592,21 @@ async function startFlow() {
   }
   launch(key, streamCfg.bubble);
 }
+function recommendQuality(mbps) {
+  const order = ['1080p60', '1080p30', '720p60', '720p30', '540p30'];
+  for (const k of order) { const q = QUALITY[k]; if ((q.kbps + 160) / 1000 * 1.5 <= mbps) return k; }
+  return '540p30';
+}
 async function launch(key, bubble) {
   liveState = 'connecting'; liveMsg = ''; setStatus();
   try {
     const out = await buildAll(), q = QUALITY[streamCfg.quality], [w, h] = outDims();
-    NATIVE.start(JSON.stringify({ url: INGEST + key, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur }));
+    const chatChannel = TW.loggedIn ? TW.login : (streamCfg.chatChannel || '');
+    const url = INGEST + key + (streamCfg.testMode ? '?bandwidthtest=true' : '');
+    NATIVE.start(JSON.stringify({ url, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur,
+      testMode: streamCfg.testMode, autoBitrate: streamCfg.autoBitrate, gameVolume: streamCfg.gameVol / 100, micVolume: streamCfg.micVol / 100,
+      noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel }));
+    if (streamCfg.testMode) toast('Пробный эфир: зрители его не увидят');
   } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
 }
 function overlayHelp(onGo, onSkip) {
@@ -1229,11 +1662,16 @@ window.onNative = o => {
     case 'resume': twRefresh(); return;
     case 'viewers': liveViewers = o.count; setStatus(); return;
     case 'mic': toast(o.muted ? 'Микрофон выключен' : 'Микрофон включён'); return;
-    case 'bitrate': liveKbps = o.kbps; updLiveStats(); return;
+    case 'speed': speedBusy = false; speedRes = o; if (tab === 'live') renderLive(); if (o.ok) toast(`Отдача ${o.mbps.toFixed(1)} Мбит/с`); return;
+    case 'warn': toast(o.msg); return;
+    case 'info': toast(o.msg); return;
+    case 'alert': return;
+    case 'privacy': privacyNow = o.on; if (tab === 'live' && $('#lvPriv')) renderLive(); return;
+    case 'bitrate': liveKbps = o.kbps; liveTarget = o.target || 0; liveMax = o.max || 0; updLiveStats(); return;
     case 'scene': if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); if (tab === 'live') renderLive(); } return;
   }
   liveState = o.state; liveMsg = o.msg || '';
-  if (liveState === 'live' && !wasLive) { wasLive = true; liveSince = liveSince || Date.now(); toast('Ты в эфире. Сворачивай и запускай игру'); }
+  if (liveState === 'live' && !wasLive) { wasLive = true; liveSince = liveSince || Date.now(); toast(streamCfg.hideInApp ? 'Ты в эфире. Пока открыта СтримСцена, зрители видят заставку — переходи в игру' : 'Ты в эфире. Сворачивай и запускай игру'); }
   if (!isLive()) { wasLive = false; liveKbps = 0; liveViewers = null; liveSince = 0; }
   if (liveState === 'error') toast(liveMsg || 'Ошибка');
   setStatus();
@@ -1249,7 +1687,7 @@ window.onBack = () => {
 load();
 if (NATIVE && isLive()) { cur = clamp(INFO.current || 0, 0, scenes.length - 1); liveSince = Date.now(); wasLive = liveState === 'live'; }
 twRefresh();
-renderUI(); setTab(tab); setStatus(); requestAnimationFrame(loop);
+renderUI(); setTab(tab); setStatus(); histPush(); requestAnimationFrame(loop);
 </script>
 </body>
 </html>

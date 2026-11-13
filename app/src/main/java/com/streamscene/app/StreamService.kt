@@ -93,6 +93,11 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   private val gifFilters = ArrayList<GifFilterRender>()
   private var alertFilter: ImageObjectFilterRender? = null
   private var alertGif: GifFilterRender? = null
+  private val webFilters = ArrayList<WebFilterRender>()
+  private val webHosts = ArrayList<WebWidgetHost>()
+  private val webState = ArrayList<String>()
+  private var highlightFilter: ImageObjectFilterRender? = null
+  private val events = ArrayDeque<AlertEvent>()
   private var da: DaAlertsClient? = null
   private var tts: TextToSpeech? = null
   private var ttsReady = false
@@ -262,6 +267,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       s.changeVideoSource(screen)
       screenSource = screen
       s.getStreamClient().setReTries(10)
+      if (cfg.delaySec > 0) s.getStreamClient().setDelay(cfg.delaySec * 1000L)
       if (cfg.autoBitrate) makeAdapter(cfg.bitrate)
 
       buildFilters(s, cfg)
@@ -332,6 +338,12 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         f.alpha = 0f; gl.addFilter(f)
       }
     }
+    val nWeb = min(2, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
+    repeat(nWeb) { idx ->
+      val host = WebWidgetHost(this)
+      webHosts += host; webState += ""
+      webFilters += WebFilterRender { st -> attachWeb(idx, st) }.also { gl.addFilter(it) }
+    }
     val gifMedia = cfg.scenes.flatMap { it.widgets }.filter { it.type == "alerts" }.flatMap { it.media.values }.firstOrNull { it.isGif && it.img != null }
     if (gifMedia != null) {
       alertGif = GifFilterRender().also { f ->
@@ -343,6 +355,9 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       alertFilter = ImageObjectFilterRender().also { f ->
         f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; gl.addFilter(f)
       }
+    }
+    highlightFilter = ImageObjectFilterRender().also { f ->
+      f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; gl.addFilter(f)
     }
     val customPriv = cfg.privacyPng?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
     privacyFilter.setImage(customPriv ?: renderer.privacyBitmap(fw, fh))
@@ -396,6 +411,16 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         f.setScale(w.w * 100f, w.h * 100f); f.setPosition(w.x * 100f, w.y * 100f); f.alpha = w.opacity
       }
     }
+    // веб-виджеты
+    val webs = sceneWidgets("web").filter { it.url.isNotBlank() }
+    webFilters.forEachIndexed { i, f ->
+      val w = webs.getOrNull(i)
+      if (w == null) f.visible = false
+      else {
+        f.rx = w.x; f.ry = w.y; f.rw = w.w; f.rh = w.h; f.key = w.key; f.alpha = w.opacity; f.visible = true
+        f.surfaceTexture?.let { st -> attachWeb(i, st) }
+      }
+    }
     redrawDyn(true)
     updateNotification()
     pushUi()
@@ -407,6 +432,42 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     if (n == 0) return
     current = ((index % n) + n) % n
     applyScene()
+  }
+
+  // ---------------- веб-виджеты ----------------
+  private fun attachWeb(slot: Int, st: android.graphics.SurfaceTexture) {
+    val w = sceneWidgets("web").filter { it.url.isNotBlank() }.getOrNull(slot)
+      ?: StreamState.config?.scenes?.flatMap { sc -> sc.widgets.filter { it.type == "web" && it.url.isNotBlank() } }?.getOrNull(slot) ?: return
+    val pw = w.pageWidth.coerceIn(200, 1920)
+    val ph = (pw * (w.h * fh) / (w.w * fw).coerceAtLeast(1f)).toInt().coerceIn(64, 1920)
+    val sig = "${w.url}|$pw|$ph|${w.key}"
+    if (webState.getOrNull(slot) == sig) return
+    if (slot < webState.size) webState[slot] = sig
+    webHosts.getOrNull(slot)?.attach(st, pw, ph, w.url, w.key)
+  }
+
+  // ---------------- выделенное сообщение ----------------
+  override fun onHighlight(line: ChatLine) {
+    val f = highlightFilter ?: return
+    val w = sceneWidgets("highlight").firstOrNull()
+    val vertical = fh > fw
+    val x = w?.x ?: if (vertical) .05f else .2f
+    val y = w?.y ?: if (vertical) .62f else .7f
+    val ww = w?.w ?: if (vertical) .9f else .6f
+    val hh = w?.h ?: if (vertical) .12f else .17f
+    f.setImage(renderer.highlightBitmap(max(8, (ww * fw).toInt()), max(8, (hh * fh).toInt()), line))
+    f.setScale(ww * 100f, hh * 100f); f.setPosition(x * 100f, y * 100f)
+    main.removeCallbacks(hideHighlight)
+    for (i in 0..8) main.postDelayed({ f.alpha = i / 8f }, i * 30L)
+    main.postDelayed(hideHighlight, 10000)
+    StreamState.send(JSONObject().put("state", "info").put("msg", "Сообщение показано на стриме"))
+  }
+
+  fun highlight(name: String, color: Int, text: String) = onHighlight(ChatLine(name, color, text))
+
+  private val hideHighlight = Runnable {
+    val f = highlightFilter ?: return@Runnable
+    for (i in 0..8) main.postDelayed({ f.alpha = 1f - i / 8f }, i * 30L)
   }
 
   // ---------------- живые слои ----------------
@@ -478,6 +539,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       chat = ChatClient(channel) { line ->
         chatLines.addLast(line)
         while (chatLines.size > 30) chatLines.removeFirst()
+        StreamState.send(JSONObject().put("state", "chat").put("name", line.name)
+          .put("color", String.format("#%06X", 0xFFFFFF and line.color)).put("text", line.text))
         redrawDyn(false); pushUi()
       }.also { it.start() }
     }
@@ -502,7 +565,9 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   }
 
   private fun queueAlert(ev: AlertEvent) {
-    StreamState.send(JSONObject().put("state", "alert").put("name", ev.name).put("title", ev.title))
+    StreamState.send(JSONObject().put("state", "alert").put("kind", ev.kind).put("name", ev.name).put("title", ev.title).put("message", ev.message))
+    events.addLast(ev); while (events.size > 50) events.removeFirst()
+    pushUi()
     alertQueue.addLast(ev)
     if (!alertBusy) showNextAlert()
   }
@@ -736,6 +801,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     try { player?.release() } catch (_: Exception) {}
     player = null
     camCtl?.close(); camCtl = null
+    webHosts.forEach { it.release() }
     try { unregisterReceiver(sysReceiver) } catch (_: Exception) {}
     thermalListener?.let { try { getSystemService(PowerManager::class.java).removeThermalStatusListener(it) } catch (_: Exception) {} }
     thermalListener = null
@@ -823,7 +889,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         state = uiState, viewers = viewers, kbps = kbps, targetKbps = maxVideoBitrate / 1000,
         uptimeMs = if (liveSince > 0) System.currentTimeMillis() - liveSince else 0L,
         scenes = cfg.scenes.map { it.name }, current = current, micMuted = micMuted, micLabel = micLabel(),
-        privacy = privacyOn, warn = warn, chat = chatLines.toList().takeLast(4)
+        privacy = privacyOn, warn = warn, chat = chatLines.toList().takeLast(4), events = events.toList()
       )
     )
   }

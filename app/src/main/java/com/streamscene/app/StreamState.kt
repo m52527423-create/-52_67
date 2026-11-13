@@ -40,7 +40,10 @@ class Widget(
   val gif: ByteArray?,
   val media: Map<String, AlertMedia> = emptyMap(),
   val tts: Boolean = false,
-  val ttsMin: Double = 0.0
+  val ttsMin: Double = 0.0,
+  val url: String = "",
+  val pageWidth: Int = 800,
+  val key: Boolean = true
 )
 
 /** Готовая сцена: экран игры + картинка всех обычных слоёв (с «окном» под экран) + живые слои. */
@@ -64,6 +67,7 @@ class StreamConfig(
   val hideInApp: Boolean,
   val chatChannel: String,
   val privacyPng: ByteArray?,
+  val delaySec: Int,
   var scenes: List<SceneOut>,
   var current: Int
 )
@@ -109,6 +113,7 @@ object StreamState {
       hideOnLock = o.optBoolean("hideOnLock", true),
       hideInApp = o.optBoolean("hideInApp", true),
       chatChannel = o.optString("chatChannel", ""),
+      delaySec = o.optInt("delay", 0).coerceIn(0, 300),
       privacyPng = o.optString("privacy", "").takeIf { it.isNotEmpty() }?.let { decodeData(it) },
       scenes = parseScenes(o.getJSONArray("scenes")),
       current = o.optInt("current", 0)
@@ -178,7 +183,10 @@ object StreamState {
           gif = w.optString("gif", "").takeIf { it.isNotEmpty() }?.let { Base64.decode(it.substringAfter(","), Base64.DEFAULT) },
           media = media(w.optJSONObject("media")),
           tts = w.optBoolean("tts", false),
-          ttsMin = w.optDouble("ttsMin", 0.0)
+          ttsMin = w.optDouble("ttsMin", 0.0),
+          url = w.optString("url", ""),
+          pageWidth = w.optInt("pageWidth", 800),
+          key = w.optBoolean("key", true)
         )
       }
     )

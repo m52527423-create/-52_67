@@ -238,6 +238,24 @@ class WidgetRenderer(private val ctx: Context) {
     return bmp
   }
 
+  /** Выделенное сообщение из чата — крупно на стриме. */
+  fun highlightBitmap(pw: Int, ph: Int, line: ChatLine): Bitmap {
+    val bmp = Bitmap.createBitmap(pw.coerceAtLeast(8), ph.coerceAtLeast(8), Bitmap.Config.ARGB_8888)
+    val c = Canvas(bmp)
+    val r = RectF(0f, 0f, pw.toFloat(), ph.toFloat())
+    val rr = r.height() * 0.18f
+    fill.color = Color.argb(238, 20, 20, 24); c.drawRoundRect(r, rr, rr, fill)
+    fill.color = Color.parseColor("#9147ff"); c.drawRoundRect(RectF(0f, 0f, r.height() * 0.06f, r.height()), rr, rr, fill)
+    val pad = r.height() * 0.16f
+    tp.typeface = Fonts.get(ctx, "montserrat"); tp.textSize = r.height() * 0.2f; tp.color = line.color
+    c.drawText(TextUtils.ellipsize(line.name, tp, r.width() - pad * 2, TextUtils.TruncateAt.END).toString(), pad * 1.2f, pad + tp.textSize * 0.85f, tp)
+    val mp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Typeface.DEFAULT_BOLD; color = Color.WHITE; textSize = r.height() * 0.2f }
+    val lay = StaticLayout.Builder.obtain(line.text, 0, line.text.length, mp, (r.width() - pad * 2.4f).toInt())
+      .setMaxLines(2).setEllipsize(TextUtils.TruncateAt.END).build()
+    c.save(); c.translate(pad * 1.2f, pad + tp.textSize * 1.25f); lay.draw(c); c.restore()
+    return bmp
+  }
+
   /** Заставка «Секунду…» для режима приватности. */
   fun privacyBitmap(pw: Int, ph: Int): Bitmap {
     val bmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)

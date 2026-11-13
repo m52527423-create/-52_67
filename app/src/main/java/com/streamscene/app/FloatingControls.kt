@@ -36,7 +36,8 @@ class LiveInfo(
   val micLabel: String,
   val privacy: Boolean = false,
   val warn: String = "",
-  val chat: List<ChatLine> = emptyList()
+  val chat: List<ChatLine> = emptyList(),
+  val events: List<AlertEvent> = emptyList()
 )
 
 /**
@@ -49,6 +50,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     fun onScene(index: Int)
     fun onToggleMic()
     fun onTogglePrivacy()
+    fun onHighlight(line: ChatLine)
     fun onOpenApp()
     fun onStop()
   }
@@ -105,6 +107,8 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   private lateinit var warnText: TextView
   private lateinit var chatBox: LinearLayout
   private lateinit var chatHead: TextView
+  private lateinit var evHead: TextView
+  private lateinit var evBox: LinearLayout
 
   fun canShow() = Settings.canDrawOverlays(ctx)
 
@@ -246,8 +250,14 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     warnRow.addView(warnText, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
     p.addView(warnRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
 
+    // события
+    evHead = text(12f, MUTE).apply { text = "СОБЫТИЯ"; letterSpacing = 0.08f; visibility = View.GONE }
+    p.addView(evHead, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
+    evBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+    p.addView(evBox)
+
     // чат
-    chatHead = text(12f, MUTE).apply { text = "ЧАТ"; letterSpacing = 0.08f; visibility = View.GONE }
+    chatHead = text(12f, MUTE).apply { text = "ЧАТ · нажми, чтобы показать на стриме"; letterSpacing = 0.04f; visibility = View.GONE }
     p.addView(chatHead, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
     chatBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
     p.addView(chatBox)
@@ -295,7 +305,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     // положение рядом с кружком
     val s = screenSize()
     val pw = minOf(dp(300), s.x - dp(16))
-    val estH = dp(340)
+    val estH = dp(420)
     val lp = WindowManager.LayoutParams(
       pw, WindowManager.LayoutParams.WRAP_CONTENT,
       WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -372,8 +382,21 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
       sb.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
       sb.append(": ").append(m.text)
       chatBox.addView(text(13f, Color.parseColor("#e6e6ea")).apply {
-        text = sb; maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(0, dp(2), 0, dp(2))
+        text = sb; maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(6), dp(4), dp(6), dp(4))
+        background = rounded(Color.TRANSPARENT, 8f)
+        setOnClickListener { actions.onHighlight(m) }
       })
+    }
+    evHead.visibility = if (i.events.isEmpty()) View.GONE else View.VISIBLE
+    evBox.visibility = evHead.visibility
+    evBox.removeAllViews()
+    i.events.takeLast(3).asReversed().forEach { e ->
+      val r = row().apply { setPadding(0, dp(3), 0, dp(3)) }
+      val ic = when (e.kind) { "follow" -> Ic.HEART; "sub", "gift" -> Ic.STAR; "cheer" -> Ic.GEM; "raid" -> Ic.RAID; "donate" -> Ic.COIN; else -> Ic.STAR }
+      r.addView(IconView(ctx, ic, Color.parseColor(if (e.kind == "donate") "#00c896" else "#b58cff")), LinearLayout.LayoutParams(dp(15), dp(15)).apply { rightMargin = dp(8) })
+      r.addView(text(13f).apply { text = "${e.name} · ${e.title}"; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END },
+        LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+      evBox.addView(r)
     }
 
     if (scenesRow.childCount != i.scenes.size || scenesRow.tag != i.scenes.joinToString("|") + "#" + i.current) {

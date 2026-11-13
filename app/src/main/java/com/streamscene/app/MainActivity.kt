@@ -356,6 +356,12 @@ class MainActivity : Activity() {
     }
 
     @JavascriptInterface
+    fun highlight(name: String, color: String, text: String) {
+      val c = try { android.graphics.Color.parseColor(color) } catch (_: Exception) { android.graphics.Color.WHITE }
+      runOnUiThread { StreamService.instance?.highlight(name, c, text) }
+    }
+
+    @JavascriptInterface
     fun testAlert() {
       runOnUiThread { StreamService.instance?.testAlert() }
     }

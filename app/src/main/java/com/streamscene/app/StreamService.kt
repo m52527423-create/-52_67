@@ -19,7 +19,10 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.hardware.display.DisplayManager
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.media.projection.MediaProjection
+import android.speech.tts.TextToSpeech
 import android.media.projection.MediaProjectionManager
 import android.os.BatteryManager
 import android.os.Build
@@ -47,6 +50,7 @@ import java.io.ByteArrayInputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.io.File
 import kotlin.concurrent.thread
 import kotlin.math.max
 import kotlin.math.min
@@ -88,6 +92,11 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   private val tickerFilters = ArrayList<ImageObjectFilterRender>()
   private val gifFilters = ArrayList<GifFilterRender>()
   private var alertFilter: ImageObjectFilterRender? = null
+  private var alertGif: GifFilterRender? = null
+  private var da: DaAlertsClient? = null
+  private var tts: TextToSpeech? = null
+  private var ttsReady = false
+  private var player: MediaPlayer? = null
   private val privacyFilter = ImageObjectFilterRender()
 
   private var current = 0
@@ -179,6 +188,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     super.onCreate()
     instance = this
     TwitchClient.init(this)
+    DaClient.init(this)
     renderer = WidgetRenderer(this)
     val nm = getSystemService(NotificationManager::class.java)
     nm.createNotificationChannel(NotificationChannel(CHANNEL, "Стрим", NotificationManager.IMPORTANCE_LOW))
@@ -322,12 +332,20 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         f.alpha = 0f; gl.addFilter(f)
       }
     }
+    val gifMedia = cfg.scenes.flatMap { it.widgets }.filter { it.type == "alerts" }.flatMap { it.media.values }.firstOrNull { it.isGif && it.img != null }
+    if (gifMedia != null) {
+      alertGif = GifFilterRender().also { f ->
+        try { f.setGif(ByteArrayInputStream(gifMedia.img)) } catch (e: Exception) { Log.w(TAG, "alert gif", e) }
+        f.alpha = 0f; gl.addFilter(f)
+      }
+    }
     if (cfg.scenes.any { sc -> sc.widgets.any { it.type == "alerts" } }) {
       alertFilter = ImageObjectFilterRender().also { f ->
         f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; gl.addFilter(f)
       }
     }
-    privacyFilter.setImage(renderer.privacyBitmap(fw, fh))
+    val customPriv = cfg.privacyPng?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
+    privacyFilter.setImage(customPriv ?: renderer.privacyBitmap(fw, fh))
     privacyFilter.setScale(100f, 100f); privacyFilter.setPosition(0f, 0f); privacyFilter.alpha = 0f
     gl.addFilter(privacyFilter)
   }
@@ -463,6 +481,19 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         redrawDyn(false); pushUi()
       }.also { it.start() }
     }
+    val alertWs = cfg.scenes.flatMap { it.widgets }.filter { it.type == "alerts" }
+    if (alertWs.any { "donate" in it.alertKinds } && DaClient.loggedIn) {
+      da = DaAlertsClient({ ev -> queueAlert(ev) }, { msg -> StreamState.send(JSONObject().put("state", "info").put("msg", msg)) }).also { it.start() }
+    }
+    if (alertWs.any { it.tts }) {
+      tts = TextToSpeech(this) { st ->
+        ttsReady = st == TextToSpeech.SUCCESS
+        if (ttsReady) {
+          tts?.language = Locale("ru", "RU")
+          tts?.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+        }
+      }
+    }
     if (alertFilter != null && TwitchClient.loggedIn) {
       alerts = AlertsClient(TwitchClient.userId, { ev -> queueAlert(ev) }, { msg ->
         StreamState.send(JSONObject().put("state", "info").put("msg", msg))
@@ -481,7 +512,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       AlertEvent("follow", "Pelmen_TV", "новый фолловер"),
       AlertEvent("sub", "NightOwl", "подписка · 3 месяца", "Спасибо за стримы!"),
       AlertEvent("cheer", "KoshkaGamer", "500 битов", "Держи на чай"),
-      AlertEvent("raid", "ZvezdaTV", "рейд · 42 зрителя")
+      AlertEvent("raid", "ZvezdaTV", "рейд · 42 зрителя"),
+      AlertEvent("donate", "Ivan", "500 ₽", "Отличный стрим, держи на пиццу!").apply { amount = 500.0 }
     )
     queueAlert(samples.random())
   }
@@ -494,20 +526,66 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     if (w == null) { alertBusy = false; showNextAlert(); return }
     alertBusy = true
     val pw = max(8, (w.w * fw).toInt()); val ph = max(8, (w.h * fh).toInt())
-    f.setImage(renderer.alertBitmap(w, pw, ph, ev))
+    val media = w.media[ev.kind] ?: if (ev.kind == "gift") w.media["sub"] else null
+    var gifRect: android.graphics.RectF? = null
+    val card: Bitmap = if (media?.img != null) {
+      if (media.isGif && alertGif != null) {
+        val o = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(media.img, 0, media.img.size, o)
+        gifRect = renderer.mediaRect(pw, ph, o.outWidth, o.outHeight)
+        try { alertGif?.setGif(ByteArrayInputStream(media.img)) } catch (e: Exception) { Log.w(TAG, "alert gif", e) }
+        renderer.mediaAlertBitmap(w, pw, ph, ev, null)
+      } else renderer.mediaAlertBitmap(w, pw, ph, ev, BitmapFactory.decodeByteArray(media.img, 0, media.img.size))
+    } else renderer.alertBitmap(w, pw, ph, ev)
+    f.setImage(card)
     f.setScale(w.w * 100f, w.h * 100f)
-    if (w.alertSound) AlertSound.play(ev.kind)
+    val g = alertGif
+    val gr = gifRect
+    if (g != null && gr != null) g.setScale(gr.width() / fw * 100f, gr.height() / fh * 100f)
+
+    // звук: свой или стандартный, затем озвучка доната
+    var soundMs = 0L
+    if (media?.sound != null) soundMs = playSound(media.sound)
+    else if (w.alertSound) { AlertSound.play(ev.kind); soundMs = 900L }
+    var ttsMs = 0L
+    if (w.tts && ev.kind == "donate" && ev.message.isNotEmpty() && ev.amount >= w.ttsMin && ttsReady) {
+      ttsMs = 1500L + ev.message.length * 75L
+      main.postDelayed({ try { tts?.speak(ev.message, TextToSpeech.QUEUE_ADD, null, "a" + System.nanoTime()) } catch (_: Exception) {} }, soundMs + 200)
+    }
+
     val steps = 10; val slide = 0.04f
     fun frame(i: Int, show: Boolean) {
       val k = i / steps.toFloat()
       val a = if (show) k else 1f - k
+      val dy = slide * (1f - a)
       f.alpha = a * w.opacity
-      f.setPosition(w.x * 100f, (w.y + slide * (1f - a)) * 100f)
+      f.setPosition(w.x * 100f, (w.y + dy) * 100f)
+      if (g != null && gr != null) {
+        g.alpha = a * w.opacity
+        g.setPosition((w.x + gr.left / fw) * 100f, (w.y + gr.top / fh + dy) * 100f)
+      }
     }
     for (i in 0..steps) main.postDelayed({ frame(i, true) }, i * 30L)
-    val hold = w.alertSeconds.coerceIn(2, 20) * 1000L
+    val hold = maxOf(w.alertSeconds.coerceIn(2, 30) * 1000L, soundMs + 300, soundMs + ttsMs)
     for (i in 0..steps) main.postDelayed({ frame(i, false) }, 330L + hold + i * 30L)
-    main.postDelayed({ f.alpha = 0f; showNextAlert() }, 330L + hold + 400L)
+    main.postDelayed({ f.alpha = 0f; g?.alpha = 0f; showNextAlert() }, 330L + hold + 400L)
+  }
+
+  /** Проигрывает свой звук алерта как звук игры (попадает в эфир). Возвращает длительность, мс. */
+  private fun playSound(bytes: ByteArray): Long = try {
+    val file = File(cacheDir, "alert_${bytes.contentHashCode()}.snd")
+    if (!file.exists()) file.writeBytes(bytes)
+    player?.release()
+    val mp = MediaPlayer()
+    mp.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
+    mp.setDataSource(file.absolutePath)
+    mp.prepare()
+    mp.setOnCompletionListener { it.release(); if (player == it) player = null }
+    mp.start()
+    player = mp
+    mp.duration.toLong().coerceIn(0L, 30000L)
+  } catch (e: Exception) {
+    Log.w(TAG, "alert sound", e); 0L
   }
 
   // ---------------- приватность и звук ----------------
@@ -652,6 +730,11 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     controls?.hide(); controls = null
     chat?.stop(); chat = null
     alerts?.stop(); alerts = null
+    da?.stop(); da = null
+    try { tts?.shutdown() } catch (_: Exception) {}
+    tts = null; ttsReady = false
+    try { player?.release() } catch (_: Exception) {}
+    player = null
     camCtl?.close(); camCtl = null
     try { unregisterReceiver(sysReceiver) } catch (_: Exception) {}
     thermalListener?.let { try { getSystemService(PowerManager::class.java).removeThermalStatusListener(it) } catch (_: Exception) {} }

@@ -43,7 +43,9 @@ object Fonts {
 
 class ChatLine(val name: String, val color: Int, val text: String)
 
-class AlertEvent(val kind: String, val name: String, val title: String, val message: String = "")
+class AlertEvent(val kind: String, val name: String, val title: String, val message: String = "") {
+  var amount: Double = 0.0
+}
 
 /** Рисует живые слои (тексты, чат, бегущая строка, алерт, заставка приватности) в картинки. */
 class WidgetRenderer(private val ctx: Context) {
@@ -160,7 +162,7 @@ class WidgetRenderer(private val ctx: Context) {
     val r = RectF(0f, 0f, pw.toFloat(), ph.toFloat())
     val acc = when (a.kind) {
       "follow" -> Color.parseColor("#9147ff"); "sub" -> Color.parseColor("#f5a524"); "gift" -> Color.parseColor("#30a46c")
-      "cheer" -> Color.parseColor("#3e9bff"); "raid" -> Color.parseColor("#e5484d"); else -> Color.parseColor("#9147ff")
+      "cheer" -> Color.parseColor("#3e9bff"); "raid" -> Color.parseColor("#e5484d"); "donate" -> Color.parseColor("#00c896"); else -> Color.parseColor("#9147ff")
     }
     val rr = min(r.height() * 0.22f, cornerR(w, r).coerceAtLeast(r.height() * 0.12f))
     fill.color = alphaOf(w.bg ?: Color.parseColor("#141418"), 0.94f)
@@ -170,7 +172,7 @@ class WidgetRenderer(private val ctx: Context) {
     fill.color = acc
     c.drawRoundRect(RectF(0f, 0f, r.height() * 0.06f, r.height()), rr, rr, fill)
     // значок
-    val ic = when (a.kind) { "follow" -> Ic.HEART; "sub" -> Ic.STAR; "gift" -> Ic.GIFT; "cheer" -> Ic.GEM; "raid" -> Ic.RAID; else -> Ic.STAR }
+    val ic = when (a.kind) { "follow" -> Ic.HEART; "sub" -> Ic.STAR; "gift" -> Ic.GIFT; "cheer" -> Ic.GEM; "raid" -> Ic.RAID; "donate" -> Ic.COIN; else -> Ic.STAR }
     val isz = r.height() * 0.5f
     val icx = r.height() * 0.2f
     fill.color = alphaOf(acc, 0.22f)
@@ -192,6 +194,47 @@ class WidgetRenderer(private val ctx: Context) {
       val msg = TextPaint(sub).apply { color = alphaOf(Color.WHITE, 0.92f); textSize = fs * 0.58f; textSkewX = -0.15f }
       c.drawText(TextUtils.ellipsize("«${a.message}»", msg, avail, TextUtils.TruncateAt.END).toString(), left, y1 + fs * 1.75f, msg)
     }
+    return bmp
+  }
+
+  /** Где поместится картинка алерта (верхняя часть окна, с сохранением пропорций). */
+  fun mediaRect(pw: Int, ph: Int, iw: Int, ih: Int): RectF {
+    val area = RectF(0f, 0f, pw.toFloat(), ph * 0.68f)
+    if (iw <= 0 || ih <= 0) return area
+    val k = min(area.width() / iw, area.height() / ih)
+    val w = iw * k; val h = ih * k
+    return RectF((pw - w) / 2f, area.bottom - h, (pw + w) / 2f, area.bottom)
+  }
+
+  /** Алерт со своей картинкой: картинка сверху, крупный текст снизу (как в DonationAlerts). */
+  fun mediaAlertBitmap(w: Widget, pw: Int, ph: Int, a: AlertEvent, img: Bitmap?): Bitmap {
+    val bmp = Bitmap.createBitmap(pw.coerceAtLeast(8), ph.coerceAtLeast(8), Bitmap.Config.ARGB_8888)
+    val c = Canvas(bmp)
+    if (img != null) c.drawBitmap(img, null, mediaRect(pw, ph, img.width, img.height), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+    val acc = when (a.kind) { "donate" -> Color.parseColor("#00e0a4"); "follow" -> Color.parseColor("#b58cff"); "sub", "gift" -> Color.parseColor("#ffc04d"); "cheer" -> Color.parseColor("#6fb5ff"); else -> Color.parseColor("#ff7a7a") }
+    val top = ph * 0.70f
+    val fs = ph * 0.11f
+    tp.typeface = Fonts.get(ctx, w.font); tp.textSize = fs; tp.textAlign = Paint.Align.CENTER
+    sp.typeface = tp.typeface; sp.textSize = fs; sp.strokeWidth = fs * 0.22f; sp.color = Color.argb(220, 0, 0, 0); sp.textAlign = Paint.Align.CENTER
+    val line1 = TextUtils.ellipsize("${a.name} — ${a.title}", tp, pw * 0.96f, TextUtils.TruncateAt.END).toString()
+    // имя белым, сумма/событие цветом
+    val y1 = top + fs
+    c.drawText(line1, pw / 2f, y1, sp)
+    val nameW = tp.measureText("${a.name} — ")
+    val totalW = tp.measureText(line1)
+    val startX = pw / 2f - totalW / 2f
+    tp.textAlign = Paint.Align.LEFT
+    tp.color = w.color
+    c.drawText(line1.take(min(line1.length, a.name.length + 3)), startX, y1, tp)
+    if (line1.length > a.name.length + 3) { tp.color = acc; c.drawText(line1.substring(a.name.length + 3), startX + nameW, y1, tp) }
+    if (a.message.isNotEmpty()) {
+      val mp = TextPaint(tp).apply { textSize = fs * 0.62f; color = Color.WHITE; typeface = Typeface.DEFAULT_BOLD }
+      mp.setShadowLayer(fs * 0.12f, 0f, 0f, Color.BLACK)
+      val lay = StaticLayout.Builder.obtain(a.message, 0, a.message.length, mp, (pw * 0.94f).toInt())
+        .setAlignment(Layout.Alignment.ALIGN_CENTER).setMaxLines(2).setEllipsize(TextUtils.TruncateAt.END).build()
+      c.save(); c.translate(pw * 0.03f, y1 + fs * 0.35f); lay.draw(c); c.restore()
+    }
+    tp.textAlign = Paint.Align.LEFT; sp.textAlign = Paint.Align.LEFT
     return bmp
   }
 

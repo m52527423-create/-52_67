@@ -10,7 +10,7 @@ import android.graphics.Typeface
 import android.view.View
 
 /** Собственный набор иконок приложения (рисуются линиями в сетке 24×24). */
-enum class Ic { EYE, EYE_OFF, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK, HEART, STAR, GIFT, GEM, RAID, WARN, CHAT }
+enum class Ic { EYE, EYE_OFF, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK, HEART, STAR, GIFT, GEM, RAID, WARN, CHAT, COIN }
 
 object Icons {
   private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -97,6 +97,14 @@ object Icons {
       Ic.WARN -> {
         val p = Path().apply { moveTo(12f, 3f); lineTo(22f, 21f); lineTo(2f, 21f); close() }
         c.drawPath(p, stroke); c.drawLine(12f, 10f, 12f, 15f, stroke); c.drawCircle(12f, 18f, 0.8f, fill)
+      }
+      Ic.COIN -> {
+        c.drawCircle(12f, 12f, 9.5f, fill)
+        val old = fill.color
+        fill.color = android.graphics.Color.argb(150, 0, 0, 0)
+        c.drawCircle(12f, 12f, 6.5f, fill)
+        fill.color = old
+        c.drawRect(11f, 8f, 13f, 16f, fill)
       }
       Ic.CHAT -> {
         val p = Path().apply { moveTo(4f, 5f); lineTo(20f, 5f); lineTo(20f, 16f); lineTo(10f, 16f); lineTo(6f, 20f); lineTo(6f, 16f); lineTo(4f, 16f); close() }

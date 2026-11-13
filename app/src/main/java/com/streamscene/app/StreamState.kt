@@ -11,6 +11,9 @@ data class ScreenRect(
   val cl: Float = 0f, val ct: Float = 0f, val cr: Float = 0f, val cb: Float = 0f
 )
 
+/** Своё оформление алерта: картинка или GIF и звук. */
+class AlertMedia(val img: ByteArray?, val isGif: Boolean, val sound: ByteArray?)
+
 /** Живой слой, который рисуется на телефоне во время эфира (камера, чат, алерты, таймер…). */
 class Widget(
   val type: String,          // camera | chat | alerts | timer | clock | viewers | ticker | gif
@@ -34,7 +37,10 @@ class Widget(
   val alertSound: Boolean,
   val alertSeconds: Int,
   val speed: Float,          // бегущая строка
-  val gif: ByteArray?
+  val gif: ByteArray?,
+  val media: Map<String, AlertMedia> = emptyMap(),
+  val tts: Boolean = false,
+  val ttsMin: Double = 0.0
 )
 
 /** Готовая сцена: экран игры + картинка всех обычных слоёв (с «окном» под экран) + живые слои. */
@@ -57,6 +63,7 @@ class StreamConfig(
   val hideOnLock: Boolean,
   val hideInApp: Boolean,
   val chatChannel: String,
+  val privacyPng: ByteArray?,
   var scenes: List<SceneOut>,
   var current: Int
 )
@@ -102,9 +109,25 @@ object StreamState {
       hideOnLock = o.optBoolean("hideOnLock", true),
       hideInApp = o.optBoolean("hideInApp", true),
       chatChannel = o.optString("chatChannel", ""),
+      privacyPng = o.optString("privacy", "").takeIf { it.isNotEmpty() }?.let { decodeData(it) },
       scenes = parseScenes(o.getJSONArray("scenes")),
       current = o.optInt("current", 0)
     )
+  }
+
+  fun decodeData(s: String): ByteArray? = try { Base64.decode(s.substringAfter(","), Base64.DEFAULT) } catch (_: Exception) { null }
+
+  private fun media(o: JSONObject?): Map<String, AlertMedia> {
+    if (o == null) return emptyMap()
+    val m = HashMap<String, AlertMedia>()
+    o.keys().forEach { k ->
+      val e = o.optJSONObject(k) ?: return@forEach
+      val img = e.optString("img", "").takeIf { it.isNotEmpty() }
+      val snd = e.optString("snd", "").takeIf { it.isNotEmpty() }
+      if (img != null || snd != null)
+        m[k] = AlertMedia(img?.let { decodeData(it) }, img?.startsWith("data:image/gif") == true, snd?.let { decodeData(it) })
+    }
+    return m
   }
 
   private fun color(s: String?, def: Int): Int = try {
@@ -147,12 +170,15 @@ object StreamState {
           mirror = w.optBoolean("mirror", true),
           chatSize = w.optString("chatSize", "m"),
           bgAlpha = f(w, "bgAlpha", .55),
-          alertKinds = if (kinds == null) setOf("follow", "sub", "gift", "cheer", "raid")
+          alertKinds = if (kinds == null) setOf("follow", "sub", "gift", "cheer", "raid", "donate")
                        else (0 until kinds.length()).map { kinds.getString(it) }.toSet(),
           alertSound = w.optBoolean("sound", true),
           alertSeconds = w.optInt("seconds", 6),
           speed = f(w, "speed", 1.0),
-          gif = w.optString("gif", "").takeIf { it.isNotEmpty() }?.let { Base64.decode(it.substringAfter(","), Base64.DEFAULT) }
+          gif = w.optString("gif", "").takeIf { it.isNotEmpty() }?.let { Base64.decode(it.substringAfter(","), Base64.DEFAULT) },
+          media = media(w.optJSONObject("media")),
+          tts = w.optBoolean("tts", false),
+          ttsMin = w.optDouble("ttsMin", 0.0)
         )
       }
     )

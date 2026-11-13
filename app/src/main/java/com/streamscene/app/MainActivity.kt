@@ -47,6 +47,7 @@ class MainActivity : Activity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     TwitchClient.init(this)
+    DaClient.init(this)
     web = WebView(this)
     web.layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     web.setBackgroundColor(0xFF0B0B0D.toInt())
@@ -272,6 +273,21 @@ class MainActivity : Activity() {
           if (ok) runOnUiThread { bringToFront() }
         })
     }
+
+    // ---------- DonationAlerts ----------
+    @JavascriptInterface
+    fun daInfo(): String = DaClient.info(this@MainActivity).toString()
+
+    @JavascriptInterface
+    fun daLogin(clientId: String) {
+      runOnUiThread {
+        startActivity(Intent(this@MainActivity, LoginActivity::class.java)
+          .putExtra(LoginActivity.EXTRA_PROVIDER, "da").putExtra(LoginActivity.EXTRA_CLIENT_ID, clientId))
+      }
+    }
+
+    @JavascriptInterface
+    fun daLogout() = DaClient.logout()
 
     @JavascriptInterface
     fun twCancel() = TwitchClient.cancelLogin()

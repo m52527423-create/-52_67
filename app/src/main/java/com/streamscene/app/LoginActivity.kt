@@ -29,6 +29,7 @@ class LoginActivity : Activity() {
 
   companion object {
     const val EXTRA_CLIENT_ID = "clientId"
+    const val EXTRA_PROVIDER = "provider"   // twitch | da
     const val REDIRECT = "http://localhost"
   }
 
@@ -37,14 +38,18 @@ class LoginActivity : Activity() {
   private var state = ""
   private var clientId = ""
   private var finished = false
+  private var provider = "twitch"
 
   private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    TwitchClient.init(this)
-    clientId = intent.getStringExtra(EXTRA_CLIENT_ID)?.trim().orEmpty().ifEmpty { TwitchClient.effectiveClientId(this) }
+    TwitchClient.init(this); DaClient.init(this)
+    provider = intent.getStringExtra(EXTRA_PROVIDER) ?: "twitch"
+    clientId = intent.getStringExtra(EXTRA_CLIENT_ID)?.trim().orEmpty().ifEmpty {
+      if (provider == "da") DaClient.effectiveClientId(this) else TwitchClient.effectiveClientId(this)
+    }
     if (clientId.isEmpty()) { done(false, "Нет Client ID"); return }
 
     val root = LinearLayout(this).apply {
@@ -56,7 +61,7 @@ class LoginActivity : Activity() {
       setPadding(dp(16), 0, dp(8), 0)
     }
     bar.addView(TextView(this).apply {
-      text = "Вход в Twitch"; setTextColor(Color.WHITE); typeface = Typeface.DEFAULT_BOLD
+      text = if (provider == "da") "Вход в DonationAlerts" else "Вход в Twitch"; setTextColor(Color.WHITE); typeface = Typeface.DEFAULT_BOLD
       setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
     }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
     bar.addView(TextView(this).apply {
@@ -101,7 +106,14 @@ class LoginActivity : Activity() {
     }
 
     state = java.util.UUID.randomUUID().toString()
-    val url = Uri.parse("https://id.twitch.tv/oauth2/authorize").buildUpon()
+    val url = if (provider == "da")
+      Uri.parse("https://www.donationalerts.com/oauth/authorize").buildUpon()
+        .appendQueryParameter("client_id", clientId)
+        .appendQueryParameter("redirect_uri", REDIRECT)
+        .appendQueryParameter("response_type", "token")
+        .appendQueryParameter("scope", DaClient.SCOPES)
+        .build().toString()
+    else Uri.parse("https://id.twitch.tv/oauth2/authorize").buildUpon()
       .appendQueryParameter("response_type", "token")
       .appendQueryParameter("client_id", clientId)
       .appendQueryParameter("redirect_uri", REDIRECT)
@@ -122,12 +134,12 @@ class LoginActivity : Activity() {
     when {
       err != null -> done(false, if (err == "access_denied") "Вход отменён" else (params.getQueryParameter("error_description") ?: err))
       token == null -> done(false, "Twitch не вернул доступ")
-      params.getQueryParameter("state") != state -> done(false, "Ошибка проверки входа, попробуй ещё раз")
+      provider == "twitch" && params.getQueryParameter("state") != state -> done(false, "Ошибка проверки входа, попробуй ещё раз")
       else -> {
         finished = true
         web.loadData("<body style='background:#0b0b0d;color:#ccc;font:16px sans-serif;display:flex;align-items:center;justify-content:center;height:90vh'>Входим…</body>", "text/html; charset=utf-8", "utf-8")
         thread {
-          val res = TwitchClient.completeImplicitLogin(clientId, token)
+          val res = if (provider == "da") DaClient.completeLogin(clientId, token) else TwitchClient.completeImplicitLogin(clientId, token)
           runOnUiThread { done(res == null, res ?: "") }
         }
       }
@@ -137,7 +149,7 @@ class LoginActivity : Activity() {
 
   private fun done(ok: Boolean, msg: String) {
     finished = true
-    StreamState.send(JSONObject().put("state", "tw").put("phase", "done").put("ok", ok).put("msg", msg))
+    StreamState.send(JSONObject().put("state", if (provider == "da") "da" else "tw").put("phase", "done").put("ok", ok).put("msg", msg))
     finish()
   }
 

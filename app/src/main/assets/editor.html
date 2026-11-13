@@ -150,7 +150,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 1
 .note b{color:var(--text)}
 
 /* ---------- нижние вкладки ---------- */
-nav.tabs{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--bg);padding:4px 4px 6px}
+nav.tabs{flex:none;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--bg);padding:4px 4px 6px}
 nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11px;color:var(--mute);position:relative}
 nav.tabs button .ic{width:20px;height:20px}
 nav.tabs button.on{color:#fff}
@@ -181,6 +181,81 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 #live .badge{position:absolute;top:12px;left:12px;background:var(--red);color:#fff;font-weight:700;font-size:12px;border-radius:5px;padding:4px 8px;display:flex;align-items:center;gap:6px}
 #live .badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#fff}
 #live .hint{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.6);color:#ccc;border-radius:5px;padding:4px 8px;font-size:12px}
+/* пульт */
+.hero{padding:16px;display:flex;flex-direction:column;gap:10px}
+.hero .sub{font-size:12px;color:var(--mute);text-align:center}
+.chk{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 12px;border-bottom:1px solid var(--line)}
+.chk:last-child{border-bottom:0}
+.chk .st{width:20px;height:20px;flex:none}
+.chk .st.ok{color:var(--ok)}.chk .st.warn{color:var(--warn)}.chk .st.no{color:var(--dim)}
+.chk .lbl{flex:1;min-width:0}
+.chk .lbl small{display:block;color:var(--mute);font-size:12px}
+.feed{max-height:260px;overflow:auto}
+.fe{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:13px}
+.fe:last-child{border-bottom:0}
+.fe b{font-weight:700}
+.fe .t{color:var(--mute);font-size:11px;margin-left:auto;white-space:nowrap}
+.cm{padding:7px 12px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.35}
+.cm:active{background:var(--acc-d)}
+.cm b{font-weight:700}
+.scenebar{display:flex;gap:6px;overflow-x:auto;padding:12px}
+.big3{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px;border-top:1px solid var(--line)}
+.themes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.theme{border:1px solid var(--line2);border-radius:var(--rc);background:var(--s2);padding:6px;font-size:11px;color:var(--mute);display:flex;flex-direction:column;gap:5px;align-items:stretch}
+.theme.on{border-color:var(--acc);color:#fff}
+.theme i{display:block;height:26px;border-radius:5px}
+.layer .grip{width:26px;height:34px;display:grid;place-items:center;color:var(--dim);touch-action:none;margin-left:-6px}
+.layer.drag{opacity:.9;box-shadow:0 6px 20px rgba(0,0,0,.5);background:var(--s3);position:relative;z-index:2}
+.ob{text-align:center;padding:6px 4px}
+.ob .big{width:64px;height:64px;margin:6px auto 10px;color:var(--acc)}
+.ob h5{font-size:18px;margin:0 0 6px}
+.ob p{color:#cfcfd6;font-size:14px;margin:0 0 6px}
+.dots{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line2)}.dots i.on{background:var(--acc)}
+@media (orientation:landscape) and (max-height:620px){
+  body{display:grid;grid-template-columns:1fr minmax(300px,42%);grid-template-rows:auto auto 1fr auto;grid-template-areas:"h h" "s m" "st m" "st n"}
+  .top{grid-area:h;height:44px}
+  .scenes{grid-area:s;padding-top:8px}
+  .stagewrap{grid-area:st;border-bottom:0;border-right:1px solid var(--line);display:flex;flex-direction:column;justify-content:center}
+  main{grid-area:m}
+  nav.tabs{grid-area:n}
+  nav.tabs button{font-size:10px;padding:4px 0}
+}
+
+/* Пульт */
+.hero{padding:18px 14px;text-align:center}
+.btn.big{width:100%;height:58px;font-size:18px;border-radius:16px}
+.hero .sub{margin-top:10px;color:var(--mute);font-size:13px}
+.chk{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
+.chk:first-of-type{border-top:0}
+.chk .lbl{flex:1;font-size:14px}.chk .lbl small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.ic.st{width:20px;height:20px;flex:none}.ic.st.ok{color:var(--ok)}.ic.st.warn{color:var(--warn)}.ic.st.no{color:var(--mute)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px}
+.stats .stat{background:var(--s2);border-radius:12px;padding:10px;text-align:center}
+.stats .stat b{display:block;font-size:20px}.stats .stat span{font-size:11px;color:var(--mute)}
+.scenebar{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px}
+.scenebar .btn{flex:none}
+.big3{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.big3 .btn{height:48px}
+.feed{max-height:260px;overflow-y:auto;padding:4px 14px 12px}
+.fe{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.fe:first-child{border-top:0}.fe>.ic{width:18px;height:18px;flex:none;color:var(--acc);margin-top:1px}
+.fe>div{flex:1}.fe .note{color:var(--mute);font-size:13px;margin-top:2px}.fe .t{color:var(--mute);font-size:11px}
+.cm{padding:6px 8px;border-radius:8px;font-size:14px;word-break:break-word}.cm:active{background:var(--line)}
+.empty{color:var(--mute);font-size:13px;text-align:center;padding:16px 8px}
+/* Темы */
+#themes{display:flex;gap:8px;overflow-x:auto;padding:4px 14px 10px}
+.theme{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:2px solid transparent;border-radius:12px;padding:6px;color:var(--text);font-size:12px}
+.theme i{width:52px;height:34px;border-radius:8px;display:block}
+.theme.on{border-color:var(--acc)}
+/* Обучение */
+.ob{text-align:center;padding:10px 6px 4px}.ob .ic.big{width:52px;height:52px;color:var(--acc)}
+.ob h5{font-size:19px;margin:12px 0 6px}.ob p{color:var(--mute);font-size:14px;line-height:1.45;margin:0}
+.ob .dots{display:flex;justify-content:center;gap:6px;margin:16px 0 4px}.ob .dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.ob .dots i.on{background:var(--acc)}
+/* Перетаскивание слоёв */
+.layer .grip{width:22px;display:flex;align-items:center;justify-content:center;color:var(--mute);touch-action:none;flex:none;cursor:grab}
+.layer .grip .ic{width:16px;height:16px}
+.layer.drag{position:relative;z-index:5;box-shadow:0 6px 20px #0008;background:var(--s3)}
 </style>
 </head>
 <body>
@@ -232,8 +307,19 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
 <symbol id="i-speed" viewBox="0 0 24 24"><path d="M4 18a9 9 0 1 1 16 0"/><path d="M12 14l4-5"/></symbol>
 <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+<symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 4h12l3 5-9 11L3 9zM3 9h18M9 4l3 16M15 4l-3 16"/></symbol>
+<symbol id="i-raid" viewBox="0 0 24 24"><path d="M4 12h12M12 6l6 6-6 6M20 5v14"/></symbol>
 <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M4 5h16v10H9l-5 4z"/><path d="M8 9h8M8 12h5"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></symbol>
+<symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+<symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
 </defs></svg>
 <header class="top">
   <div class="brand"><span class="mark"></span>СтримСцена</div>
@@ -252,8 +338,16 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 </div>
 
 <main>
+  <!-- ===== ПУЛЬТ ===== -->
+  <section class="pane" data-pane="home" id="homePane"></section>
+
   <!-- ===== СЛОИ ===== -->
   <section class="pane" data-pane="layers">
+    <div class="group">
+      <div class="ghead">Тема оформления<span class="sp"></span><span class="hint">для всех сцен</span></div>
+      <div class="gbody themes" id="themes"></div>
+      <div class="item"><div class="lbl">Свой акцентный цвет</div><input type="color" id="themeAccent"><button class="btn sm" id="themeApply">Применить</button></div>
+    </div>
     <div class="group">
       <div class="ghead">Сцена<span class="sp"></span>
         <button class="btn sm icon" id="scRename" aria-label="Переименовать"><svg class="ic"><use href="#i-edit"/></svg></button>
@@ -343,6 +437,14 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
         <div class="gbody"><button class="btn" style="width:100%" id="pAlertDemo"><svg class="ic"><use href="#i-eye"/></svg>Показать пример</button></div>
       </div>
 
+      <div class="group" id="gWeb">
+        <div class="ghead">Веб-виджет</div>
+        <div class="item col"><span class="lab">Ссылка</span><input class="inp" id="pUrl" placeholder="https://www.donationalerts.com/widget/alerts?…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        <div class="item"><div class="lbl">Ширина страницы, px<small>как в OBS: обычно 800–1920</small></div><input class="inp" id="pPageW" inputmode="numeric" style="width:90px;text-align:right"></div>
+        <div class="item"><div class="lbl">Прозрачный фон<small>убирает фон страницы</small></div><label class="sw"><input type="checkbox" id="pKey"><span></span></label></div>
+        <div class="item"><div class="lbl note">Для DonationAlerts: сайт → Виджеты → Оповещения → «Ссылка для OBS». Так на стриме будут именно твои алерты с сайта: картинки, звуки, озвучка. Работает во время эфира.</div></div>
+      </div>
+
       <div class="group" id="gTicker">
         <div class="ghead">Бегущая строка</div>
         <div class="item"><div class="lbl" style="flex:none;width:118px">Скорость</div><input type="range" id="pSpeed" min="3" max="30"><span class="val" id="vSpeed"></span></div>
@@ -407,6 +509,8 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
         <button class="tile" data-add="clock"><svg class="ic"><use href="#i-clock"/></svg>Часы</button>
         <button class="tile" data-add="viewers"><svg class="ic"><use href="#i-eye"/></svg>Зрители</button>
         <button class="tile" data-add="ticker"><svg class="ic"><use href="#i-ticker"/></svg>Бегущая строка</button>
+        <button class="tile" data-add="web"><svg class="ic"><use href="#i-globe"/></svg>Веб-виджет</button>
+        <button class="tile" data-add="highlight"><svg class="ic"><use href="#i-pin"/></svg>Выделенное сообщение</button>
         <button class="tile" id="addGif"><svg class="ic"><use href="#i-film"/></svg>GIF</button>
       </div>
     </div>
@@ -421,10 +525,11 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 </main>
 
 <nav class="tabs">
+  <button data-tab="home"><svg class="ic"><use href="#i-home"/></svg>Пульт<span class="dot hidden" id="liveDot"></span></button>
   <button data-tab="layers"><svg class="ic"><use href="#i-layers"/></svg>Слои</button>
   <button data-tab="props"><svg class="ic"><use href="#i-sliders"/></svg>Свойства</button>
   <button data-tab="add"><svg class="ic"><use href="#i-plus"/></svg>Добавить</button>
-  <button data-tab="live"><svg class="ic"><use href="#i-live"/></svg>Эфир<span class="dot hidden" id="liveDot"></span></button>
+  <button data-tab="live"><svg class="ic"><use href="#i-gear"/></svg>Настройки</button>
 </nav>
 
 <div id="live" class="hidden">
@@ -560,28 +665,42 @@ function gift(x, cx, cy, s) {
   x.beginPath(); x.ellipse(cx - s * .14, top - s * .3, s * .14, s * .08, -.4, 0, 7); x.stroke();
   x.beginPath(); x.ellipse(cx + s * .14, top - s * .3, s * .14, s * .08, .4, 0, 7); x.stroke();
 }
+const THEMES = {
+  classic: { name: 'Классика', a: '#9147ff', b: '#ff4fa3', c: '#00c896', onA: '#ffffff', plate: '#0e0e10', bgA: '#1b0b3a', bgB: '#6f2bd9', light: '#bf94ff', font: 'montserrat', r: 1 },
+  neon:    { name: 'Неон', a: '#00e5ff', b: '#ff2bd6', c: '#39ff14', onA: '#06060c', plate: '#05050c', bgA: '#020210', bgB: '#2a0050', light: '#7ff6ff', font: 'unbounded', r: .5, glow: true },
+  minimal: { name: 'Минимал', a: '#ffffff', b: '#a8a8b2', c: '#ffffff', onA: '#111111', plate: '#111111', bgA: '#0c0c0e', bgB: '#2a2a30', light: '#cfcfd6', font: 'rubik', r: .3 },
+  anime:   { name: 'Аниме', a: '#ff8fc7', b: '#a98bff', c: '#7fe0ff', onA: '#ffffff', plate: '#2a1430', bgA: '#3a1446', bgB: '#e0619f', light: '#ffd1ea', font: 'comfortaa', r: 1.6 },
+  fire:    { name: 'Огонь', a: '#ff6a00', b: '#ff2e2e', c: '#ffc400', onA: '#ffffff', plate: '#1a0b05', bgA: '#1a0500', bgB: '#a32000', light: '#ffb27a', font: 'russo', r: .6 },
+  forest:  { name: 'Лес', a: '#3ddc84', b: '#0fa3a3', c: '#c8f560', onA: '#04140b', plate: '#0b1a12', bgA: '#05140d', bgB: '#0f5b3d', light: '#9ff0c4', font: 'oswald', r: .8 },
+  retro:   { name: 'Ретро', a: '#ffd23f', b: '#ff4f4f', c: '#4fd1ff', onA: '#1b1b2f', plate: '#1b1b2f', bgA: '#1b1b2f', bgB: '#3d2d6b', light: '#ffe58f', font: 'pixel', r: 0 },
+  ocean:   { name: 'Океан', a: '#3e9bff', b: '#00d4ff', c: '#ffd23f', onA: '#ffffff', plate: '#06121f', bgA: '#04101e', bgB: '#0f4c8a', light: '#a8d4ff', font: 'montserrat', r: 1.2 }
+};
+let THEME = Object.assign({ id: 'classic' }, THEMES.classic);
 function makeBanner(kind) {
+  const T = THEME;
   const c = document.createElement('canvas'), x = c.getContext('2d');
-  const rr = (X, Y, w, h, r) => { x.beginPath(); x.roundRect(X, Y, w, h, r); };
+  const rr = (X, Y, w, h, r) => { x.beginPath(); x.roundRect(X, Y, w, h, Math.max(0, r * T.r)); };
   const grad = (a, b, w, h) => { const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
-  const font = (sz, w = 900) => x.font = `${w} ${sz}px "Segoe UI",Roboto,sans-serif`;
+  const fam = (typeof FONTS !== 'undefined' && FONTS[T.font]) ? FONTS[T.font].css : '"Segoe UI",Roboto,sans-serif';
+  const font = (sz, w = 900) => { const k = T.font === 'pixel' ? .62 : 1; x.font = `${w} ${sz * k}px ${fam}`; };
+  const glow = on => { x.shadowColor = on && T.glow ? T.a : 'transparent'; x.shadowBlur = on && T.glow ? 28 : 0; };
   if (kind === 'follow') {
-    c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#9147ff', '#ff4fa3', 900, 220); x.fill();
-    x.fillStyle = '#fff'; heart(x, 115, 118, 120); x.textBaseline = 'middle'; font(72); x.fillText('ПОДПИШИСЬ!', 200, 90); font(40, 600); x.globalAlpha = .9; x.fillText('нажми сердечко под стримом', 200, 160);
+    c.width = 900; c.height = 220; glow(true); rr(10, 10, 880, 200, 40); x.fillStyle = grad(T.a, T.b, 900, 220); x.fill(); glow(false);
+    x.fillStyle = T.onA; heart(x, 115, 118, 120); x.textBaseline = 'middle'; font(72); x.fillText('ПОДПИШИСЬ!', 200, 90); font(40, 600); x.globalAlpha = .9; x.fillText('нажми сердечко под стримом', 200, 160);
   } else if (kind === 'nick') {
-    c.width = 900; c.height = 140; rr(0, 0, 900, 140, 28); x.fillStyle = 'rgba(14,14,16,.88)'; x.fill();
-    rr(0, 0, 18, 140, 9); x.fillStyle = '#9147ff'; x.fill();
-    font(64); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('ТВОЙ_НИК', 50, 56); font(34, 600); x.fillStyle = '#bf94ff'; x.fillText('twitch.tv/твой_ник', 52, 108);
+    c.width = 900; c.height = 140; rr(0, 0, 900, 140, 28); x.fillStyle = hexA(T.plate, .9); x.fill();
+    glow(true); x.beginPath(); x.roundRect(0, 0, 18, 140, 9 * Math.min(1, T.r)); x.fillStyle = T.a; x.fill(); glow(false);
+    font(64); x.fillStyle = '#fff'; x.textBaseline = 'middle'; x.fillText('ТВОЙ_НИК', 50, 56); font(34, 600); x.fillStyle = T.light; x.fillText('twitch.tv/твой_ник', 52, 108);
   } else if (kind === 'donate') {
-    c.width = 900; c.height = 220; rr(10, 10, 880, 200, 40); x.fillStyle = grad('#00b37a', '#00d4ff', 900, 220); x.fill();
-    x.fillStyle = '#fff'; gift(x, 115, 115, 110); x.textBaseline = 'middle'; font(66); x.fillText('ПОДДЕРЖАТЬ', 200, 90); font(40, 600); x.fillText('ссылка в описании', 200, 160);
+    c.width = 900; c.height = 220; glow(true); rr(10, 10, 880, 200, 40); x.fillStyle = grad(T.c, T.a, 900, 220); x.fill(); glow(false);
+    x.fillStyle = T.onA; gift(x, 115, 115, 110); x.textBaseline = 'middle'; font(66); x.fillText('ПОДДЕРЖАТЬ', 200, 90); font(40, 600); x.fillText('ссылка в описании', 200, 160);
   } else if (kind === 'soon') {
-    c.width = 1280; c.height = 720; x.fillStyle = grad('#1b0b3a', '#6f2bd9', 1280, 720); x.fillRect(0, 0, 1280, 720);
-    x.globalAlpha = .15; for (let i = 0; i < 40; i++) { x.fillStyle = '#fff'; x.beginPath(); x.arc((i * 337) % 1280, (i * 211) % 720, (i % 5) * 6 + 4, 0, 7); x.fill(); } x.globalAlpha = 1;
-    font(110); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('СТРИМ СКОРО', 640, 300); x.fillText('НАЧНЁТСЯ', 640, 420); font(40, 600); x.globalAlpha = .8; x.fillText('устраивайся поудобнее', 640, 530);
+    c.width = 1280; c.height = 720; x.fillStyle = grad(T.bgA, T.bgB, 1280, 720); x.fillRect(0, 0, 1280, 720);
+    x.globalAlpha = .15; for (let i = 0; i < 40; i++) { x.fillStyle = i % 3 ? '#fff' : T.light; x.beginPath(); x.arc((i * 337) % 1280, (i * 211) % 720, (i % 5) * 6 + 4, 0, 7); x.fill(); } x.globalAlpha = 1;
+    glow(true); font(110); x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('СТРИМ СКОРО', 640, 300); x.fillText('НАЧНЁТСЯ', 640, 420); glow(false); font(40, 600); x.globalAlpha = .8; x.fillText('устраивайся поудобнее', 640, 530);
   } else if (kind === 'brb') {
-    c.width = 1280; c.height = 720; x.fillStyle = grad('#0b2a3a', '#1f6f8b', 1280, 720); x.fillRect(0, 0, 1280, 720);
-    x.fillStyle = '#fff'; x.beginPath(); x.roundRect(585, 185, 38, 130, 10); x.roundRect(657, 185, 38, 130, 10); x.fill(); x.textAlign = 'center'; x.textBaseline = 'middle'; font(96); x.fillText('ОТОШЁЛ', 640, 410); font(44, 600); x.globalAlpha = .85; x.fillText('скоро вернусь, не уходи!', 640, 500);
+    c.width = 1280; c.height = 720; x.fillStyle = grad(T.bgB, T.bgA, 1280, 720); x.fillRect(0, 0, 1280, 720);
+    glow(true); x.fillStyle = '#fff'; x.beginPath(); x.roundRect(585, 185, 38, 130, 10 * Math.min(1, T.r)); x.roundRect(657, 185, 38, 130, 10 * Math.min(1, T.r)); x.fill(); x.textAlign = 'center'; x.textBaseline = 'middle'; font(96); x.fillText('ОТОШЁЛ', 640, 410); glow(false); font(44, 600); x.globalAlpha = .85; x.fillText('скоро вернусь, не уходи!', 640, 500);
   } else if (kind === 'live') {
     c.width = 360; c.height = 120; rr(0, 0, 360, 120, 24); x.fillStyle = '#e91916'; x.fill();
     x.fillStyle = '#fff'; x.beginPath(); x.arc(65, 60, 20, 0, 7); x.fill(); font(64); x.textBaseline = 'middle'; x.fillText('LIVE', 110, 63);
@@ -680,7 +799,7 @@ function save() {
   clearTimeout(histT); histT = setTimeout(histPush, 500);
   clearTimeout(saveT);
   saveT = setTimeout(() => {
-    if (!store.set('proj', { orient: ORIENT, gamePort: GAME_PORT, scenes, cur })) toast('Не хватило места для сохранения картинок');
+    if (!store.set('proj', { orient: ORIENT, gamePort: GAME_PORT, scenes, cur, theme: THEME.id, accent: THEME.customA || null })) toast('Не хватило места для сохранения картинок');
     if (isLive()) pushScenes();
   }, 400);
 }
@@ -699,6 +818,7 @@ function migrate() {
 }
 function load() {
   const p = store.get('proj', null);
+  if (p && p.theme && THEMES[p.theme]) { THEME = Object.assign({ id: p.theme }, THEMES[p.theme]); if (p.accent) { THEME.a = p.accent; THEME.customA = p.accent; } }
   if (p && p.scenes && p.scenes.length) { ORIENT = p.orient || 'h'; setGameAspect(p.gamePort); scenes = p.scenes; cur = clamp(p.cur || 0, 0, scenes.length - 1); migrate(); }
   else scenes = defaultScenes();
   applyOrient();
@@ -714,7 +834,9 @@ function applyOrient() {
   sizeStage();
 }
 function sizeStage() {
-  const st = $('#stage'), maxW = st.parentElement.clientWidth - 24, maxH = window.innerHeight * (ORIENT === 'h' ? .30 : .40);
+  const st = $('#stage'), land = matchMedia('(orientation:landscape) and (max-height:620px)').matches;
+  const maxW = st.parentElement.clientWidth - 24;
+  const maxH = land ? window.innerHeight - 44 - 52 - 56 : window.innerHeight * (ORIENT === 'h' ? .30 : .40);
   let w = maxW, h = w * H / W; if (h > maxH) { h = maxH; w = h * W / H; }
   st.style.width = w + 'px'; st.style.height = h + 'px';
 }
@@ -733,7 +855,7 @@ const FONTS = {
   caveat: { name: 'Caveat (рукописный)', css: '"SS Caveat"', w: 700 }
 };
 const fontOf = (id, px) => { const f = FONTS[id] || FONTS.system; return `${f.w} ${px}px ${f.css}`; };
-const DYN = new Set(['camera', 'chat', 'alerts', 'timer', 'clock', 'viewers', 'ticker', 'gif']);
+const DYN = new Set(['camera', 'chat', 'alerts', 'timer', 'clock', 'viewers', 'ticker', 'gif', 'web', 'highlight']);
 const isDyn = l => DYN.has(l.type);
 const drawOrder = () => { const ls = layers(); return [...ls.filter(l => !isDyn(l)), ...ls.filter(isDyn)]; };
 const ICON_PATHS = {
@@ -880,6 +1002,23 @@ function drawLayer(c, l, t = performance.now()) {
     case 'chat': drawChatDemo(c, l); break;
     case 'alerts': drawAlertDemo(c, l, t); break;
     case 'camera': drawCamDemo(c, l); break;
+    case 'web': {
+      c.fillStyle = 'rgba(62,155,255,.12)'; c.fillRect(l.x, l.y, l.w, l.h);
+      c.setLineDash([12, 8]); c.strokeStyle = 'rgba(120,180,255,.8)'; c.lineWidth = 3; c.strokeRect(l.x + 1.5, l.y + 1.5, l.w - 3, l.h - 3); c.setLineDash([]);
+      const fs = Math.min(l.h * .09, 30); c.font = `700 ${fs}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = '#cfe4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('Веб-виджет', l.x + l.w / 2, l.y + l.h / 2 - fs * .7);
+      c.font = `500 ${fs * .7}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(207,228,255,.75)';
+      let u = (l.url || 'вставь ссылку в свойствах').replace(/^https?:\/\//, ''); while (u.length > 4 && c.measureText(u).width > l.w * .9) u = u.slice(0, -4) + '…';
+      c.fillText(u, l.x + l.w / 2, l.y + l.h / 2 + fs * .6); break;
+    }
+    case 'highlight': {
+      const rr = l.h * .18; c.fillStyle = 'rgba(20,20,24,.93)'; c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, rr); c.fill();
+      c.fillStyle = THEME.a; c.beginPath(); c.roundRect(l.x, l.y, l.h * .06, l.h, rr); c.fill();
+      const pad = l.h * .16; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+      c.font = fontOf('montserrat', l.h * .2); c.fillStyle = '#7ab8ff'; c.fillText('NightOwl', l.x + pad * 1.2, l.y + pad + l.h * .17);
+      c.font = `700 ${l.h * .2}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = '#fff'; c.fillText('Здесь появится выделенное сообщение из чата', l.x + pad * 1.2, l.y + pad + l.h * .45, l.w - pad * 2.4);
+      break;
+    }
     default: {
       const r = cornerR(l);
       if (r > 0) { c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, r); c.clip(); }
@@ -930,6 +1069,7 @@ function loop(t) {
 
 /* ================= Жесты ================= */
 const ptrs = new Map();
+let lastTap = 0;
 let mode = null, start = null;
 function toCanvas(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; }
 function hit(p) { const ls = drawOrder(); for (let i = ls.length - 1; i >= 0; i--) { const l = ls[i]; if (l.visible && p.x >= l.x && p.x <= l.x + l.w && p.y >= l.y && p.y <= l.y + l.h) return l; } return null; }
@@ -947,7 +1087,7 @@ cv.addEventListener('pointerdown', e => {
     if (ci >= 0) { mode = 'resize'; start = { ci, r: { ...s } }; return; }
   }
   const l = hit(p);
-  if (l) { const was = selId; selId = l.id; mode = 'move'; start = { p, r: { ...l } }; if (was !== l.id) onCanvasSelect(); }
+  if (l) { const was = selId; selId = l.id; mode = 'move'; start = { p, r: { ...l } }; const now = Date.now(); if (was === l.id && now - lastTap < 320) setTab('props'); else if (was !== l.id) onCanvasSelect(); lastTap = now; }
   else { selId = null; mode = null; }
   renderUI();
 });
@@ -1118,7 +1258,8 @@ function widgetOut(l) {
     mirror: l.mirror !== false, chatSize: l.chatSize || 'm', bgAlpha: l.bgAlpha ?? .45,
     kinds: l.kinds || ['donate', 'follow', 'sub', 'gift', 'cheer', 'raid'], sound: l.sound !== false, seconds: l.seconds || 6,
     media: l.media || {}, tts: !!l.tts, ttsMin: +l.ttsMin || 0,
-    speed: l.speed || 1, gif: l.type === 'gif' ? l.src : ''
+    speed: l.speed || 1, gif: l.type === 'gif' ? l.src : '',
+    url: l.url || '', pageWidth: +l.pageWidth || 800, key: l.key !== false
   };
 }
 function buildScene(sc, EW, EH) {
@@ -1152,20 +1293,22 @@ function pushScenes() {
 
 
 /* ================= Вкладки ================= */
-let tab = store.get('tab', 'layers');
+let tab = store.get('tab', 'home');
 function setTab(t) {
   tab = t; store.set('tab', t);
   $$('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   $$('.pane').forEach(p => p.classList.toggle('on', p.dataset.pane === t));
   $('main').scrollTop = 0;
   if (t === 'live') renderLive();
+  if (t === 'home') renderHome();
+  sizeStage();
 }
 $$('nav.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 function onCanvasSelect() { if (tab === 'layers' || tab === 'add') setTab('props'); }
 
 /* ================= Отрисовка интерфейса ================= */
-const TYPE_ICON = { screen: 'game', image: 'image', text: 'text', camera: 'camera', chat: 'chat', alerts: 'bell', timer: 'timer', clock: 'clock', viewers: 'eye', ticker: 'ticker', gif: 'film' };
-const TYPE_NAME = { screen: 'экран игры', image: 'картинка', text: 'текст', camera: 'камера', chat: 'чат', alerts: 'алерты', timer: 'таймер эфира', clock: 'часы', viewers: 'счётчик зрителей', ticker: 'бегущая строка', gif: 'GIF' };
+const TYPE_ICON = { web: 'globe', highlight: 'pin', screen: 'game', image: 'image', text: 'text', camera: 'camera', chat: 'chat', alerts: 'bell', timer: 'timer', clock: 'clock', viewers: 'eye', ticker: 'ticker', gif: 'film' };
+const TYPE_NAME = { web: 'веб-виджет', highlight: 'выделенное сообщение', screen: 'экран игры', image: 'картинка', text: 'текст', camera: 'камера', chat: 'чат', alerts: 'алерты', timer: 'таймер эфира', clock: 'часы', viewers: 'счётчик зрителей', ticker: 'бегущая строка', gif: 'GIF' };
 function updSize() {
   const s = selected();
   $('#metaSel').textContent = s ? `${s.name} ${Math.round(s.w)}×${Math.round(s.h)}` : '';
@@ -1194,7 +1337,7 @@ function renderLayers() {
   [...layers()].reverse().forEach(l => {
     const d = document.createElement('div'); d.className = 'layer' + (l.id === selId ? ' on' : '');
     const th = (l.type === 'image' || l.type === 'gif') ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${I(TYPE_ICON[l.type])}</div>`;
-    d.innerHTML = `${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${TYPE_NAME[l.type]}${isDyn(l) ? ' · живой' : ''}${l.visible ? '' : ' · скрыт'}</small></div>
+    d.innerHTML = `<span class="grip" aria-label="Перетащить">${I('grip')}</span>${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${TYPE_NAME[l.type]}${isDyn(l) ? ' · живой' : ''}${l.visible ? '' : ' · скрыт'}</small></div>
       <button class="tb${l.visible ? '' : ' off'}" data-v aria-label="Видимость">${I(l.visible ? 'eye' : 'eyeoff')}</button>
       <button class="tb" data-e aria-label="Свойства">${I('chev')}</button>`;
     d.onclick = e => {
@@ -1202,8 +1345,10 @@ function renderLayers() {
       selId = l.id; renderUI();
       if (e.target.closest('[data-e]')) setTab('props');
     };
+    d.ondblclick = () => { selId = l.id; renderUI(); setTab('props'); };
     box.appendChild(d);
   });
+  enableLayerDrag();
 }
 const TEXTY = new Set(['text', 'timer', 'clock', 'viewers', 'ticker']);
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -1252,6 +1397,8 @@ function renderProps() {
     renderMediaList(s);
     $('#pSound').checked = s.sound !== false; $('#pSeconds').value = s.seconds || 6; $('#vSeconds').textContent = (s.seconds || 6) + ' с';
   }
+  show('#gWeb', t === 'web');
+  if (t === 'web') { if (document.activeElement !== $('#pUrl')) $('#pUrl').value = s.url || ''; $('#pPageW').value = s.pageWidth || 800; $('#pKey').checked = s.key !== false; }
   show('#gTicker', t === 'ticker');
   if (t === 'ticker') { $('#pSpeed').value = Math.round((s.speed || 1) * 10); $('#vSpeed').textContent = (s.speed || 1).toFixed(1) + '×'; }
   show('#gImage', t === 'image' || t === 'gif');
@@ -1395,6 +1542,9 @@ $('#fileBg').onchange = async e => {
   } catch { toast('Не удалось открыть картинку'); }
 };
 $('#bgImgDel').onclick = () => { const i = layers().findIndex(l => l.bgImage); if (i >= 0) { layers().splice(i, 1); selId = null; save(); renderUI(); } };
+$('#pUrl').onchange = e => { const s = selected(); if (!s) return; let u = e.target.value.trim(); if (u && !/^https?:\/\//.test(u)) u = 'https://' + u; s.url = u; e.target.value = u; save(); };
+$('#pPageW').onchange = e => { const s = selected(); if (!s) return; s.pageWidth = clamp(parseInt(e.target.value) || 800, 200, 1920); e.target.value = s.pageWidth; save(); };
+$('#pKey').onchange = e => { const s = selected(); if (s) { s.key = e.target.checked; save(); } };
 $('#pSpeed').oninput = e => { const s = selected(); if (!s) return; s.speed = e.target.value / 10; $('#vSpeed').textContent = s.speed.toFixed(1) + '×'; save(); };
 $$('[data-crop]').forEach(i => i.oninput = () => { const s = selected(); if (!s) return; s[i.dataset.crop] = +i.value; $(`[data-cv="${i.dataset.crop}"]`).textContent = i.value + '%'; save(); });
 $('#pCropReset').onclick = () => { const s = selected(); if (!s) return; ['cl', 'cr', 'ct', 'cb'].forEach(k => s[k] = 0); save(); renderProps(); };
@@ -1435,11 +1585,13 @@ const LIVE_DEFAULTS = () => ({
   timer: { name: 'Таймер эфира', w: W * .17, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
   clock: { name: 'Часы', w: W * .12, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
   viewers: { name: 'Зрители', w: W * .13, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#e5484d', radius: 20, lock: false, pos: 'tr' },
+  web: { name: 'Веб-виджет', w: W * .5, h: H * .5, url: '', pageWidth: 800, key: true, lock: false, pos: 't' },
+  highlight: { name: 'Выделенное сообщение', w: W * .6, h: H * .17, lock: false, pos: 'hb' },
   ticker: { name: 'Бегущая строка', w: W, h: H * .075, font: 'rubik', color: '#ffffff', bg: '#9147ff', text: 'Добро пожаловать на стрим! Подписывайся, чтобы не пропустить эфиры', speed: 1, lock: false, pos: 'b' }
 });
 function placeAt(o) {
   const m = H * .03;
-  const map = { br: [W - o.w - m, H - o.h - m], r: [W - o.w - m, (H - o.h) / 2], t: [(W - o.w) / 2, m], tl: [m, m], tr: [W - o.w - m, m], b: [0, H - o.h] };
+  const map = { hb: [(W - o.w) / 2, H * .7], br: [W - o.w - m, H - o.h - m], r: [W - o.w - m, (H - o.h) / 2], t: [(W - o.w) / 2, m], tl: [m, m], tr: [W - o.w - m, m], b: [0, H - o.h] };
   const [x, y] = map[o.pos] || [(W - o.w) / 2, (H - o.h) / 2]; return { x, y };
 }
 $$('[data-add]').forEach(b => b.onclick = () => {
@@ -1523,7 +1675,8 @@ $('#btnPreview').onclick = () => {
 };
 
 /* ================= Вкладка «Эфир» ================= */
-let chan = null, catSel = null, catT = null, chanLoaded = false, liveSince = 0;
+let chan = null, catSel = null, catT = null, chanLoaded = false, liveSince = 0, titleDraft = null;
+const chatLog = [], eventLog = [];
 function renderTw() { if (tab === 'live') renderLive(); }
 function fmtUp(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
 function renderLive() {
@@ -1617,6 +1770,7 @@ function renderLive() {
       <div class="seg txt" id="segGame"><button data-v="land">Горизонтально</button><button data-v="port">Вертикально</button></div></div>
     <div class="item col"><span class="lab">Качество</span><select class="inp" id="skQ" ${live ? 'disabled' : ''}>${opt(QUALITY, streamCfg.quality)}</select></div>
     <div class="item"><div class="lbl">Автокачество<small>снижает битрейт, если интернет проседает, и поднимает обратно</small></div><label class="sw"><input type="checkbox" id="skAuto"${streamCfg.autoBitrate ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item"><div class="lbl">Задержка эфира, секунд<small>зрители увидят всё позже на это время${streamCfg.delay >= 60 ? ' · большая задержка расходует память' : ''}</small></div><input class="inp" id="skDelay" inputmode="numeric" style="width:80px;text-align:right" value="${streamCfg.delay || 0}" ${live ? 'disabled' : ''}></div>
     <div class="item"><div class="lbl">Пробный эфир<small>уходит на Twitch, но зрители его не видят</small></div><label class="sw"><input type="checkbox" id="skTest"${streamCfg.testMode ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
   </div>`;
 
@@ -1656,6 +1810,14 @@ function renderLive() {
   $('#skA').onchange = e => { streamCfg.audio = e.target.value; store.set('streamCfg', streamCfg); renderLive(); };
   const saveCfg = () => store.set('streamCfg', streamCfg);
   $('#skAuto').onchange = e => { streamCfg.autoBitrate = e.target.checked; saveCfg(); };
+  $('#skDelay').onchange = e => {
+    let v = Math.round(parseFloat(String(e.target.value).replace(',', '.')) || 0);
+    if (v > 300) { v = 300; toast('Максимум 300 секунд (5 минут)'); }
+    if (v < 0) v = 0;
+    streamCfg.delay = v; e.target.value = v; saveCfg();
+    if (v > 0) toast(`Задержка ${v} с: зрители увидят эфир с опозданием`);
+    renderLive();
+  };
   $('#skTest').onchange = e => { streamCfg.testMode = e.target.checked; saveCfg(); };
   $('#skNoise').onchange = e => { streamCfg.noise = e.target.checked; saveCfg(); };
   $('#skLock').onchange = e => { streamCfg.hideOnLock = e.target.checked; saveCfg(); };
@@ -1682,7 +1844,8 @@ function renderLive() {
   if (TW.loggedIn) {
     $('#twOut').onclick = () => sheetOpts('Выйти из Twitch?', [{ label: 'Выйти', cls: 'danger', fn: () => { NATIVE.twLogout(); chan = null; chanLoaded = false; twRefresh(); } }]);
     const t = $('#skTitle'), c = $('#skCat'), sg = $('#skSugg');
-    if (chan) { t.value = chan.title || ''; c.value = catSel ? catSel.name : (chan.game_name || ''); }
+    if (chan) { t.value = titleDraft ?? (chan.title || ''); c.value = catSel ? catSel.name : (chan.game_name || ''); }
+    t.oninput = () => { titleDraft = t.value; };
     if (!chanLoaded) {
       chanLoaded = true;
       tw('GET', 'channels', { broadcaster_id: TW.userId }).then(r => {
@@ -1729,11 +1892,12 @@ setInterval(() => { if (tab === 'live' && isLive()) updLiveStats(); }, 1000);
 
 async function startFlow() {
   if (!NATIVE) return toast('Эфир запускается в приложении на телефоне');
-  const go = $('#skGo'); go.disabled = true;
+  const go = $('#skGo') || $('#homeGo') || { disabled: false }; go.disabled = true;
   let key = '';
   try {
     if (TW.loggedIn) {
-      const title = $('#skTitle').value.trim(), catText = $('#skCat').value.trim();
+      const title = ($('#skTitle') ? $('#skTitle').value : (titleDraft ?? (chan && chan.title) ?? '')).trim();
+      const catText = ($('#skCat') ? $('#skCat').value : (catSel ? catSel.name : (chan && chan.game_name) || '')).trim();
       if (catText && !catSel) { toast('Выбери категорию из списка'); go.disabled = false; return; }
       const patch = {};
       if (chan && title && title !== chan.title) patch.title = title;
@@ -1743,7 +1907,7 @@ async function startFlow() {
       key = r && r.data && r.data[0] && r.data[0].stream_key;
       if (!key) throw new Error('Twitch не отдал ключ трансляции');
     } else {
-      key = $('#skKey').value.trim().replace(/^.*\/app\//, '');
+      key = ($('#skKey') ? $('#skKey').value : store.get('key', '')).trim().replace(/^.*\/app\//, '');
       if (key.length < 10) { toast('Войди через Twitch или вставь ключ'); go.disabled = false; return; }
       store.set('key', key);
     }
@@ -1776,7 +1940,7 @@ async function launch(key, bubble) {
     const url = INGEST + key + (streamCfg.testMode ? '?bandwidthtest=true' : '');
     NATIVE.start(JSON.stringify({ url, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur,
       testMode: streamCfg.testMode, autoBitrate: streamCfg.autoBitrate, gameVolume: streamCfg.gameVol / 100, micVolume: streamCfg.micVol / 100,
-      noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel, privacy }));
+      noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel, privacy, delay: streamCfg.delay || 0 }));
     if (streamCfg.testMode) toast('Пробный эфир: зрители его не увидят');
   } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
 }
@@ -1805,6 +1969,159 @@ function overlayHelp(onGo, onSkip) {
 }
 function askStop() { sheetOpts('Остановить эфир?', [{ label: 'Остановить эфир', cls: 'danger', fn: () => NATIVE && NATIVE.stop() }]); }
 
+/* ================= Пульт ================= */
+const EV_ICON = { donate: 'coin', follow: 'heart', sub: 'star', gift: 'star', cheer: 'gem', raid: 'raid' };
+function ago(t) { const s = Math.floor((Date.now() - t) / 1000); return s < 60 ? 'сейчас' : s < 3600 ? Math.floor(s / 60) + ' мин' : Math.floor(s / 3600) + ' ч'; }
+function chkRow(state, title, sub, btn) {
+  const ic = state === 'ok' ? 'ok' : state === 'warn' ? 'warn' : 'dot';
+  return `<div class="chk"><svg class="ic st ${state}"><use href="#i-${ic}"/></svg><div class="lbl">${title}${sub ? `<small>${sub}</small>` : ''}</div>${btn || ''}</div>`;
+}
+function renderHome() {
+  const p = $('#homePane'); if (!p) return;
+  const live = isLive();
+  let h = '';
+  if (live) {
+    h += `<div class="group">
+      <div class="ghead">${liveState === 'live' ? 'В эфире' : liveState === 'reconnecting' ? 'Переподключение' : 'Подключение'}<span class="sp"></span><span class="hint" id="lvState"></span></div>
+      <div class="stats">
+        <div class="stat"><b id="stViewers">—</b><span>зрители</span></div>
+        <div class="stat"><b id="stKbps">—</b><span>Мбит/с</span></div>
+        <div class="stat"><b id="stUp">—</b><span>в эфире</span></div>
+      </div>
+      <div class="scenebar">${scenes.map((sc, i) => `<button class="btn sm${i === cur ? ' pri' : ''}" data-hs="${i}">${esc(sc.name)}</button>`).join('')}</div>
+      <div class="big3">
+        <button class="btn${privacyNow ? ' on' : ''}" id="hPriv">${I(privacyNow ? 'eye' : 'eyeoff')}${privacyNow ? 'Показать экран' : 'Скрыть экран'}</button>
+        <button class="btn" id="hTest">${I('bell')}Тестовый алерт</button>
+        <button class="btn" id="hGame">${I('out')}Перейти к игре</button>
+        <button class="btn danger" id="hStop">${I('stop')}Остановить</button>
+      </div>
+    </div>
+    <div class="group"><div class="ghead">События<span class="sp"></span><span class="hint">донаты, фолловы, сабы</span></div>
+      <div class="feed" id="hFeed">${eventLog.length ? eventLog.slice(0, 30).map(e => `<div class="fe">${I(EV_ICON[e.kind] || 'star')}<div><b>${esc(e.name)}</b> · ${esc(e.title)}${e.msg ? `<div class="note">«${esc(e.msg)}»</div>` : ''}</div><span class="t">${ago(e.t)}</span></div>`).join('') : '<div class="empty">Здесь появятся донаты, фолловы и подписки</div>'}</div></div>
+    <div class="group"><div class="ghead">Чат<span class="sp"></span><span class="hint">нажми — покажу на стриме</span></div>
+      <div class="feed" id="hChat"></div></div>`;
+  } else {
+    const hasScreen = scenes.some(sc => sc.layers.some(l => l.type === 'screen' && l.visible));
+    const key = store.get('key', '');
+    const sp = speedRes, b = devStat;
+    const q = QUALITY[streamCfg.quality];
+    h += `<div class="group"><div class="hero">
+        <button class="btn pri big" id="homeGo">${I('live')}Начать эфир</button>
+        <div class="sub">Сцена «${esc(scene().name)}» · ${q.label.split(' (')[0]}${streamCfg.testMode ? ' · пробный' : ''}${streamCfg.delay ? ` · задержка ${streamCfg.delay} с` : ''}</div>
+      </div></div>`;
+    h += `<div class="group"><div class="ghead">Готовность</div>`;
+    h += TW.loggedIn ? chkRow('ok', 'Twitch: ' + esc(TW.displayName || TW.login), chan ? esc(chan.title || '') : 'ключ трансляции возьмём сами')
+      : key ? chkRow('ok', 'Ключ трансляции указан', 'или войди через Twitch для названия и алертов', `<button class="btn sm" id="hTw">Войти</button>`)
+      : chkRow('warn', 'Войди через Twitch', 'нужно для эфира', `<button class="btn sm pri" id="hTw">Войти</button>`);
+    h += hasScreen ? chkRow('ok', 'Экран игры есть в сцене', '') : chkRow('warn', 'В сценах нет экрана игры', 'зрители не увидят игру', `<button class="btn sm" id="hAddScreen">Добавить</button>`);
+    h += sp && sp.ok ? chkRow(sp.mbps >= 5 ? 'ok' : 'warn', `Интернет: ${sp.mbps.toFixed(1)} Мбит/с`, sp.mbps >= 5 ? 'хватает для выбранного качества' : 'слабовато — выбери качество пониже', `<button class="btn sm" id="hSpeed">Ещё раз</button>`)
+      : chkRow('no', speedBusy ? 'Проверяю интернет…' : 'Интернет не проверен', 'займёт 10 секунд', speedBusy ? '' : `<button class="btn sm" id="hSpeed">Проверить</button>`);
+    if (b) h += chkRow(b.battery < 20 && !b.charging ? 'warn' : 'ok', `Батарея ${b.battery}%${b.charging ? ' · заряжается' : ''}`, b.battery < 20 && !b.charging ? 'подключи зарядку' : '');
+    if (NATIVE) h += DA.loggedIn ? chkRow('ok', 'DonationAlerts: ' + esc(DA.name || 'подключён'), '') : chkRow('no', 'DonationAlerts не подключён', 'по желанию', `<button class="btn sm" id="hDa">Подключить</button>`);
+    if (NATIVE && streamCfg.bubble) h += NATIVE.canOverlay() ? chkRow('ok', 'Кружок поверх игры разрешён', '') : chkRow('warn', 'Кружок поверх игры не разрешён', '', `<button class="btn sm" id="hOv">Разрешить</button>`);
+    h += `</div>`;
+    if (eventLog.length) h += `<div class="group"><div class="ghead">Прошлый эфир<span class="sp"></span><span class="hint">${eventLog.length} событий</span></div><div class="feed">${eventLog.slice(0, 10).map(e => `<div class="fe">${I(EV_ICON[e.kind] || 'star')}<div><b>${esc(e.name)}</b> · ${esc(e.title)}</div><span class="t">${ago(e.t)}</span></div>`).join('')}</div></div>`;
+  }
+  p.innerHTML = h;
+  const on = (id, fn) => { const e = $('#' + id); if (e) e.onclick = fn; };
+  on('homeGo', () => startFlow());
+  on('hTw', () => twLoginFlow(() => setTab('home')));
+  on('hDa', () => daLoginFlow());
+  on('hOv', () => overlayHelp(() => renderHome(), () => { streamCfg.bubble = false; store.set('streamCfg', streamCfg); renderHome(); }));
+  on('hSpeed', () => { if (!NATIVE) return toast('Проверка работает в приложении'); speedBusy = true; speedRes = null; NATIVE.speedTest(); renderHome(); });
+  on('hAddScreen', () => { setTab('add'); });
+  on('hPriv', () => NATIVE && NATIVE.setPrivacy(!privacyNow));
+  on('hTest', () => { if (!scenes.some(sc => sc.layers.some(l => l.type === 'alerts'))) return toast('Добавь слой «Алерты» в сцену и перезапусти эфир'); NATIVE && NATIVE.testAlert(); });
+  on('hGame', () => NATIVE && NATIVE.goHome());
+  on('hStop', askStop);
+  $$('[data-hs]').forEach(b => b.onclick = () => { cur = +b.dataset.hs; selId = null; if (NATIVE) NATIVE.setScene(cur); save(); renderUI(); renderHome(); });
+  if (live) { updHomeChat(); updLiveStats(); }
+  if (NATIVE && !live) { try { devStat = JSON.parse(NATIVE.deviceStatus()); } catch {} }
+  if (NATIVE && TW.loggedIn && !chanLoaded) {
+    chanLoaded = true;
+    tw('GET', 'channels', { broadcaster_id: TW.userId }).then(r => { chan = (r && r.data && r.data[0]) || {}; catSel = chan.game_id ? { id: chan.game_id, name: chan.game_name } : null; if (tab === 'home' && !isLive()) renderHome(); }).catch(() => { chanLoaded = false; });
+  }
+}
+function updHomeChat() {
+  const box = $('#hChat'); if (!box) return;
+  if (!chatLog.length) { box.innerHTML = '<div class="empty">Сообщения чата появятся здесь</div>'; return; }
+  const stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = chatLog.map((m, i) => `<div class="cm" data-cm="${i}"><b style="color:${esc(m.color)}">${esc(m.name)}</b>: ${esc(m.text)}</div>`).join('');
+  $$('[data-cm]').forEach(e => e.onclick = () => { const m = chatLog[+e.dataset.cm]; if (m && NATIVE) NATIVE.highlight(m.name, m.color, m.text); });
+  if (stick) box.scrollTop = box.scrollHeight;
+}
+setInterval(() => { if (tab === 'home' && isLive()) updLiveStats(); }, 1000);
+
+/* ================= Темы ================= */
+function renderThemes() {
+  const box = $('#themes'); if (!box) return;
+  box.innerHTML = Object.entries(THEMES).map(([id, t]) => `<button class="theme${THEME.id === id ? ' on' : ''}" data-theme="${id}"><i style="background:linear-gradient(135deg,${t.a},${t.b})"></i>${t.name}</button>`).join('');
+  $$('[data-theme]').forEach(b => b.onclick = () => sheetOpts(`Тема «${THEMES[b.dataset.theme].name}»: перекрасить все сцены?`, [{ label: 'Применить ко всем сценам', cls: 'pri', fn: () => applyTheme(b.dataset.theme) }]));
+  $('#themeAccent').value = THEME.a;
+}
+async function applyTheme(id, accent) {
+  THEME = Object.assign({ id }, THEMES[id]);
+  if (accent) { THEME.a = accent; THEME.customA = accent; }
+  const f = FONTS[THEME.font]; if (document.fonts && f) await document.fonts.load(`${f.w} 60px ${f.css}`).catch(() => {});
+  scenes.forEach(sc => sc.layers.forEach(l => {
+    if (l.tpl) { l.src = makeBanner(l.tpl); l.v2 = true; }
+    if (['text', 'timer', 'clock', 'viewers', 'ticker', 'chat', 'alerts'].includes(l.type)) l.font = THEME.font;
+    if (l.type === 'text' && l.bg) l.bg = THEME.a, l.color = THEME.onA;
+    if (l.type === 'ticker') { l.bg = THEME.a; l.color = THEME.onA; }
+    if (l.type === 'timer' || l.type === 'clock') { l.bg = THEME.plate; l.color = '#ffffff'; }
+    if (l.type === 'viewers') { l.bg = THEME.b; l.color = THEME.onA; }
+    if (l.type === 'camera' && l.border) l.border = THEME.a;
+    if (['text', 'timer', 'clock', 'viewers', 'ticker', 'alerts'].includes(l.type)) l.radius = Math.round(clamp(20 * THEME.r, 0, 50));
+  }));
+  save(); renderUI(); renderThemes(); toast('Тема применена');
+}
+$('#themeApply').onclick = () => applyTheme(THEME.id, $('#themeAccent').value);
+
+/* ================= Обучение при первом запуске ================= */
+const OB = [
+  ['user', 'Войди в Twitch', 'Название, категория и ключ трансляции подтянутся сами. Можно подключить и DonationAlerts.'],
+  ['layers', 'Настрой сцену', 'Экран игры, камера, чат и алерты — во вкладках «Слои» и «Добавить». Тяни слои пальцем, уголки — размер.'],
+  ['live', 'Нажми «Начать эфир»', 'На «Пульте» видно, всё ли готово. Во время игры управляй эфиром из кружка поверх игры.']
+];
+function onboarding(i = 0) {
+  sheet('', box => {
+    box.innerHTML = `<div class="ob"><svg class="ic big"><use href="#i-${OB[i][0]}"/></svg><h5>${OB[i][1]}</h5><p>${OB[i][2]}</p>
+      <div class="dots">${OB.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div></div>
+      <button class="btn pri" id="obNext">${i < OB.length - 1 ? 'Дальше' : 'Начать'}</button>
+      <button class="btn" id="obSkip">Пропустить</button>`;
+    box.querySelector('#obNext').onclick = () => { if (i < OB.length - 1) onboarding(i + 1); else { closeSheet(); store.set('onboarded', true); } };
+    box.querySelector('#obSkip').onclick = () => { closeSheet(); store.set('onboarded', true); };
+  });
+}
+
+/* ================= Перетаскивание слоёв в списке ================= */
+function enableLayerDrag() {
+  const box = $('#layers');
+  box.querySelectorAll('.grip').forEach(g => {
+    g.onpointerdown = e => {
+      e.preventDefault(); e.stopPropagation();
+      const row = g.closest('.layer'), rows = [...box.querySelectorAll('.layer')], from = rows.indexOf(row);
+      const startY = e.clientY, hRow = row.offsetHeight;
+      row.classList.add('drag'); g.setPointerCapture(e.pointerId);
+      let to = from;
+      g.onpointermove = ev => {
+        const dy = ev.clientY - startY; row.style.transform = `translateY(${dy}px)`;
+        to = clamp(from + Math.round(dy / hRow), 0, rows.length - 1);
+      };
+      g.onpointerup = g.onpointercancel = () => {
+        g.onpointermove = g.onpointerup = g.onpointercancel = null;
+        row.classList.remove('drag'); row.style.transform = '';
+        if (to !== from) {
+          // список показан сверху вниз — в массиве порядок обратный
+          const ls = layers(), n = ls.length, a = n - 1 - from, b = n - 1 - to;
+          const [it] = ls.splice(a, 1); ls.splice(b, 0, it); save();
+        }
+        renderUI();
+      };
+    };
+  });
+}
+
 /* ================= Статус эфира ================= */
 let prevLiveFlag = null;
 function setStatus() {
@@ -1821,10 +2138,11 @@ function setStatus() {
   b.innerHTML = live ? I('stop') + 'Стоп' : I('live') + 'Эфир';
   $('#liveDot').classList.toggle('hidden', liveState !== 'live');
   if (tab === 'live') { if (prevLiveFlag !== live || liveState === 'error') { renderLive(); $('main').scrollTop = 0; } else updLiveStats(); }
+  if (tab === 'home' && (prevLiveFlag !== live || liveState === 'error' || liveState === 'connecting')) { renderHome(); }
   prevLiveFlag = live;
 }
-$('#btnGo').onclick = () => { if (isLive()) askStop(); else setTab('live'); };
-$('#chip').onclick = () => setTab('live');
+$('#btnGo').onclick = () => { if (isLive()) askStop(); else { setTab('home'); } };
+$('#chip').onclick = () => setTab('home');
 
 window.onNative = o => {
   switch (o.state) {
@@ -1832,13 +2150,14 @@ window.onNative = o => {
     case 'tw': onTwEvent(o); return;
     case 'da': twRefresh(); toast(o.ok ? 'DonationAlerts подключён' : (o.msg || 'Не получилось подключить DonationAlerts')); return;
     case 'resume': twRefresh(); return;
-    case 'viewers': liveViewers = o.count; setStatus(); return;
+    case 'viewers': liveViewers = o.count; setStatus(); if (tab === 'home') updLiveStats(); return;
     case 'mic': toast(o.muted ? 'Микрофон выключен' : 'Микрофон включён'); return;
-    case 'speed': speedBusy = false; speedRes = o; if (tab === 'live') renderLive(); if (o.ok) toast(`Отдача ${o.mbps.toFixed(1)} Мбит/с`); return;
+    case 'speed': speedBusy = false; speedRes = o; if (tab === 'live') renderLive(); if (tab === 'home') renderHome(); if (o.ok) toast(`Отдача ${o.mbps.toFixed(1)} Мбит/с`); return;
     case 'warn': toast(o.msg); return;
     case 'info': toast(o.msg); return;
-    case 'alert': return;
-    case 'privacy': privacyNow = o.on; if (tab === 'live' && $('#lvPriv')) renderLive(); return;
+    case 'alert': eventLog.unshift({ kind: o.kind, name: o.name, title: o.title, msg: o.message, t: Date.now() }); if (eventLog.length > 60) eventLog.pop(); if (tab === 'home') renderHome(); return;
+    case 'chat': chatLog.push({ name: o.name, color: o.color, text: o.text, t: Date.now() }); if (chatLog.length > 60) chatLog.shift(); if (tab === 'home') updHomeChat(); return;
+    case 'privacy': privacyNow = o.on; if (tab === 'live' && $('#lvPriv')) renderLive(); if (tab === 'home' && $('#hPriv')) renderHome(); return;
     case 'bitrate': liveKbps = o.kbps; liveTarget = o.target || 0; liveMax = o.max || 0; updLiveStats(); return;
     case 'scene': if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); if (tab === 'live') renderLive(); } return;
   }
@@ -1851,7 +2170,7 @@ window.onNative = o => {
 window.onBack = () => {
   if ($('#sheetBg')) { closeSheet(); return true; }
   if (liveOn) { liveOn = false; $('#live').classList.add('hidden'); renderUI(); return true; }
-  if (tab !== 'layers') { setTab('layers'); return true; }
+  if (tab !== 'home') { setTab('home'); return true; }
   return false;
 };
 
@@ -1859,7 +2178,9 @@ window.onBack = () => {
 load();
 if (NATIVE && isLive()) { cur = clamp(INFO.current || 0, 0, scenes.length - 1); liveSince = Date.now(); wasLive = liveState === 'live'; }
 twRefresh();
-renderUI(); setTab(tab); setStatus(); histPush(); requestAnimationFrame(loop);
+renderUI(); renderThemes(); setTab(tab); setStatus(); histPush(); requestAnimationFrame(loop);
+if (!store.get('onboarded', false)) setTimeout(() => onboarding(0), 400);
+window.addEventListener('resize', () => setTimeout(sizeStage, 50));
 </script>
 </body>
 </html>

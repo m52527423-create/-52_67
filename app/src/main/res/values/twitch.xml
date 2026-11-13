@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- Client ID приложения на dev.twitch.tv. Если заполнен — вход через Twitch без лишних шагов. -->
-  <string name="twitch_client_id" translatable="false"></string>
+  <string name="twitch_client_id" translatable="false">9e5nrd9e327y0htpakifjp3ynwti2v</string>
 </resources>

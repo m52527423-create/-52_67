@@ -16,7 +16,7 @@ import kotlin.concurrent.thread
  * и вызовы Twitch API: ключ трансляции, название, категория, зрители.
  */
 object TwitchClient {
-  const val SCOPES = "channel:read:stream_key channel:manage:broadcast"
+  const val SCOPES = "channel:read:stream_key channel:manage:broadcast moderator:read:followers channel:read:subscriptions bits:read"
 
   class Resp(val code: Int, val body: String)
 
@@ -54,6 +54,13 @@ object TwitchClient {
     .put("login", prefs.getString("login", ""))
     .put("displayName", prefs.getString("displayName", ""))
     .put("avatar", prefs.getString("avatar", ""))
+    .put("needRelogin", loggedIn && !hasAllScopes())
+
+  /** Есть ли у входа все нужные права (после обновления приложения могли добавиться новые). */
+  fun hasAllScopes(): Boolean {
+    val have = (prefs.getString("scopes", "") ?: "").split(' ').toSet()
+    return SCOPES.split(' ').all { it in have }
+  }
 
   fun logout() {
     prefs.edit().remove("access").remove("refresh").remove("userId").remove("login")
@@ -98,7 +105,7 @@ object TwitchClient {
         if (t.code == 200) {
           val tok = JSONObject(t.body)
           prefs.edit().putString("access", tok.getString("access_token"))
-            .putString("refresh", tok.optString("refresh_token")).apply()
+            .putString("refresh", tok.optString("refresh_token")).putString("scopes", SCOPES).apply()
           if (fetchUser()) onDone(true, "") else onDone(false, "Не удалось получить данные канала")
           return@thread
         }
@@ -119,7 +126,11 @@ object TwitchClient {
     val v = exec(Request.Builder().url("https://id.twitch.tv/oauth2/validate").header("Authorization", "OAuth $token").build())
     if (v.code != 200) return "Twitch не подтвердил вход: ${msgOf(v.body)}"
     clientId = cid
-    prefs.edit().putString("access", token).remove("refresh").apply()
+    val scopes = try {
+      val arr = JSONObject(v.body).optJSONArray("scopes")
+      (0 until (arr?.length() ?: 0)).joinToString(" ") { arr!!.getString(it) }
+    } catch (_: Exception) { "" }
+    prefs.edit().putString("access", token).remove("refresh").putString("scopes", scopes).apply()
     return if (fetchUser()) null else "Не удалось получить данные канала"
   }
 

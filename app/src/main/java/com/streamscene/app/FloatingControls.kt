@@ -33,7 +33,10 @@ class LiveInfo(
   val scenes: List<String>,
   val current: Int,
   val micMuted: Boolean,
-  val micLabel: String
+  val micLabel: String,
+  val privacy: Boolean = false,
+  val warn: String = "",
+  val chat: List<ChatLine> = emptyList()
 )
 
 /**
@@ -45,6 +48,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   interface Actions {
     fun onScene(index: Int)
     fun onToggleMic()
+    fun onTogglePrivacy()
     fun onOpenApp()
     fun onStop()
   }
@@ -94,6 +98,13 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   private lateinit var micText: TextView
   private lateinit var stopBox: LinearLayout
   private lateinit var stopText: TextView
+  private lateinit var privIcon: IconView
+  private lateinit var privText: TextView
+  private lateinit var privBox: LinearLayout
+  private lateinit var warnRow: LinearLayout
+  private lateinit var warnText: TextView
+  private lateinit var chatBox: LinearLayout
+  private lateinit var chatHead: TextView
 
   fun canShow() = Settings.canDrawOverlays(ctx)
 
@@ -115,7 +126,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   fun update(i: LiveInfo) {
     info = i
     val (lvl, col) = quality(i)
-    bubble.ringColor = when (i.state) { "live" -> RED; "reconnecting" -> Color.parseColor("#ff7a1a"); else -> YELLOW }
+    bubble.ringColor = when { i.privacy -> MUTE; i.state == "live" -> RED; i.state == "reconnecting" -> Color.parseColor("#ff7a1a"); else -> YELLOW }
     bubble.viewers = i.viewers
     bubble.signalColor = col
     bubble.invalidate()
@@ -226,6 +237,21 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     r2.addView(tBitrate)
     p.addView(r2, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
 
+    // предупреждение (батарея, нагрев)
+    warnRow = row().apply {
+      background = rounded(Color.parseColor("#3a2a10"), 10f); setPadding(dp(10), dp(8), dp(10), dp(8)); visibility = View.GONE
+    }
+    warnRow.addView(IconView(ctx, Ic.WARN, YELLOW), LinearLayout.LayoutParams(dp(16), dp(16)).apply { rightMargin = dp(8) })
+    warnText = text(12f, Color.parseColor("#ffd27a"))
+    warnRow.addView(warnText, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+    p.addView(warnRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
+
+    // чат
+    chatHead = text(12f, MUTE).apply { text = "ЧАТ"; letterSpacing = 0.08f; visibility = View.GONE }
+    p.addView(chatHead, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
+    chatBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+    p.addView(chatBox)
+
     // 3. сцены
     p.addView(text(12f, MUTE).apply { text = "СЦЕНЫ"; letterSpacing = 0.08f },
       LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
@@ -251,6 +277,8 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     }
     val (_, mi, mt) = action(Ic.MIC, "Микрофон", CARD2) { actions.onToggleMic() }
     micIcon = mi; micText = mt
+    val (pb, pi, pt) = action(Ic.EYE_OFF, "Скрыть", CARD2) { actions.onTogglePrivacy() }
+    privBox = pb; privIcon = pi; privText = pt
     action(Ic.APP, "Редактор", CARD2) { closePanel(); actions.onOpenApp() }
     val (sb, _, st) = action(Ic.STOP, "Стоп", Color.parseColor("#5a1b1b")) {
       if (stopArmed) { closePanel(); actions.onStop() }
@@ -266,8 +294,8 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
 
     // положение рядом с кружком
     val s = screenSize()
-    val pw = minOf(dp(290), s.x - dp(16))
-    val estH = dp(250)
+    val pw = minOf(dp(300), s.x - dp(16))
+    val estH = dp(340)
     val lp = WindowManager.LayoutParams(
       pw, WindowManager.LayoutParams.WRAP_CONTENT,
       WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -328,6 +356,25 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     micIcon.color = if (i.micMuted) RED else Color.WHITE
     micIcon.invalidate()
     micText.text = if (i.micMuted) "${i.micLabel} выкл" else i.micLabel
+    privIcon.ic = if (i.privacy) Ic.EYE else Ic.EYE_OFF; privIcon.invalidate()
+    privText.text = if (i.privacy) "Показать" else "Скрыть"
+    privBox.background = rounded(if (i.privacy) ACCENT else CARD2, 12f)
+    warnRow.visibility = if (i.warn.isEmpty()) View.GONE else View.VISIBLE
+    warnText.text = i.warn
+    if (i.privacy && i.warn.isEmpty()) { warnRow.visibility = View.VISIBLE; warnText.text = "Экран скрыт — зрители видят заставку" }
+    val showChat = i.chat.isNotEmpty()
+    chatHead.visibility = if (showChat) View.VISIBLE else View.GONE
+    chatBox.visibility = if (showChat) View.VISIBLE else View.GONE
+    chatBox.removeAllViews()
+    i.chat.forEach { m ->
+      val sb = android.text.SpannableStringBuilder(m.name)
+      sb.setSpan(android.text.style.ForegroundColorSpan(m.color), 0, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+      sb.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+      sb.append(": ").append(m.text)
+      chatBox.addView(text(13f, Color.parseColor("#e6e6ea")).apply {
+        text = sb; maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(0, dp(2), 0, dp(2))
+      })
+    }
 
     if (scenesRow.childCount != i.scenes.size || scenesRow.tag != i.scenes.joinToString("|") + "#" + i.current) {
       scenesRow.removeAllViews()

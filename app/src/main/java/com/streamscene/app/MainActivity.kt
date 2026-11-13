@@ -99,8 +99,14 @@ class MainActivity : Activity() {
     web.loadUrl("file:///android_asset/editor.html")
   }
 
+  override fun onPause() {
+    super.onPause()
+    StreamService.instance?.setAppForeground(false)
+  }
+
   override fun onResume() {
     super.onResume()
+    StreamService.instance?.setAppForeground(true)
     if (pageReady) StreamState.send(JSONObject().put("state", "resume"))
   }
 
@@ -124,6 +130,8 @@ class MainActivity : Activity() {
   private fun beginStart() {
     val need = mutableListOf<String>()
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) need += Manifest.permission.RECORD_AUDIO
+    val wantsCamera = StreamState.config?.scenes?.any { s -> s.widgets.any { it.type == "camera" } } == true
+    if (wantsCamera && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) need += Manifest.permission.CAMERA
     if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) need += Manifest.permission.POST_NOTIFICATIONS
     if (need.isNotEmpty()) requestPermissions(need.toTypedArray(), REQ_PERMS) else requestProjection()
   }
@@ -133,7 +141,12 @@ class MainActivity : Activity() {
     if (requestCode != REQ_PERMS) return
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
       StreamState.emit("error", "Без разрешения на звук стрим не запустится. Разреши «Микрофон» в настройках приложения.")
-    } else requestProjection()
+    } else {
+      val wantsCamera = StreamState.config?.scenes?.any { s -> s.widgets.any { it.type == "camera" } } == true
+      if (wantsCamera && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+        StreamState.send(JSONObject().put("state", "warn").put("msg", "Без доступа к камере эфир пойдёт без камеры"))
+      requestProjection()
+    }
   }
 
   private fun requestProjection() {
@@ -301,6 +314,34 @@ class MainActivity : Activity() {
           startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
         } catch (_: Exception) {}
       }
+    }
+
+    // ---------- проверка перед эфиром и управление в эфире ----------
+    @JavascriptInterface
+    fun deviceStatus(): String = DeviceInfo.status(this@MainActivity).toString()
+
+    @JavascriptInterface
+    fun speedTest() {
+      thread {
+        val r = DeviceInfo.uploadSpeed()
+        StreamState.send(JSONObject().put("state", "speed").put("ok", r.isSuccess)
+          .put("mbps", r.getOrDefault(0.0)).put("msg", r.exceptionOrNull()?.message ?: ""))
+      }
+    }
+
+    @JavascriptInterface
+    fun setVolumes(game: Double, mic: Double) {
+      runOnUiThread { StreamService.instance?.setVolumes(game.toFloat(), mic.toFloat()) }
+    }
+
+    @JavascriptInterface
+    fun setPrivacy(on: Boolean) {
+      runOnUiThread { StreamService.instance?.setPrivacy(on) }
+    }
+
+    @JavascriptInterface
+    fun testAlert() {
+      runOnUiThread { StreamService.instance?.testAlert() }
     }
 
     @JavascriptInterface

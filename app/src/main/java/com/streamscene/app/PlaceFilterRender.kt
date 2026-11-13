@@ -32,12 +32,17 @@ class PlaceFilterRender : BaseFilterRender() {
   private var uSamplerHandle = -1
   private var uRectHandle = -1
   private var uFlipHandle = -1
+  private var uCropHandle = -1
 
   @Volatile private var rx = 0f
   @Volatile private var ry = 0f
   @Volatile private var rw = 1f
   @Volatile private var rh = 1f
   @Volatile private var flip = 0f
+  @Volatile private var cl = 0f
+  @Volatile private var ct = 0f
+  @Volatile private var cr = 0f
+  @Volatile private var cb = 0f
 
   init {
     squareVertex = ByteBuffer.allocateDirect(squareVertexDataFilter.size * BaseRenderOffScreen.FLOAT_SIZE_BYTES)
@@ -57,6 +62,7 @@ class PlaceFilterRender : BaseFilterRender() {
     uSamplerHandle = GLES20.glGetUniformLocation(program, "uSampler")
     uRectHandle = GLES20.glGetUniformLocation(program, "uRect")
     uFlipHandle = GLES20.glGetUniformLocation(program, "uFlip")
+    uCropHandle = GLES20.glGetUniformLocation(program, "uCrop")
   }
 
   override fun drawFilter() {
@@ -77,6 +83,7 @@ class PlaceFilterRender : BaseFilterRender() {
     GLES20.glUniformMatrix4fv(uSTMatrixHandle, 1, false, STMatrix, 0)
     GLES20.glUniform4f(uRectHandle, rx, ry, rw.coerceAtLeast(0.0001f), rh.coerceAtLeast(0.0001f))
     GLES20.glUniform1f(uFlipHandle, flip)
+    GLES20.glUniform4f(uCropHandle, cl, ct, cr, cb)
     GLES20.glUniform1i(uSamplerHandle, 0)
     GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, previousTexId)
@@ -92,6 +99,11 @@ class PlaceFilterRender : BaseFilterRender() {
 
   fun setRect(x: Float, y: Float, w: Float, h: Float, flipped: Boolean) {
     rx = x; ry = y; rw = w; rh = h; flip = if (flipped) 1f else 0f
+  }
+
+  /** Обрезка краёв экрана игры (доли от 0 до ~0.45). */
+  fun setCrop(l: Float, t: Float, r: Float, b: Float) {
+    cl = l; ct = t; cr = r; cb = b
   }
 
   companion object {
@@ -113,6 +125,7 @@ precision mediump float;
 uniform sampler2D uSampler;
 uniform vec4 uRect;
 uniform float uFlip;
+uniform vec4 uCrop;
 varying vec2 vTextureCoord;
 void main() {
   vec2 t = vec2(vTextureCoord.x, 1.0 - vTextureCoord.y);
@@ -121,7 +134,8 @@ void main() {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
   } else {
     if (uFlip > 0.5) p.x = 1.0 - p.x;
-    gl_FragColor = texture2D(uSampler, vec2(p.x, 1.0 - p.y));
+    vec2 s = vec2(uCrop.x + p.x * (1.0 - uCrop.x - uCrop.z), uCrop.y + p.y * (1.0 - uCrop.y - uCrop.w));
+    gl_FragColor = texture2D(uSampler, vec2(s.x, 1.0 - s.y));
   }
 }
 """

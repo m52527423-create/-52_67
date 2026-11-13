@@ -10,7 +10,7 @@ import android.graphics.Typeface
 import android.view.View
 
 /** Собственный набор иконок приложения (рисуются линиями в сетке 24×24). */
-enum class Ic { EYE, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK }
+enum class Ic { EYE, EYE_OFF, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK, HEART, STAR, GIFT, GEM, RAID, WARN, CHAT }
 
 object Icons {
   private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -56,6 +56,51 @@ object Icons {
         c.drawArc(RectF(7f, 7f, 17f, 17f), -45f, 90f, false, stroke)
         c.drawArc(RectF(3f, 3f, 21f, 21f), 140f, 80f, false, stroke)
         c.drawArc(RectF(3f, 3f, 21f, 21f), -40f, 80f, false, stroke)
+      }
+      Ic.EYE_OFF -> {
+        val p = Path().apply { moveTo(2f, 12f); quadTo(12f, 2.5f, 22f, 12f); quadTo(12f, 21.5f, 2f, 12f); close() }
+        c.drawPath(p, stroke); c.drawLine(3f, 3f, 21f, 21f, stroke)
+      }
+      Ic.HEART -> {
+        val p = Path().apply {
+          moveTo(12f, 20.5f); cubicTo(3f, 14.5f, 2f, 9f, 5f, 6.2f); cubicTo(7.5f, 4f, 10.5f, 4.8f, 12f, 7.5f)
+          cubicTo(13.5f, 4.8f, 16.5f, 4f, 19f, 6.2f); cubicTo(22f, 9f, 21f, 14.5f, 12f, 20.5f); close()
+        }
+        c.drawPath(p, fill)
+      }
+      Ic.STAR -> {
+        val p = Path()
+        for (i in 0 until 10) {
+          val r = if (i % 2 == 0) 9.5f else 4f
+          val a = Math.toRadians((-90 + i * 36).toDouble())
+          val px = 12f + r * Math.cos(a).toFloat(); val py = 12.5f + r * Math.sin(a).toFloat()
+          if (i == 0) p.moveTo(px, py) else p.lineTo(px, py)
+        }
+        p.close(); c.drawPath(p, fill)
+      }
+      Ic.GIFT -> {
+        c.drawRoundRect(RectF(4f, 11f, 20f, 21f), 1.5f, 1.5f, fill)
+        c.drawRoundRect(RectF(3f, 7.5f, 21f, 11f), 1.2f, 1.2f, fill)
+        c.drawArc(RectF(6.5f, 3f, 12f, 8f), 180f, 270f, false, stroke)
+        c.drawArc(RectF(12f, 3f, 17.5f, 8f), 90f, 270f, false, stroke)
+      }
+      Ic.GEM -> {
+        val p = Path().apply { moveTo(7f, 4f); lineTo(17f, 4f); lineTo(21.5f, 9.5f); lineTo(12f, 21f); lineTo(2.5f, 9.5f); close() }
+        c.drawPath(p, fill)
+      }
+      Ic.RAID -> {
+        val p = Path().apply { moveTo(12f, 2.5f); cubicTo(16.5f, 6f, 17f, 11f, 15.5f, 16f); lineTo(8.5f, 16f); cubicTo(7f, 11f, 7.5f, 6f, 12f, 2.5f); close() }
+        c.drawPath(p, fill)
+        val f2 = Path().apply { moveTo(9f, 17.5f); lineTo(12f, 22f); lineTo(15f, 17.5f); close() }
+        c.drawPath(f2, fill)
+      }
+      Ic.WARN -> {
+        val p = Path().apply { moveTo(12f, 3f); lineTo(22f, 21f); lineTo(2f, 21f); close() }
+        c.drawPath(p, stroke); c.drawLine(12f, 10f, 12f, 15f, stroke); c.drawCircle(12f, 18f, 0.8f, fill)
+      }
+      Ic.CHAT -> {
+        val p = Path().apply { moveTo(4f, 5f); lineTo(20f, 5f); lineTo(20f, 16f); lineTo(10f, 16f); lineTo(6f, 20f); lineTo(6f, 16f); lineTo(4f, 16f); close() }
+        c.drawPath(p, stroke)
       }
       Ic.CLOCK -> {
         c.drawCircle(12f, 12f, 9f, stroke)

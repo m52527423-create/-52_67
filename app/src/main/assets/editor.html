@@ -232,6 +232,8 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
 <symbol id="i-speed" viewBox="0 0 24 24"><path d="M4 18a9 9 0 1 1 16 0"/><path d="M12 14l4-5"/></symbol>
 <symbol id="i-battery" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
 </defs></svg>
 <header class="top">
   <div class="brand"><span class="mark"></span>СтримСцена</div>
@@ -259,7 +261,8 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
         <button class="btn sm icon danger" id="scDel" aria-label="Удалить"><svg class="ic"><use href="#i-trash"/></svg></button>
       </div>
       <div class="item"><div class="lbl" id="scName">—</div></div>
-      <div class="item"><div class="lbl">Фон сцены</div><input type="color" id="sceneBg"></div>
+      <div class="item"><div class="lbl">Цвет фона</div><input type="color" id="sceneBg"></div>
+      <div class="item"><div class="lbl">Картинка фона<small id="bgImgState">не выбрана</small></div><button class="btn sm" id="bgImgPick"><svg class="ic"><use href="#i-image"/></svg>Выбрать</button><button class="btn sm icon hidden" id="bgImgDel" aria-label="Убрать"><svg class="ic"><use href="#i-trash"/></svg></button></div>
     </div>
     <div class="group">
       <div class="ghead">Слои<span class="sp"></span><span class="hint">верхний — поверх всех</span></div>
@@ -326,18 +329,31 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 
       <div class="group" id="gAlerts">
         <div class="ghead">Алерты</div>
+        <div class="item"><div class="lbl">Донаты DonationAlerts<small>подключение — во вкладке «Эфир»</small></div><label class="sw"><input type="checkbox" data-kind="donate"><span></span></label></div>
         <div class="item"><div class="lbl">Фолловы</div><label class="sw"><input type="checkbox" data-kind="follow"><span></span></label></div>
         <div class="item"><div class="lbl">Подписки и подарки</div><label class="sw"><input type="checkbox" data-kind="sub"><span></span></label></div>
         <div class="item"><div class="lbl">Биты</div><label class="sw"><input type="checkbox" data-kind="cheer"><span></span></label></div>
         <div class="item"><div class="lbl">Рейды</div><label class="sw"><input type="checkbox" data-kind="raid"><span></span></label></div>
         <div class="item"><div class="lbl">Звук<small>слышно и в эфире</small></div><label class="sw"><input type="checkbox" id="pSound"><span></span></label></div>
         <div class="item"><div class="lbl" style="flex:none;width:118px">Показывать</div><input type="range" id="pSeconds" min="3" max="15"><span class="val" id="vSeconds"></span></div>
+        <div class="item"><div class="lbl">Озвучивать сообщения донатов</div><label class="sw"><input type="checkbox" id="pTts"><span></span></label></div>
+        <div class="item" id="rowTtsMin"><div class="lbl">Озвучивать от суммы</div><input class="inp" id="pTtsMin" inputmode="numeric" style="width:90px;text-align:right"></div>
+        <div class="ghead" style="border-top:1px solid var(--line)">Свои картинки и звуки</div>
+        <div id="mediaList"></div>
         <div class="gbody"><button class="btn" style="width:100%" id="pAlertDemo"><svg class="ic"><use href="#i-eye"/></svg>Показать пример</button></div>
       </div>
 
       <div class="group" id="gTicker">
         <div class="ghead">Бегущая строка</div>
         <div class="item"><div class="lbl" style="flex:none;width:118px">Скорость</div><input type="range" id="pSpeed" min="3" max="30"><span class="val" id="vSpeed"></span></div>
+      </div>
+
+      <div class="group" id="gImage">
+        <div class="ghead">Картинка</div>
+        <div class="gbody" style="display:flex;gap:8px">
+          <button class="btn" style="flex:1" id="pReplace"><svg class="ic"><use href="#i-image"/></svg>Заменить картинку</button>
+          <button class="btn" style="flex:1" id="pNatural"><svg class="ic"><use href="#i-fit"/></svg>Пропорции картинки</button>
+        </div>
       </div>
 
       <div class="group" id="gCrop">
@@ -418,6 +434,10 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 
 <input type="file" id="fileImg" accept="image/*" class="hidden">
 <input type="file" id="fileGif" accept="image/gif" class="hidden">
+<input type="file" id="fileReplace" accept="image/*" class="hidden">
+<input type="file" id="fileBg" accept="image/*" class="hidden">
+<input type="file" id="fileMediaImg" accept="image/*" class="hidden">
+<input type="file" id="fileMediaSnd" accept="audio/*" class="hidden">
 <input type="file" id="fileSrc" accept="video/*,image/*" class="hidden">
 <div id="toast"></div>
 <script>
@@ -723,7 +743,8 @@ const ICON_PATHS = {
   gift: 'M4 11h16v10H4zM3 7.5h18V11H3zM12 7.5V21',
   gem: 'M7 4h10l4.5 5.5L12 21 2.5 9.5z',
   raid: 'M12 2.5c4.5 3.5 5 8.5 3.5 13.5h-7C7 11 7.5 6 12 2.5zM9 17.5l3 4.5 3-4.5z',
-  person: 'M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4 21a8 8 0 0 1 16 0z'
+  person: 'M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4 21a8 8 0 0 1 16 0z',
+  coin: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM11 7h2v10h-2z'
 };
 const iconCache = {};
 function drawIcon(c, name, x, y, size, color) {
@@ -788,7 +809,7 @@ function drawChatDemo(c, l) {
   }
   c.restore();
 }
-const ALERT_DEMO = [['follow', 'heart', '#9147ff', 'Pelmen_TV', 'новый фолловер'], ['sub', 'star', '#f5a524', 'NightOwl', 'подписка · 3 месяца'], ['cheer', 'gem', '#3e9bff', 'KoshkaGamer', '500 битов'], ['raid', 'raid', '#e5484d', 'ZvezdaTV', 'рейд · 42 зрителя']];
+const ALERT_DEMO = [['donate', 'coin', '#00c896', 'Ivan', '500 ₽'], ['follow', 'heart', '#9147ff', 'Pelmen_TV', 'новый фолловер'], ['sub', 'star', '#f5a524', 'NightOwl', 'подписка · 3 месяца'], ['cheer', 'gem', '#3e9bff', 'KoshkaGamer', '500 битов'], ['raid', 'raid', '#e5484d', 'ZvezdaTV', 'рейд · 42 зрителя']];
 function drawAlertDemo(c, l, t) {
   let k = 1, idx = 0;
   if (l._demo) {
@@ -796,7 +817,9 @@ function drawAlertDemo(c, l, t) {
     if (dt > total * 2) delete l._demo;
     else { idx = Math.floor(dt / total) % ALERT_DEMO.length; const d = dt % total; k = d < 330 ? d / 330 : d > total - 360 ? Math.max(0, (total - d) / 360) : 1; }
   }
-  const [, ic, acc, name, title] = ALERT_DEMO[idx];
+  const [kind, ic, acc, name, title] = ALERT_DEMO[idx];
+  const med = l.media && (l.media[kind] || (kind === 'gift' && l.media.sub));
+  if (med && med.img) { drawMediaAlert(c, l, k, med, name, title, kind === 'donate' ? 'Отличный стрим, держи на пиццу!' : ''); return; }
   c.save(); c.globalAlpha *= k; c.translate(0, l.h * .3 * (1 - k) * .4);
   const rr = Math.min(l.h * .22, Math.max(cornerR(l), l.h * .12));
   c.fillStyle = hexA(l.bg || '#141418', .94); c.beginPath(); c.roundRect(l.x, l.y, l.w, l.h, rr); c.fill();
@@ -810,6 +833,23 @@ function drawAlertDemo(c, l, t) {
   c.textAlign = 'left'; c.textBaseline = 'alphabetic';
   c.font = fontOf(l.font, fs); c.fillStyle = l.color || '#fff'; c.fillText(name, left, l.y + l.h / 2 - fs * .05);
   c.font = `500 ${fs * .62}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(255,255,255,.78)'; c.fillText(title, left, l.y + l.h / 2 + fs * .8);
+  c.restore();
+}
+function drawMediaAlert(c, l, k, med, name, title, msg) {
+  c.save(); c.globalAlpha *= k; c.translate(0, l.h * .3 * (1 - k) * .4);
+  let im = imgs.get(med.img); if (!im) { im = new Image(); im.src = med.img; imgs.set(med.img, im); }
+  if (im.naturalWidth) {
+    const aw = l.w, ah = l.h * .68, kk = Math.min(aw / im.naturalWidth, ah / im.naturalHeight), w = im.naturalWidth * kk, h = im.naturalHeight * kk;
+    c.drawImage(im, l.x + (l.w - w) / 2, l.y + ah - h, w, h);
+  }
+  const fs = l.h * .11, y1 = l.y + l.h * .7 + fs;
+  c.font = fontOf(l.font, fs); c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+  const line = `${name} — ${title}`;
+  c.lineJoin = 'round'; c.lineWidth = fs * .22; c.strokeStyle = 'rgba(0,0,0,.86)'; c.strokeText(line, l.x + l.w / 2, y1);
+  const tw = c.measureText(line).width, nw = c.measureText(name + ' — ').width; c.textAlign = 'left';
+  c.fillStyle = l.color || '#fff'; c.fillText(name + ' — ', l.x + l.w / 2 - tw / 2, y1);
+  c.fillStyle = '#00e0a4'; c.fillText(title, l.x + l.w / 2 - tw / 2 + nw, y1);
+  if (msg) { c.font = `700 ${fs * .62}px "Segoe UI",Roboto,sans-serif`; c.textAlign = 'center'; c.fillStyle = '#fff'; c.shadowColor = '#000'; c.shadowBlur = fs * .12; c.fillText(msg, l.x + l.w / 2, y1 + fs * .9); }
   c.restore();
 }
 function camPath(c, l) {
@@ -998,7 +1038,8 @@ function outDims() { const q = QUALITY[streamCfg.quality]; return ORIENT === 'h'
 
 /* ---------- Twitch: аккаунт и API ---------- */
 let TW = { loggedIn: false, clientId: '' };
-function twRefresh() { try { if (NATIVE) TW = JSON.parse(NATIVE.twInfo()); } catch {} renderTw(); }
+let DA = { loggedIn: false };
+function twRefresh() { try { if (NATIVE) TW = JSON.parse(NATIVE.twInfo()); } catch {} try { if (NATIVE && NATIVE.daInfo) DA = JSON.parse(NATIVE.daInfo()); } catch {} renderTw(); }
 const apiWait = {}; let apiSeq = 0;
 function tw(method, path, query, body) {
   return new Promise((res, rej) => {
@@ -1034,6 +1075,25 @@ function twLoginFlow(then) {
     };
   });
 }
+function daLoginFlow() {
+  if (DA.builtIn) { NATIVE.daLogin(''); return; }
+  sheet('Подключить DonationAlerts', box => {
+    box.innerHTML = `
+      <div class="note" style="font-size:13px">Один раз нужен ID приложения DonationAlerts. Потом вход — обычная страница DonationAlerts.</div>
+      <ol class="steps">
+        <li>Открой <a href="#" id="daDev">donationalerts.com/application/clients</a> → «Создать новое приложение».</li>
+        <li>Название — любое, URL перенаправления: <code>http://localhost</code>.</li>
+        <li>Скопируй <b>ID</b> приложения сюда.</li>
+      </ol>
+      <input class="inp" id="daCid" placeholder="ID приложения" inputmode="numeric" autocomplete="off">
+      <button class="btn pri" id="daGo">${I('coin')}Продолжить</button>
+      <button class="btn" id="daNo">Отмена</button>`;
+    const cid = box.querySelector('#daCid'); cid.value = DA.clientId || '';
+    box.querySelector('#daDev').onclick = e => { e.preventDefault(); NATIVE.openUrl('https://www.donationalerts.com/application/clients'); };
+    box.querySelector('#daNo').onclick = closeSheet;
+    box.querySelector('#daGo').onclick = () => { const v = cid.value.trim(); if (!v) { toast('Вставь ID приложения'); return; } closeSheet(); NATIVE.daLogin(v); };
+  });
+}
 let twUri = '';
 function onTwEvent(o) {
   if (o.phase === 'code') { twUri = o.uri; const c = $('#twCode'); if (c) c.textContent = o.code; return; }
@@ -1056,7 +1116,8 @@ function widgetOut(l) {
     font: l.font || 'system', color: l.color || '#ffffff', bg: l.bg || null, stroke: l.stroke || 0, strokeColor: l.strokeColor || '#000000',
     text: l.text || '', shape: l.shape || 'rect', facing: l.facing || 'front', border: l.border || null, rot: l.rot || 0,
     mirror: l.mirror !== false, chatSize: l.chatSize || 'm', bgAlpha: l.bgAlpha ?? .45,
-    kinds: l.kinds || ['follow', 'sub', 'gift', 'cheer', 'raid'], sound: l.sound !== false, seconds: l.seconds || 6,
+    kinds: l.kinds || ['donate', 'follow', 'sub', 'gift', 'cheer', 'raid'], sound: l.sound !== false, seconds: l.seconds || 6,
+    media: l.media || {}, tts: !!l.tts, ttsMin: +l.ttsMin || 0,
     speed: l.speed || 1, gif: l.type === 'gif' ? l.src : ''
   };
 }
@@ -1127,6 +1188,7 @@ function renderScenes() {
 function renderLayers() {
   $('#scName').textContent = scene().name;
   $('#sceneBg').value = scene().bg || '#000000';
+  const hasBg = layers().some(l => l.bgImage); $('#bgImgState').textContent = hasBg ? 'своя картинка' : 'не выбрана'; $('#bgImgDel').classList.toggle('hidden', !hasBg);
   const box = $('#layers'); box.innerHTML = '';
   if (!layers().length) { box.innerHTML = '<div class="empty">Сцена пустая. Добавь слой во вкладке «Добавить».</div>'; return; }
   [...layers()].reverse().forEach(l => {
@@ -1184,12 +1246,15 @@ function renderProps() {
   }
   show('#gAlerts', t === 'alerts');
   if (t === 'alerts') {
-    const k = s.kinds || ['follow', 'sub', 'cheer', 'raid'];
+    const k = s.kinds || ['donate', 'follow', 'sub', 'cheer', 'raid'];
     $$('[data-kind]').forEach(i => i.checked = k.includes(i.dataset.kind));
+    $('#pTts').checked = !!s.tts; $('#pTtsMin').value = s.ttsMin || 0; show('#rowTtsMin', !!s.tts);
+    renderMediaList(s);
     $('#pSound').checked = s.sound !== false; $('#pSeconds').value = s.seconds || 6; $('#vSeconds').textContent = (s.seconds || 6) + ' с';
   }
   show('#gTicker', t === 'ticker');
   if (t === 'ticker') { $('#pSpeed').value = Math.round((s.speed || 1) * 10); $('#vSpeed').textContent = (s.speed || 1).toFixed(1) + '×'; }
+  show('#gImage', t === 'image' || t === 'gif');
   show('#gCrop', t === 'image' || t === 'screen');
   if (t === 'image' || t === 'screen') ['cl', 'cr', 'ct', 'cb'].forEach(k => { $(`[data-crop="${k}"]`).value = s[k] || 0; $(`[data-cv="${k}"]`).textContent = (s[k] || 0) + '%'; });
   show('#gScreen', t === 'screen');
@@ -1248,6 +1313,88 @@ $$('[data-kind]').forEach(i => i.onchange = () => { const s = selected(); if (!s
 $('#pSound').onchange = e => { const s = selected(); if (s) { s.sound = e.target.checked; save(); } };
 $('#pSeconds').oninput = e => { const s = selected(); if (!s) return; s.seconds = +e.target.value; $('#vSeconds').textContent = s.seconds + ' с'; save(); };
 $('#pAlertDemo').onclick = () => { const s = selected(); if (s) s._demo = Date.now(); };
+$('#pTts').onchange = e => { const s = selected(); if (!s) return; s.tts = e.target.checked; show('#rowTtsMin', s.tts); save(); };
+$('#pTtsMin').onchange = e => { const s = selected(); if (!s) return; s.ttsMin = Math.max(0, parseFloat(e.target.value) || 0); save(); };
+const MEDIA_KINDS = [['donate', 'Донаты', 'coin'], ['follow', 'Фолловы', 'heart'], ['sub', 'Подписки и подарки', 'star'], ['cheer', 'Биты', 'gem'], ['raid', 'Рейды', 'raid']];
+function renderMediaList(s) {
+  const box = $('#mediaList'); box.innerHTML = '';
+  const m = s.media || {};
+  MEDIA_KINDS.forEach(([k, label]) => {
+    const e = m[k] || {};
+    const d = document.createElement('div'); d.className = 'layer';
+    d.innerHTML = `<div class="th" style="${e.img ? `background-image:url('${e.img}')` : ''}">${e.img ? '' : I('image')}</div>
+      <div class="nm"><b>${label}</b><small>${e.img ? (e.img.startsWith('data:image/gif') ? 'свой GIF' : 'своя картинка') : 'стандартная карточка'} · ${e.snd ? 'свой звук' : 'стандартный звук'}</small></div>
+      <button class="tb" aria-label="Изменить">${I('chev')}</button>`;
+    d.onclick = () => mediaSheet(s, k, label);
+    box.appendChild(d);
+  });
+}
+let mediaTarget = null;
+function mediaSheet(s, k, label) {
+  s.media = s.media || {};
+  const e = s.media[k] || (s.media[k] = {});
+  sheet('Алерт: ' + label, box => {
+    box.innerHTML = `
+      <div class="note">Картинка или GIF появится над текстом алерта, звук прозвучит в эфире.</div>
+      <button class="btn" id="mImg">${I('image')}${e.img ? 'Заменить картинку / GIF' : 'Выбрать картинку / GIF'}</button>
+      ${e.img ? `<button class="btn danger" id="mImgDel">${I('trash')}Убрать картинку</button>` : ''}
+      <button class="btn" id="mSnd">${I('music')}${e.snd ? 'Заменить звук' : 'Выбрать звук (mp3, ogg, wav)'}</button>
+      ${e.snd ? `<button class="btn" id="mPlay">${I('eye')}Прослушать</button><button class="btn danger" id="mSndDel">${I('trash')}Убрать звук</button>` : ''}
+      <button class="btn pri" id="mOk">Готово</button>`;
+    box.querySelector('#mImg').onclick = () => { mediaTarget = { s, k, label, what: 'img' }; $('#fileMediaImg').click(); };
+    box.querySelector('#mSnd').onclick = () => { mediaTarget = { s, k, label, what: 'snd' }; $('#fileMediaSnd').click(); };
+    if (box.querySelector('#mImgDel')) box.querySelector('#mImgDel').onclick = () => { delete e.img; save(); renderProps(); mediaSheet(s, k, label); };
+    if (box.querySelector('#mSndDel')) box.querySelector('#mSndDel').onclick = () => { delete e.snd; save(); renderProps(); mediaSheet(s, k, label); };
+    if (box.querySelector('#mPlay')) box.querySelector('#mPlay').onclick = () => { try { new Audio(e.snd).play(); } catch {} };
+    box.querySelector('#mOk').onclick = () => { closeSheet(); s._demo = Date.now(); };
+  });
+}
+function readDataUrl(f) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(f); }); }
+$('#fileMediaImg').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; const t = mediaTarget; if (!f || !t) return;
+  if (f.size > 5 * 1024 * 1024) return toast('Файл больше 5 МБ — выбери поменьше');
+  let src;
+  if (f.type === 'image/gif') src = await readDataUrl(f);
+  else src = (await readImage(f, 1000)).src;
+  t.s.media[t.k].img = src;
+  // для алерта с картинкой нужно окно повыше: картинка сверху, текст снизу
+  if (t.s.h < H * .3) { const cx = t.s.x + t.s.w / 2; t.s.w = Math.max(t.s.w * .8, W * .36); t.s.h = H * .44; t.s.x = clamp(cx - t.s.w / 2, 0, W - t.s.w); t.s.y = H * .04; toast('Окно алерта увеличено под картинку'); }
+  save(); renderUI(); mediaSheet(t.s, t.k, t.label);
+};
+$('#fileMediaSnd').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; const t = mediaTarget; if (!f || !t) return;
+  if (f.size > 3 * 1024 * 1024) return toast('Звук больше 3 МБ — выбери покороче');
+  t.s.media[t.k].snd = await readDataUrl(f); save(); renderProps(); mediaSheet(t.s, t.k, t.label);
+  toast('Звук добавлен');
+};
+$('#pReplace').onclick = () => $('#fileReplace').click();
+$('#fileReplace').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; const s = selected(); if (!f || !s) return;
+  try {
+    let src, w, h;
+    if (f.type === 'image/gif') { if (f.size > 4 * 1024 * 1024) return toast('GIF больше 4 МБ'); src = await readDataUrl(f); const im = await new Promise((r, j) => { const i = new Image(); i.onload = () => r(i); i.onerror = j; i.src = src; }); w = im.naturalWidth; h = im.naturalHeight; s.type = 'gif'; }
+    else { const r = await readImage(f); src = r.src; w = r.w; h = r.h; if (s.type === 'gif') s.type = 'image'; }
+    s.src = src; delete s.tpl; s.v2 = true;
+    const full = Math.abs(s.w - W) < 2 && Math.abs(s.h - H) < 2;
+    if (full) { /* фон на весь кадр остаётся на весь кадр */ }
+    else if (s.lock) { const cx = s.x + s.w / 2, cy = s.y + s.h / 2; s.h = s.w * h / w; s.x = cx - s.w / 2; s.y = cy - s.h / 2; }
+    save(); renderUI(); toast('Картинка заменена');
+  } catch (err) { toast('Не удалось открыть картинку'); }
+};
+$('#pNatural').onclick = () => { const s = selected(); if (!s) return; const ar = natAR(s), cx = s.x + s.w / 2, cy = s.y + s.h / 2; s.h = s.w / ar; s.x = cx - s.w / 2; s.y = cy - s.h / 2; s.lock = true; save(); renderUI(); };
+$('#bgImgPick').onclick = () => $('#fileBg').click();
+$('#fileBg').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const r = await readImage(f);
+    let bg = layers().find(l => l.bgImage);
+    if (!bg) { bg = newLayer('image', { name: 'Картинка фона', bgImage: true, lock: false }); layers().unshift(bg); }
+    bg.src = r.src; bg.v2 = true;
+    Object.assign(bg, fitRect(r.w / r.h, 'fill'));
+    save(); renderUI(); toast('Фон сцены обновлён');
+  } catch { toast('Не удалось открыть картинку'); }
+};
+$('#bgImgDel').onclick = () => { const i = layers().findIndex(l => l.bgImage); if (i >= 0) { layers().splice(i, 1); selId = null; save(); renderUI(); } };
 $('#pSpeed').oninput = e => { const s = selected(); if (!s) return; s.speed = e.target.value / 10; $('#vSpeed').textContent = s.speed.toFixed(1) + '×'; save(); };
 $$('[data-crop]').forEach(i => i.oninput = () => { const s = selected(); if (!s) return; s[i.dataset.crop] = +i.value; $(`[data-cv="${i.dataset.crop}"]`).textContent = i.value + '%'; save(); });
 $('#pCropReset').onclick = () => { const s = selected(); if (!s) return; ['cl', 'cr', 'ct', 'cb'].forEach(k => s[k] = 0); save(); renderProps(); };
@@ -1284,7 +1431,7 @@ $('#addText').onclick = () => askText('Текст на стрим', 'Всем п
 const LIVE_DEFAULTS = () => ({
   camera: { name: 'Камера', w: H * .36, h: H * .36, shape: 'circle', facing: 'front', mirror: true, rot: 0, border: '#9147ff', lock: true, pos: 'br' },
   chat: { name: 'Чат', w: W * .28, h: H * .5, font: 'system', color: '#ffffff', bg: '#000000', bgAlpha: .45, chatSize: 'm', radius: 6, lock: false, pos: 'r' },
-  alerts: { name: 'Алерты', w: W * .42, h: H * .15, font: 'montserrat', color: '#ffffff', kinds: ['follow', 'sub', 'gift', 'cheer', 'raid'], sound: true, seconds: 6, radius: 20, lock: false, pos: 't' },
+  alerts: { name: 'Алерты', w: W * .42, h: H * .15, font: 'montserrat', color: '#ffffff', kinds: ['donate', 'follow', 'sub', 'gift', 'cheer', 'raid'], tts: true, ttsMin: 0, media: {}, sound: true, seconds: 6, radius: 20, lock: false, pos: 't' },
   timer: { name: 'Таймер эфира', w: W * .17, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
   clock: { name: 'Часы', w: W * .12, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#000000', radius: 20, lock: false, pos: 'tl' },
   viewers: { name: 'Зрители', w: W * .13, h: H * .08, font: 'montserrat', color: '#ffffff', bg: '#e5484d', radius: 20, lock: false, pos: 'tr' },
@@ -1431,6 +1578,18 @@ function renderLive() {
   if (!TW.loggedIn && NATIVE) html += `<div class="group"><div class="ghead">Чат на стриме</div>
       <div class="item col"><span class="lab">Ник канала для чата (без входа)</span><input class="inp" id="skChan" placeholder="например: pelmen_tv" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(streamCfg.chatChannel || '')}"></div></div>`;
 
+  // DonationAlerts
+  if (NATIVE) {
+    html += `<div class="group"><div class="ghead">DonationAlerts</div>`;
+    if (DA.loggedIn) html += `<div class="item"><div class="acct" style="flex:1">${DA.avatar ? `<img src="${esc(DA.avatar)}" alt="">` : `<span class="ph">${I('coin')}</span>`}
+        <div class="nm">${esc(DA.name || 'Подключено')}<small>донаты придут в слой «Алерты»</small></div></div>
+        <button class="btn sm icon" id="daOut" aria-label="Отключить">${I('logout')}</button></div>
+        ${scenes.some(sc => sc.layers.some(l => l.type === 'alerts')) ? '' : `<div class="item"><span style="color:var(--warn)">${I('warn')}</span><div class="lbl note">Добавь в сцену слой «Алерты» (вкладка «Добавить»), иначе донаты не будут видны на стриме</div></div>`}`;
+    else html += `<div class="gbody"><button class="btn" style="width:100%" id="daIn">${I('coin')}Подключить DonationAlerts</button>
+        <div class="note" style="margin-top:8px">Донаты будут появляться на стриме: имя, сумма, сообщение, твоя картинка и звук, озвучка текста.</div></div>`;
+    html += `</div>`;
+  }
+
   // проверка перед эфиром
   if (!live) {
     const b = devStat;
@@ -1473,6 +1632,7 @@ function renderLive() {
   html += `<div class="group"><div class="ghead">Приватность и кружок</div>
     <div class="item"><div class="lbl">Скрывать экран, когда телефон заблокирован<small>зрители видят заставку «Секунду…»</small></div><label class="sw"><input type="checkbox" id="skLock"${streamCfg.hideOnLock ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
     <div class="item"><div class="lbl">Скрывать, пока открыта СтримСцена<small>зрители не увидят редактор и ключи</small></div><label class="sw"><input type="checkbox" id="skInApp"${streamCfg.hideInApp ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item col"><span class="lab">Заставка, когда экран скрыт</span><select class="inp" id="skPrivScene" ${live ? 'disabled' : ''}><option value="">Стандартная «Секунду…»</option>${scenes.map(sc => `<option value="${sc.id}"${streamCfg.privacyScene === sc.id ? ' selected' : ''}>Сцена «${esc(sc.name)}»</option>`).join('')}</select></div>
     <div class="item"><div class="lbl">Плавающий кружок поверх игры<small>зрители, соединение, чат, сцены, микрофон</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
   </div>`;
 
@@ -1500,6 +1660,9 @@ function renderLive() {
   $('#skNoise').onchange = e => { streamCfg.noise = e.target.checked; saveCfg(); };
   $('#skLock').onchange = e => { streamCfg.hideOnLock = e.target.checked; saveCfg(); };
   $('#skInApp').onchange = e => { streamCfg.hideInApp = e.target.checked; saveCfg(); };
+  $('#skPrivScene').onchange = e => { streamCfg.privacyScene = e.target.value; saveCfg(); };
+  if ($('#daIn')) $('#daIn').onclick = daLoginFlow;
+  if ($('#daOut')) $('#daOut').onclick = () => sheetOpts('Отключить DonationAlerts?', [{ label: 'Отключить', cls: 'danger', fn: () => { NATIVE.daLogout(); twRefresh(); } }]);
   const vol = () => { saveCfg(); if (NATIVE && live) NATIVE.setVolumes(streamCfg.gameVol / 100, streamCfg.micVol / 100); };
   $('#skGameVol').oninput = e => { streamCfg.gameVol = +e.target.value; $('#vGameVol').textContent = e.target.value + '%'; vol(); };
   $('#skMicVol').oninput = e => { streamCfg.micVol = +e.target.value; $('#vMicVol').textContent = e.target.value + '%'; vol(); };
@@ -1602,10 +1765,18 @@ async function launch(key, bubble) {
   try {
     const out = await buildAll(), q = QUALITY[streamCfg.quality], [w, h] = outDims();
     const chatChannel = TW.loggedIn ? TW.login : (streamCfg.chatChannel || '');
+    let privacy = '';
+    const ps = scenes.find(sc => sc.id === streamCfg.privacyScene);
+    if (ps) {
+      const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.scale(w / W, h / H);
+      x.fillStyle = ps.bg || '#000'; x.fillRect(0, 0, W, H);
+      ps.layers.forEach(l => { if (l.visible && !isDyn(l) && l.type !== 'screen') drawLayer(x, l); });
+      privacy = c.toDataURL('image/png');
+    }
     const url = INGEST + key + (streamCfg.testMode ? '?bandwidthtest=true' : '');
     NATIVE.start(JSON.stringify({ url, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur,
       testMode: streamCfg.testMode, autoBitrate: streamCfg.autoBitrate, gameVolume: streamCfg.gameVol / 100, micVolume: streamCfg.micVol / 100,
-      noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel }));
+      noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel, privacy }));
     if (streamCfg.testMode) toast('Пробный эфир: зрители его не увидят');
   } catch (e) { liveState = 'error'; liveMsg = 'Не удалось подготовить сцены: ' + e.message; setStatus(); }
 }
@@ -1659,6 +1830,7 @@ window.onNative = o => {
   switch (o.state) {
     case 'api': { const w = apiWait[o.id]; if (!w) return; delete apiWait[o.id]; let j = null; try { j = JSON.parse(o.body); } catch {} if (o.code >= 200 && o.code < 300) w.res(j); else w.rej(new Error((j && j.message) || ('Ошибка ' + o.code))); if (o.code === 401) twRefresh(); return; }
     case 'tw': onTwEvent(o); return;
+    case 'da': twRefresh(); toast(o.ok ? 'DonationAlerts подключён' : (o.msg || 'Не получилось подключить DonationAlerts')); return;
     case 'resume': twRefresh(); return;
     case 'viewers': liveViewers = o.count; setStatus(); return;
     case 'mic': toast(o.muted ? 'Микрофон выключен' : 'Микрофон включён'); return;

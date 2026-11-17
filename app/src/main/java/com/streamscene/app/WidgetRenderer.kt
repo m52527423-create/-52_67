@@ -260,7 +260,7 @@ class WidgetRenderer(private val ctx: Context) {
   fun privacyBitmap(pw: Int, ph: Int): Bitmap {
     val bmp = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888)
     val c = Canvas(bmp)
-    fill.shader = LinearGradient(0f, 0f, pw.toFloat(), ph.toFloat(), Color.parseColor("#0b0b0d"), Color.parseColor("#22113f"), Shader.TileMode.CLAMP)
+    fill.shader = LinearGradient(0f, 0f, pw.toFloat(), ph.toFloat(), Color.parseColor("#140F2B"), Color.parseColor("#22113f"), Shader.TileMode.CLAMP)
     c.drawRect(0f, 0f, pw.toFloat(), ph.toFloat(), fill); fill.shader = null
     val s = min(pw, ph).toFloat()
     val cx = pw / 2f; val cy = ph * 0.42f

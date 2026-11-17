@@ -152,7 +152,7 @@ class BubbleView(ctx: Context) : View(ctx) {
   var ringColor = Color.parseColor("#ffb31a")
   var viewers: Int? = null
   var signalColor = Color.GRAY
-  private val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#EE18181B") }
+  private val bg = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#F0140F2B") }
   private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
   private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
   private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {

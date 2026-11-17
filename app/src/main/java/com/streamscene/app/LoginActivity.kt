@@ -54,7 +54,7 @@ class LoginActivity : Activity() {
 
     val root = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
-      setBackgroundColor(Color.parseColor("#0b0b0d"))
+      setBackgroundColor(Color.parseColor("#140F2B"))
     }
     val bar = LinearLayout(this).apply {
       orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
@@ -137,7 +137,7 @@ class LoginActivity : Activity() {
       provider == "twitch" && params.getQueryParameter("state") != state -> done(false, "Ошибка проверки входа, попробуй ещё раз")
       else -> {
         finished = true
-        web.loadData("<body style='background:#0b0b0d;color:#ccc;font:16px sans-serif;display:flex;align-items:center;justify-content:center;height:90vh'>Входим…</body>", "text/html; charset=utf-8", "utf-8")
+        web.loadData("<body style='background:#140F2B;color:#ccc;font:16px sans-serif;display:flex;align-items:center;justify-content:center;height:90vh'>Входим…</body>", "text/html; charset=utf-8", "utf-8")
         thread {
           val res = if (provider == "da") DaClient.completeLogin(clientId, token) else TwitchClient.completeImplicitLogin(clientId, token)
           runOnUiThread { done(res == null, res ?: "") }

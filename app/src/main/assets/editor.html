@@ -7,19 +7,23 @@
 <title>СтримСцена</title>
 <style>
 :root{
-  --bg:#0b0b0d;--s1:#131316;--s2:#1b1b1f;--s3:#232328;--line:#26262b;--line2:#323238;
-  --text:#ececef;--mute:#8a8a94;--dim:#5d5d66;
-  --acc:#9147ff;--acc-d:#2a1f40;--red:#e5484d;--ok:#30a46c;--warn:#f5a524;
-  --r:10px;--rc:8px;
+  --bg:#140F2B;--s1:#1A1438;--s2:#221A47;--s3:#2B2257;--line:#2E2558;--line2:#3A3070;
+  --text:#F1EEFF;--mute:#A79FD0;--dim:#6A6290;
+  --acc:#FF3DA8;--acc-d:#3B1846;--on-acc:#140F2B;--cy:#3DF2FF;--cy-d:#123A4A;
+  --red:#FF6B8A;--ok:#4BE39A;--warn:#FFB13D;
+  --r:16px;--rc:12px;
+  --disp:"SS Unbounded",sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;overscroll-behavior:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:500 14px/1.4 "SS Manrope",Roboto,sans-serif;overscroll-behavior:none}
 body{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:0;padding:0}
 .hidden{display:none!important}
 .ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+@font-face{font-family:"SS Manrope";src:url(fonts/manrope-cyr.woff2) format("woff2");font-weight:200 800;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"SS Manrope";src:url(fonts/manrope-lat.woff2) format("woff2");font-weight:200 800;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+20BD,U+2122,U+2191,U+2193,U+2212,U+2215}
 @font-face{font-family:"SS Montserrat";src:url(fonts/montserrat.ttf);font-weight:100 900}
 @font-face{font-family:"SS Rubik";src:url(fonts/rubik.ttf);font-weight:300 900}
 @font-face{font-family:"SS Oswald";src:url(fonts/oswald.ttf);font-weight:200 700}
@@ -256,6 +260,73 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 .layer .grip{width:22px;display:flex;align-items:center;justify-content:center;color:var(--mute);touch-action:none;flex:none;cursor:grab}
 .layer .grip .ic{width:16px;height:16px}
 .layer.drag{position:relative;z-index:5;box-shadow:0 6px 20px #0008;background:var(--s3)}
+
+/* ===== Неон ===== */
+body{background:radial-gradient(520px 340px at 100% -60px,rgba(255,61,168,.22),transparent 70%),radial-gradient(420px 320px at -80px 70%,rgba(61,242,255,.10),transparent 70%),var(--bg)}
+.top{background:transparent;border-bottom-color:var(--line)}
+.brand{font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:.3px}
+.mark{background:var(--acc);box-shadow:0 0 12px rgba(255,61,168,.7)}
+.mark:after{background:var(--on-acc)}
+.chip{border-radius:999px;font-weight:700;letter-spacing:0}
+.chip.live{background:var(--acc);color:var(--on-acc);box-shadow:0 0 14px rgba(255,61,168,.6)}.chip.live i{background:var(--on-acc)}
+.btn{border-radius:var(--rc);font-weight:700;border-color:var(--line);background:var(--s2)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);box-shadow:0 0 18px rgba(255,61,168,.35)}
+.btn.live{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.on{border-color:var(--cy);background:var(--cy-d);color:var(--cy)}
+.inp:focus{border-color:var(--cy)}
+.scene{border-radius:999px;background:var(--s2);border-color:transparent;color:var(--text);font-weight:600}
+.scene.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:700}
+.scene.add{background:transparent;border-color:var(--line2)}
+.stage{border-radius:14px;outline:2px solid var(--cy);box-shadow:0 0 26px rgba(61,242,255,.28)}
+.group{background:rgba(26,20,56,.85);border-color:var(--line);border-radius:var(--r)}
+.ghead{font-family:var(--disp);font-size:13px;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text);min-height:42px}
+.ghead .hint{font-family:"SS Manrope",sans-serif;color:var(--mute);font-size:12px}
+.sw input:checked+span{background:var(--cy);border-color:var(--cy)}
+.sw input:checked+span:before{background:var(--on-acc)}
+.layer.on{background:var(--acc-d);box-shadow:inset 3px 0 0 var(--acc)}
+.seg.txt button.on{background:var(--acc);color:var(--on-acc)}
+.tile,.tpl button{border-color:var(--line);border-radius:var(--rc)}
+nav.tabs{background:rgba(20,15,43,.94);border-top-color:var(--line)}
+nav.tabs button.on{color:var(--cy)}
+nav.tabs button.on:before{background:var(--cy);box-shadow:0 0 10px var(--cy)}
+nav.tabs .dot{background:var(--acc)}
+#sheet{background:var(--s1);border-radius:22px 22px 0 0}
+#sheet h4{font-family:var(--disp);font-weight:700}
+#toast{background:var(--s3);border-color:var(--line2);border-radius:999px}
+input[type=range]{accent-color:var(--cy)}
+/* Пульт — неон */
+.nhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px}
+.nhead .t{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;font-size:17px}
+.nhead .t i{width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc)}
+.nhead .t i.wait{background:var(--warn);box-shadow:0 0 12px var(--warn)}
+.nhead .up{font-family:var(--disp);font-weight:700;font-size:17px;color:var(--cy);font-variant-numeric:tabular-nums}
+.nstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.nstat{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:12px}
+.nstat b{display:block;font-family:var(--disp);font-weight:700;font-size:24px;line-height:1.1}
+.nstat span{font-size:12px;color:var(--mute)}
+.nbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.nbtns .btn{height:52px;font-size:14px;border-radius:14px}
+.nbtns .btn .ic{width:20px;height:20px}
+.nsec{font-family:var(--disp);font-weight:700;font-size:15px;margin:20px 2px 4px}
+.nsec small{font-family:"SS Manrope",sans-serif;font-weight:500;font-size:12px;color:var(--mute);margin-left:6px}
+.nlist .fe{padding:11px 2px}
+.nlist .fe>.ic{width:20px;height:20px}
+.nchat{font-size:14px;line-height:1.5}
+.nchat .cm{padding:4px 8px;margin:0 -8px;border-radius:8px}
+.nchat .cm:active,.nchat .cm.hl{background:var(--s3)}
+.nscenes{display:flex;gap:8px;overflow-x:auto;margin-top:12px;scrollbar-width:none}
+.nscenes .scene{height:36px;padding:0 16px}
+.golive{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.golive button{width:136px;height:136px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF7CC6,#FF3DA8 55%,#C3127A);color:var(--on-acc);box-shadow:0 0 0 9px rgba(255,61,168,.16),0 0 50px rgba(255,61,168,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:var(--disp);font-weight:800;font-size:15px}
+.golive button .ic{width:34px;height:34px;stroke-width:2.2}
+.golive button:active{transform:scale(.96)}
+.golive button:disabled{filter:grayscale(.7);opacity:.6}
+.golive .sub{margin-top:16px;color:var(--mute);font-size:13px;text-align:center}
+.nchecks .chk{padding:12px 2px;border-top:1px solid var(--line)}
+.nchecks .chk:first-child{border-top:0}
+.nchecks .ic.st.ok{color:var(--cy)}
+.nchecks .btn.sm{border-radius:999px;border-color:var(--acc);color:var(--acc);background:transparent}
 </style>
 </head>
 <body>
@@ -1884,9 +1955,10 @@ function updLiveStats() {
   $('#stViewers').textContent = liveViewers == null ? '—' : liveViewers;
   $('#stKbps').textContent = liveKbps ? (liveKbps / 1000).toFixed(1) : '—';
   $('#stUp').textContent = liveSince ? fmtUp(Date.now() - liveSince) : '—';
-  $('#lvState').textContent = { connecting: 'подключение…', live: 'соединение в норме', reconnecting: 'переподключение…' }[liveState] || '';
-  if (liveState === 'live' && liveTarget && liveMax && liveTarget < liveMax * .95) $('#lvState').textContent = `автокачество: ${(liveTarget / 1000).toFixed(1)} из ${(liveMax / 1000).toFixed(1)} Мбит/с`;
-  if (privacyNow) $('#lvState').textContent = 'экран скрыт заставкой';
+  const st = $('#lvState'); if (!st) return;
+  st.textContent = { connecting: 'подключение…', live: 'соединение в норме', reconnecting: 'переподключение…' }[liveState] || '';
+  if (liveState === 'live' && liveTarget && liveMax && liveTarget < liveMax * .95) st.textContent = `автокачество: ${(liveTarget / 1000).toFixed(1)} из ${(liveMax / 1000).toFixed(1)} Мбит/с`;
+  if (privacyNow) st.textContent = 'экран скрыт заставкой';
 }
 setInterval(() => { if (tab === 'live' && isLive()) updLiveStats(); }, 1000);
 
@@ -1971,6 +2043,8 @@ function askStop() { sheetOpts('Остановить эфир?', [{ label: 'Ос
 
 /* ================= Пульт ================= */
 const EV_ICON = { donate: 'coin', follow: 'heart', sub: 'star', gift: 'star', cheer: 'gem', raid: 'raid' };
+const EV_COL = { donate: 'var(--warn)', follow: 'var(--acc)', sub: 'var(--cy)', gift: 'var(--cy)', cheer: 'var(--acc)', raid: 'var(--warn)' };
+function ruWord(n, a, b, c) { const m = n % 10, mm = n % 100; return m === 1 && mm !== 11 ? a : m >= 2 && m <= 4 && (mm < 12 || mm > 14) ? b : c; }
 function ago(t) { const s = Math.floor((Date.now() - t) / 1000); return s < 60 ? 'сейчас' : s < 3600 ? Math.floor(s / 60) + ' мин' : Math.floor(s / 3600) + ' ч'; }
 function chkRow(state, title, sub, btn) {
   const ic = state === 'ok' ? 'ok' : state === 'warn' ? 'warn' : 'dot';
@@ -1981,46 +2055,42 @@ function renderHome() {
   const live = isLive();
   let h = '';
   if (live) {
-    h += `<div class="group">
-      <div class="ghead">${liveState === 'live' ? 'В эфире' : liveState === 'reconnecting' ? 'Переподключение' : 'Подключение'}<span class="sp"></span><span class="hint" id="lvState"></span></div>
-      <div class="stats">
-        <div class="stat"><b id="stViewers">—</b><span>зрители</span></div>
-        <div class="stat"><b id="stKbps">—</b><span>Мбит/с</span></div>
-        <div class="stat"><b id="stUp">—</b><span>в эфире</span></div>
+    const donations = eventLog.filter(e => e.kind === 'donate' && e.t >= liveSince).length;
+    h += `<div class="nhead"><div class="t"><i class="${liveState === 'live' ? '' : 'wait'}"></i>${liveState === 'live' ? 'В эфире' : liveState === 'reconnecting' ? 'Переподключение' : 'Подключение'}</div><div class="up" id="stUp">0:00:00</div></div>
+      <div class="nstats">
+        <div class="nstat"><b id="stViewers" style="color:var(--acc)">—</b><span>зрителей</span></div>
+        <div class="nstat"><b id="stKbps" style="color:var(--cy)">—</b><span>Мбит/с</span></div>
+        <div class="nstat"><b style="color:var(--warn)">${donations}</b><span>${ruWord(donations, 'донат', 'доната', 'донатов')}</span></div>
       </div>
-      <div class="scenebar">${scenes.map((sc, i) => `<button class="btn sm${i === cur ? ' pri' : ''}" data-hs="${i}">${esc(sc.name)}</button>`).join('')}</div>
-      <div class="big3">
+      <div class="nbtns">
         <button class="btn${privacyNow ? ' on' : ''}" id="hPriv">${I(privacyNow ? 'eye' : 'eyeoff')}${privacyNow ? 'Показать экран' : 'Скрыть экран'}</button>
-        <button class="btn" id="hTest">${I('bell')}Тестовый алерт</button>
-        <button class="btn" id="hGame">${I('out')}Перейти к игре</button>
-        <button class="btn danger" id="hStop">${I('stop')}Остановить</button>
+        <button class="btn" id="hGame">${I('game')}К игре</button>
+        <button class="btn" id="hTest">${I('bell')}Тест алерта</button>
+        <button class="btn danger" id="hStop">${I('stop')}Стоп</button>
       </div>
-    </div>
-    <div class="group"><div class="ghead">События<span class="sp"></span><span class="hint">донаты, фолловы, сабы</span></div>
-      <div class="feed" id="hFeed">${eventLog.length ? eventLog.slice(0, 30).map(e => `<div class="fe">${I(EV_ICON[e.kind] || 'star')}<div><b>${esc(e.name)}</b> · ${esc(e.title)}${e.msg ? `<div class="note">«${esc(e.msg)}»</div>` : ''}</div><span class="t">${ago(e.t)}</span></div>`).join('') : '<div class="empty">Здесь появятся донаты, фолловы и подписки</div>'}</div></div>
-    <div class="group"><div class="ghead">Чат<span class="sp"></span><span class="hint">нажми — покажу на стриме</span></div>
-      <div class="feed" id="hChat"></div></div>`;
+      <div class="nsec">События</div>
+      <div class="feed nlist" id="hFeed">${eventLog.length ? eventLog.slice(0, 30).map(e => `<div class="fe" style="color:${EV_COL[e.kind] || 'var(--cy)'}">${I(EV_ICON[e.kind] || 'star')}<div style="color:var(--text)"><b>${esc(e.name)}</b> ${esc(e.title)}${e.msg ? `: «${esc(e.msg)}»` : ''}</div><span class="t">${ago(e.t)}</span></div>`).join('') : '<div class="empty">Здесь появятся донаты, фолловы и подписки</div>'}</div>
+      <div class="nsec">Чат<small>нажми, чтобы показать на стриме</small></div>
+      <div class="feed nchat" id="hChat"></div>`;
   } else {
     const hasScreen = scenes.some(sc => sc.layers.some(l => l.type === 'screen' && l.visible));
     const key = store.get('key', '');
     const sp = speedRes, b = devStat;
     const q = QUALITY[streamCfg.quality];
-    h += `<div class="group"><div class="hero">
-        <button class="btn pri big" id="homeGo">${I('live')}Начать эфир</button>
-        <div class="sub">Сцена «${esc(scene().name)}» · ${q.label.split(' (')[0]}${streamCfg.testMode ? ' · пробный' : ''}${streamCfg.delay ? ` · задержка ${streamCfg.delay} с` : ''}</div>
-      </div></div>`;
-    h += `<div class="group"><div class="ghead">Готовность</div>`;
+    h += `<div class="golive"><button id="homeGo" aria-label="Начать эфир">${I('live')}В ЭФИР</button>
+      <div class="sub">Сцена «${esc(scene().name)}», ${q.label.split(' (')[0]}${streamCfg.testMode ? ', пробный эфир' : ''}${streamCfg.delay ? `, задержка ${streamCfg.delay} с` : ''}</div></div>`;
+    h += `<div class="nsec">Готовность</div><div class="nchecks">`;
     h += TW.loggedIn ? chkRow('ok', 'Twitch: ' + esc(TW.displayName || TW.login), chan ? esc(chan.title || '') : 'ключ трансляции возьмём сами')
       : key ? chkRow('ok', 'Ключ трансляции указан', 'или войди через Twitch для названия и алертов', `<button class="btn sm" id="hTw">Войти</button>`)
-      : chkRow('warn', 'Войди через Twitch', 'нужно для эфира', `<button class="btn sm pri" id="hTw">Войти</button>`);
-    h += hasScreen ? chkRow('ok', 'Экран игры есть в сцене', '') : chkRow('warn', 'В сценах нет экрана игры', 'зрители не увидят игру', `<button class="btn sm" id="hAddScreen">Добавить</button>`);
-    h += sp && sp.ok ? chkRow(sp.mbps >= 5 ? 'ok' : 'warn', `Интернет: ${sp.mbps.toFixed(1)} Мбит/с`, sp.mbps >= 5 ? 'хватает для выбранного качества' : 'слабовато — выбери качество пониже', `<button class="btn sm" id="hSpeed">Ещё раз</button>`)
+      : chkRow('warn', 'Войди через Twitch', 'нужно для эфира', `<button class="btn sm" id="hTw">Войти</button>`);
+    h += hasScreen ? chkRow('ok', 'Экран игры в сцене', 'зрители увидят игру') : chkRow('warn', 'В сценах нет экрана игры', 'зрители не увидят игру', `<button class="btn sm" id="hAddScreen">Добавить</button>`);
+    h += sp && sp.ok ? chkRow(sp.mbps >= 5 ? 'ok' : 'warn', `Интернет: ${sp.mbps.toFixed(1)} Мбит/с`, sp.mbps >= 5 ? 'хватает для выбранного качества' : 'слабовато, выбери качество пониже', `<button class="btn sm" id="hSpeed">Ещё раз</button>`)
       : chkRow('no', speedBusy ? 'Проверяю интернет…' : 'Интернет не проверен', 'займёт 10 секунд', speedBusy ? '' : `<button class="btn sm" id="hSpeed">Проверить</button>`);
-    if (b) h += chkRow(b.battery < 20 && !b.charging ? 'warn' : 'ok', `Батарея ${b.battery}%${b.charging ? ' · заряжается' : ''}`, b.battery < 20 && !b.charging ? 'подключи зарядку' : '');
+    if (b) h += chkRow(b.battery < 20 && !b.charging ? 'warn' : 'ok', `Батарея ${b.battery}%${b.charging ? ', заряжается' : ''}`, b.battery < 20 && !b.charging ? 'подключи зарядку' : '');
     if (NATIVE) h += DA.loggedIn ? chkRow('ok', 'DonationAlerts: ' + esc(DA.name || 'подключён'), '') : chkRow('no', 'DonationAlerts не подключён', 'по желанию', `<button class="btn sm" id="hDa">Подключить</button>`);
     if (NATIVE && streamCfg.bubble) h += NATIVE.canOverlay() ? chkRow('ok', 'Кружок поверх игры разрешён', '') : chkRow('warn', 'Кружок поверх игры не разрешён', '', `<button class="btn sm" id="hOv">Разрешить</button>`);
     h += `</div>`;
-    if (eventLog.length) h += `<div class="group"><div class="ghead">Прошлый эфир<span class="sp"></span><span class="hint">${eventLog.length} событий</span></div><div class="feed">${eventLog.slice(0, 10).map(e => `<div class="fe">${I(EV_ICON[e.kind] || 'star')}<div><b>${esc(e.name)}</b> · ${esc(e.title)}</div><span class="t">${ago(e.t)}</span></div>`).join('')}</div></div>`;
+    if (eventLog.length) h += `<div class="nsec">Прошлый эфир<small>${eventLog.length} событий</small></div><div class="feed nlist">${eventLog.slice(0, 10).map(e => `<div class="fe" style="color:${EV_COL[e.kind] || 'var(--cy)'}">${I(EV_ICON[e.kind] || 'star')}<div style="color:var(--text)"><b>${esc(e.name)}</b> ${esc(e.title)}</div><span class="t">${ago(e.t)}</span></div>`).join('')}</div>`;
   }
   p.innerHTML = h;
   const on = (id, fn) => { const e = $('#' + id); if (e) e.onclick = fn; };
@@ -2047,7 +2117,7 @@ function updHomeChat() {
   if (!chatLog.length) { box.innerHTML = '<div class="empty">Сообщения чата появятся здесь</div>'; return; }
   const stick = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
   box.innerHTML = chatLog.map((m, i) => `<div class="cm" data-cm="${i}"><b style="color:${esc(m.color)}">${esc(m.name)}</b>: ${esc(m.text)}</div>`).join('');
-  $$('[data-cm]').forEach(e => e.onclick = () => { const m = chatLog[+e.dataset.cm]; if (m && NATIVE) NATIVE.highlight(m.name, m.color, m.text); });
+  $$('[data-cm]').forEach(e => e.onclick = () => { const m = chatLog[+e.dataset.cm]; if (!m) return; $$('.cm.hl').forEach(x => x.classList.remove('hl')); e.classList.add('hl'); if (NATIVE) NATIVE.highlight(m.name, m.color, m.text); toast('Показываю на стриме 10 секунд'); });
   if (stick) box.scrollTop = box.scrollHeight;
 }
 setInterval(() => { if (tab === 'home' && isLive()) updLiveStats(); }, 1000);

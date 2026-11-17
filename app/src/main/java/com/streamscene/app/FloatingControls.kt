@@ -62,12 +62,19 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   private fun dp(v: Int) = (v * density).toInt()
   private fun dpf(v: Float) = v * density
 
-  private val ACCENT = Color.parseColor("#9147ff")
-  private val RED = Color.parseColor("#e91916")
-  private val YELLOW = Color.parseColor("#ffb31a")
-  private val GREEN = Color.parseColor("#00c896")
-  private val MUTE = Color.parseColor("#a0a0ad")
-  private val CARD2 = Color.parseColor("#26262c")
+  // неоновая палитра (как в приложении)
+  private val ACCENT = Color.parseColor("#FF3DA8")
+  private val CYAN = Color.parseColor("#3DF2FF")
+  private val ON_ACC = Color.parseColor("#140F2B")
+  private val RED = Color.parseColor("#FF6B8A")
+  private val YELLOW = Color.parseColor("#FFB13D")
+  private val GREEN = Color.parseColor("#4BE39A")
+  private val MUTE = Color.parseColor("#A79FD0")
+  private val TEXT = Color.parseColor("#F1EEFF")
+  private val CARD = Color.parseColor("#1C1540")
+  private val CARD2 = Color.parseColor("#221A47")
+  private val LINE = Color.parseColor("#2E2558")
+  private val disp: Typeface by lazy { try { Typeface.create(Typeface.createFromAsset(ctx.assets, "fonts/unbounded.ttf"), 700, false) } catch (_: Exception) { Typeface.DEFAULT_BOLD } }
 
   private val bubbleSize = dp(58)
   private val bubble = BubbleView(ctx)
@@ -83,7 +90,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   }
 
   private var shown = false
-  private var panel: LinearLayout? = null
+  private var panel: View? = null
   private var panelLp: WindowManager.LayoutParams? = null
   private var panelClosedAt = 0L
   private var stopArmed = false
@@ -130,7 +137,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   fun update(i: LiveInfo) {
     info = i
     val (lvl, col) = quality(i)
-    bubble.ringColor = when { i.privacy -> MUTE; i.state == "live" -> RED; i.state == "reconnecting" -> Color.parseColor("#ff7a1a"); else -> YELLOW }
+    bubble.ringColor = when { i.privacy -> MUTE; i.state == "live" -> ACCENT; i.state == "reconnecting" -> RED; else -> YELLOW }
     bubble.viewers = i.viewers
     bubble.signalColor = col
     bubble.invalidate()
@@ -198,7 +205,8 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   }
 
   // ---------------- панель ----------------
-  private fun text(size: Float, color: Int = Color.WHITE, bold: Boolean = false) = TextView(ctx).apply {
+  private fun head(t: String) = text(13f, TEXT).apply { text = t; typeface = disp }
+  private fun text(size: Float, color: Int = TEXT, bold: Boolean = false) = TextView(ctx).apply {
     setTextSize(TypedValue.COMPLEX_UNIT_SP, size); setTextColor(color)
     if (bold) typeface = Typeface.DEFAULT_BOLD
     includeFontPadding = false
@@ -213,57 +221,64 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
   }
 
+  private fun statCard(parent: LinearLayout, valueColor: Int, label: String, last: Boolean = false): TextView {
+    val box = LinearLayout(ctx).apply {
+      orientation = LinearLayout.VERTICAL
+      background = rounded(CARD, 14f, LINE); setPadding(dp(10), dp(9), dp(10), dp(9))
+    }
+    val v = text(19f, valueColor).apply { typeface = disp; text = "—"; maxLines = 1 }
+    box.addView(v)
+    box.addView(text(11f, MUTE).apply { text = label }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(3) })
+    parent.addView(box, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { if (!last) rightMargin = dp(8) })
+    return v
+  }
+
   private fun openPanel() {
     val p = LinearLayout(ctx).apply {
       orientation = LinearLayout.VERTICAL
-      background = rounded(Color.parseColor("#F218181B"), 18f, Color.parseColor("#2f2f37"))
+      background = rounded(Color.parseColor("#F5140F2B"), 22f, LINE)
       setPadding(dp(14), dp(14), dp(14), dp(14))
     }
 
-    // 1. соединение + время
+    // 1. состояние + время
     val r1 = row()
     signal = SignalView(ctx)
     r1.addView(signal, LinearLayout.LayoutParams(dp(22), dp(16)).apply { rightMargin = dp(10) })
-    tState = text(15f, bold = true)
+    tState = text(15f).apply { typeface = disp }
     r1.addView(tState, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-    r1.addView(IconView(ctx, Ic.CLOCK, MUTE), LinearLayout.LayoutParams(dp(15), dp(15)).apply { rightMargin = dp(5) })
-    tUptime = text(14f, MUTE).apply { typeface = Typeface.MONOSPACE }
+    tUptime = text(15f, CYAN).apply { typeface = disp; fontFeatureSettings = "tnum" }
     r1.addView(tUptime)
     p.addView(r1)
 
-    // 2. зрители + битрейт
+    // 2. цифры
     val r2 = row()
-    r2.addView(IconView(ctx, Ic.EYE, Color.WHITE), LinearLayout.LayoutParams(dp(18), dp(18)).apply { rightMargin = dp(7) })
-    tViewers = text(14f)
-    r2.addView(tViewers, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-    r2.addView(IconView(ctx, Ic.UP, MUTE), LinearLayout.LayoutParams(dp(15), dp(15)).apply { rightMargin = dp(4) })
-    tBitrate = text(14f, MUTE)
-    r2.addView(tBitrate)
+    tViewers = statCard(r2, ACCENT, "зрителей")
+    tBitrate = statCard(r2, CYAN, "Мбит/с", last = true)
     p.addView(r2, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
 
     // предупреждение (батарея, нагрев)
     warnRow = row().apply {
-      background = rounded(Color.parseColor("#3a2a10"), 10f); setPadding(dp(10), dp(8), dp(10), dp(8)); visibility = View.GONE
+      background = rounded(Color.parseColor("#3A2A20"), 12f); setPadding(dp(10), dp(8), dp(10), dp(8)); visibility = View.GONE
     }
     warnRow.addView(IconView(ctx, Ic.WARN, YELLOW), LinearLayout.LayoutParams(dp(16), dp(16)).apply { rightMargin = dp(8) })
-    warnText = text(12f, Color.parseColor("#ffd27a"))
+    warnText = text(12f, YELLOW)
     warnRow.addView(warnText, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
     p.addView(warnRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(10) })
 
     // события
-    evHead = text(12f, MUTE).apply { text = "СОБЫТИЯ"; letterSpacing = 0.08f; visibility = View.GONE }
+    evHead = head("События").apply { visibility = View.GONE }
     p.addView(evHead, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
     evBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
     p.addView(evBox)
 
     // чат
-    chatHead = text(12f, MUTE).apply { text = "ЧАТ · нажми, чтобы показать на стриме"; letterSpacing = 0.04f; visibility = View.GONE }
+    chatHead = head("Чат").apply { visibility = View.GONE }
     p.addView(chatHead, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
     chatBox = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
     p.addView(chatBox)
 
     // 3. сцены
-    p.addView(text(12f, MUTE).apply { text = "СЦЕНЫ"; letterSpacing = 0.08f },
+    p.addView(head("Сцены"),
       LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14); bottomMargin = dp(6) })
     val hs = HorizontalScrollView(ctx).apply { isHorizontalScrollBarEnabled = false }
     scenesRow = row()
@@ -275,12 +290,12 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     fun action(ic: Ic, label: String, bg: Int, onClick: () -> Unit): Triple<LinearLayout, IconView, TextView> {
       val box = LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-        background = rounded(bg, 12f); setPadding(0, dp(9), 0, dp(8))
+        background = rounded(bg, 14f, LINE); setPadding(0, dp(11), 0, dp(10)); minimumHeight = dp(60)
         setOnClickListener { onClick() }
       }
-      val iv = IconView(ctx, ic, Color.WHITE)
+      val iv = IconView(ctx, ic, TEXT)
       box.addView(iv, LinearLayout.LayoutParams(dp(22), dp(22)))
-      val tv = text(11f).apply { text = label; gravity = Gravity.CENTER }
+      val tv = text(12f).apply { text = label; gravity = Gravity.CENTER }
       box.addView(tv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(4) })
       r4.addView(box, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
       return Triple(box, iv, tv)
@@ -290,22 +305,29 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     val (pb, pi, pt) = action(Ic.EYE_OFF, "Скрыть", CARD2) { actions.onTogglePrivacy() }
     privBox = pb; privIcon = pi; privText = pt
     action(Ic.APP, "Редактор", CARD2) { closePanel(); actions.onOpenApp() }
-    val (sb, _, st) = action(Ic.STOP, "Стоп", Color.parseColor("#5a1b1b")) {
+    val (sb, si, st) = action(Ic.STOP, "Стоп", Color.parseColor("#2A1433")) {
       if (stopArmed) { closePanel(); actions.onStop() }
       else {
         stopArmed = true
         stopText.text = "Точно?"
-        stopBox.background = rounded(RED, 12f)
+        stopBox.background = rounded(RED, 14f); stopText.setTextColor(ON_ACC)
         main.postDelayed({ disarmStop() }, 3000)
       }
     }
-    stopBox = sb; stopText = st
+    stopBox = sb; stopText = st; si.color = RED; st.setTextColor(RED)
+    sb.background = rounded(Color.parseColor("#2A1433"), 14f, RED)
     p.addView(r4, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
 
-    // положение рядом с кружком
+    // положение рядом с кружком; в горизонтальной игре — прокрутка, ничего не обрезается
     val s = screenSize()
-    val pw = minOf(dp(300), s.x - dp(16))
-    val estH = dp(420)
+    val pw = minOf(dp(310), s.x - dp(16))
+    val maxH = s.y - dp(16)
+    val estH = minOf(dp(460), maxH)
+    val content = p
+    val scroll = object : android.widget.ScrollView(ctx) {
+      override fun onMeasure(w: Int, h: Int) = super.onMeasure(w, View.MeasureSpec.makeMeasureSpec(maxH, View.MeasureSpec.AT_MOST))
+    }.apply { isVerticalScrollBarEnabled = false; background = content.background; content.background = null; clipToOutline = true; outlineProvider = android.view.ViewOutlineProvider.BACKGROUND }
+    scroll.addView(content)
     val lp = WindowManager.LayoutParams(
       pw, WindowManager.LayoutParams.WRAP_CONTENT,
       WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
@@ -315,15 +337,15 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
       gravity = Gravity.TOP or Gravity.START
       val onLeft = bubbleLp.x + bubbleSize / 2 < s.x / 2
       x = (if (onLeft) bubbleLp.x else bubbleLp.x + bubbleSize - pw).coerceIn(dp(8), (s.x - pw - dp(8)).coerceAtLeast(dp(8)))
-      y = if (bubbleLp.y + bubbleSize + dp(8) + estH < s.y) bubbleLp.y + bubbleSize + dp(8)
-          else (bubbleLp.y - estH - dp(8)).coerceAtLeast(dp(8))
+      y = (if (bubbleLp.y + bubbleSize + dp(8) + estH < s.y) bubbleLp.y + bubbleSize + dp(8)
+          else bubbleLp.y - estH - dp(8)).coerceIn(dp(8), (s.y - estH - dp(8)).coerceAtLeast(dp(8)))
     }
-    p.setOnTouchListener { _, e ->
+    scroll.setOnTouchListener { _, e ->
       if (e.action == MotionEvent.ACTION_OUTSIDE) { closePanel(); true } else false
     }
     try {
-      wm.addView(p, lp)
-      panel = p; panelLp = lp
+      wm.addView(scroll, lp)
+      panel = scroll; panelLp = lp
       info?.let { val (lvl, col) = quality(it); fillPanel(it, lvl, col) }
     } catch (_: Exception) {}
   }
@@ -332,7 +354,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     if (!stopArmed || panel == null) { stopArmed = false; return }
     stopArmed = false
     stopText.text = "Стоп"
-    stopBox.background = rounded(Color.parseColor("#5a1b1b"), 12f)
+    stopBox.background = rounded(Color.parseColor("#2A1433"), 14f, RED); stopText.setTextColor(RED)
   }
 
   private fun closePanel() {
@@ -348,27 +370,22 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     return String.format("%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
   }
 
-  private fun viewersText(v: Int?): String {
-    if (v == null) return if (TwitchClient.loggedIn) "зрители — ждём Twitch" else "войди через Twitch"
-    val n = v % 100; val m = v % 10
-    val w = if (n in 11..14) "зрителей" else if (m == 1) "зритель" else if (m in 2..4) "зрителя" else "зрителей"
-    return "$v $w"
-  }
 
   private fun fillPanel(i: LiveInfo, lvl: Int, col: Int) {
     signal.level = lvl; signal.color = col
     tState.text = when (i.state) { "live" -> "В эфире"; "reconnecting" -> "Переподключение"; else -> "Подключение…" }
-    tState.setTextColor(if (i.state == "live") Color.WHITE else YELLOW)
+    tState.setTextColor(if (i.state == "live") TEXT else YELLOW)
     tUptime.text = if (i.uptimeMs > 0) fmtUptime(i.uptimeMs) else "--:--"
-    tViewers.text = viewersText(i.viewers)
-    tBitrate.text = if (i.kbps > 0) String.format("%.1f Мбит/с", i.kbps / 1000f) else "—"
+    tViewers.text = i.viewers?.toString() ?: "—"
+    tBitrate.text = if (i.kbps > 0) String.format("%.1f", i.kbps / 1000f) else "—"
     micIcon.ic = if (i.micMuted) (if (i.micLabel == "Звук") Ic.SOUND_OFF else Ic.MIC_OFF) else (if (i.micLabel == "Звук") Ic.SOUND else Ic.MIC)
-    micIcon.color = if (i.micMuted) RED else Color.WHITE
+    micIcon.color = if (i.micMuted) RED else TEXT
     micIcon.invalidate()
     micText.text = if (i.micMuted) "${i.micLabel} выкл" else i.micLabel
     privIcon.ic = if (i.privacy) Ic.EYE else Ic.EYE_OFF; privIcon.invalidate()
     privText.text = if (i.privacy) "Показать" else "Скрыть"
-    privBox.background = rounded(if (i.privacy) ACCENT else CARD2, 12f)
+    privBox.background = rounded(if (i.privacy) ACCENT else CARD2, 14f, if (i.privacy) ACCENT else LINE)
+    privIcon.color = if (i.privacy) ON_ACC else TEXT; privText.setTextColor(if (i.privacy) ON_ACC else TEXT)
     warnRow.visibility = if (i.warn.isEmpty()) View.GONE else View.VISIBLE
     warnText.text = i.warn
     if (i.privacy && i.warn.isEmpty()) { warnRow.visibility = View.VISIBLE; warnText.text = "Экран скрыт — зрители видят заставку" }
@@ -381,7 +398,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
       sb.setSpan(android.text.style.ForegroundColorSpan(m.color), 0, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
       sb.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, sb.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
       sb.append(": ").append(m.text)
-      chatBox.addView(text(13f, Color.parseColor("#e6e6ea")).apply {
+      chatBox.addView(text(14f, TEXT).apply {
         text = sb; maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END; setPadding(dp(6), dp(4), dp(6), dp(4))
         background = rounded(Color.TRANSPARENT, 8f)
         setOnClickListener { actions.onHighlight(m) }
@@ -393,8 +410,9 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     i.events.takeLast(3).asReversed().forEach { e ->
       val r = row().apply { setPadding(0, dp(3), 0, dp(3)) }
       val ic = when (e.kind) { "follow" -> Ic.HEART; "sub", "gift" -> Ic.STAR; "cheer" -> Ic.GEM; "raid" -> Ic.RAID; "donate" -> Ic.COIN; else -> Ic.STAR }
-      r.addView(IconView(ctx, ic, Color.parseColor(if (e.kind == "donate") "#00c896" else "#b58cff")), LinearLayout.LayoutParams(dp(15), dp(15)).apply { rightMargin = dp(8) })
-      r.addView(text(13f).apply { text = "${e.name} · ${e.title}"; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END },
+      val ec = when (e.kind) { "donate", "raid" -> YELLOW; "follow", "cheer" -> ACCENT; else -> CYAN }
+      r.addView(IconView(ctx, ic, ec), LinearLayout.LayoutParams(dp(17), dp(17)).apply { rightMargin = dp(9) })
+      r.addView(text(14f).apply { text = "${e.name} ${e.title}"; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END },
         LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
       evBox.addView(r)
     }
@@ -404,10 +422,10 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
       scenesRow.tag = i.scenes.joinToString("|") + "#" + i.current
       i.scenes.forEachIndexed { idx, name ->
         val on = idx == i.current
-        val b = text(13f, if (on) Color.WHITE else Color.parseColor("#d6d6de"), bold = on).apply {
+        val b = text(13f, if (on) ON_ACC else TEXT, bold = on).apply {
           text = name
           background = rounded(if (on) ACCENT else CARD2, 999f)
-          setPadding(dp(13), dp(8), dp(13), dp(8))
+          setPadding(dp(15), dp(11), dp(15), dp(11))
           setOnClickListener { actions.onScene(idx) }
         }
         scenesRow.addView(b, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { rightMargin = dp(6) })

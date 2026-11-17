@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0b0b0d">
-<title>СтримСцена</title>
+<title>Glowcast</title>
 <style>
 :root{
   --bg:#140F2B;--s1:#1A1438;--s2:#221A47;--s3:#2B2257;--line:#2E2558;--line2:#3A3070;
@@ -265,8 +265,8 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7p
 body{background:radial-gradient(520px 340px at 100% -60px,rgba(255,61,168,.22),transparent 70%),radial-gradient(420px 320px at -80px 70%,rgba(61,242,255,.10),transparent 70%),var(--bg)}
 .top{background:transparent;border-bottom-color:var(--line)}
 .brand{font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:.3px}
-.mark{background:var(--acc);box-shadow:0 0 12px rgba(255,61,168,.7)}
-.mark:after{background:var(--on-acc)}
+.mark{width:28px;height:28px;border-radius:8px;background:none;box-shadow:0 0 14px rgba(255,61,168,.45)}
+.mark:after{display:none}
 .chip{border-radius:999px;font-weight:700;letter-spacing:0}
 .chip.live{background:var(--acc);color:var(--on-acc);box-shadow:0 0 14px rgba(255,61,168,.6)}.chip.live i{background:var(--on-acc)}
 .btn{border-radius:var(--rc);font-weight:700;border-color:var(--line);background:var(--s2)}
@@ -332,8 +332,7 @@ input[type=range]{accent-color:var(--cy)}
 /* Приветствие и гайд */
 .full{position:fixed;inset:0;z-index:70;background:radial-gradient(560px 380px at 100% -80px,rgba(255,61,168,.3),transparent 70%),radial-gradient(460px 360px at -100px 80%,rgba(61,242,255,.14),transparent 70%),var(--bg);display:flex;flex-direction:column;overflow-y:auto}
 .wel{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 26px calc(28px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;width:100%;box-sizing:border-box}
-.wel .logo{width:64px;height:64px;border-radius:20px;background:var(--acc);box-shadow:0 0 34px rgba(255,61,168,.6);display:grid;place-items:center;margin-bottom:26px}
-.wel .logo i{width:20px;height:20px;border-radius:50%;background:var(--on-acc)}
+.wel .logo{width:84px;height:84px;border-radius:24px;box-shadow:0 0 40px rgba(255,61,168,.45);margin-bottom:26px}
 .wel h1{font-family:var(--disp);font-weight:800;font-size:30px;line-height:1.15;margin:0 0 14px}
 .wel p{color:var(--mute);font-size:16px;line-height:1.5;margin:0 0 26px}
 .wel .btn.big{height:58px;font-size:17px;border-radius:18px}
@@ -426,7 +425,7 @@ input[type=range]{accent-color:var(--cy)}
 <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
 </defs></svg>
 <header class="top">
-  <div class="brand"><span class="mark"></span>СтримСцена</div>
+  <div class="brand"><img class="mark" src="logo.svg" alt="">Glowcast</div>
   <span class="chip" id="chip"><i></i><span id="chipText">ОФФЛАЙН</span></span>
   <button class="btn pri sm" id="btnGo"></button>
 </header>
@@ -1953,7 +1952,7 @@ function renderLive() {
   // приватность и кружок
   html += `<div class="group"><div class="ghead">Приватность и кружок</div>
     <div class="item adv"><div class="lbl">Скрывать экран, когда телефон заблокирован<small>зрители видят заставку «Секунду…»</small></div><label class="sw"><input type="checkbox" id="skLock"${streamCfg.hideOnLock ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
-    <div class="item adv"><div class="lbl">Скрывать, пока открыта СтримСцена<small>зрители не увидят редактор и ключи</small></div><label class="sw"><input type="checkbox" id="skInApp"${streamCfg.hideInApp ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
+    <div class="item adv"><div class="lbl">Скрывать, пока открыт Glowcast<small>зрители не увидят редактор и ключи</small></div><label class="sw"><input type="checkbox" id="skInApp"${streamCfg.hideInApp ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
     <div class="item col adv"><span class="lab">Заставка, когда экран скрыт</span><select class="inp" id="skPrivScene" ${live ? 'disabled' : ''}><option value="">Стандартная «Секунду…»</option>${scenes.map(sc => `<option value="${sc.id}"${streamCfg.privacyScene === sc.id ? ' selected' : ''}>Сцена «${esc(sc.name)}»</option>`).join('')}</select></div>
     <div class="item"><div class="lbl">Плавающий кружок поверх игры<small>зрители, соединение, чат, сцены, микрофон</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
   </div>`;
@@ -2124,7 +2123,7 @@ async function launch(key, bubble) {
 function overlayHelp(onGo, onSkip) {
   sheet('Разреши кружок поверх игры', b2 => {
     b2.innerHTML = `
-      <div class="note" style="font-size:14px">Включи для СтримСцены <b>«Показывать поверх других приложений»</b>.</div>
+      <div class="note" style="font-size:14px">Включи для Glowcast <b>«Показывать поверх других приложений»</b>.</div>
       <button class="btn" id="ovSet">${I('out')}Открыть «Поверх других приложений»</button>
       <div class="note" style="font-size:13px;margin-top:4px"><b>Если переключатель серый</b> или пишет «Доступ запрещён» — так Android защищает приложения, скачанные не из Google Play:</div>
       <ol class="steps">
@@ -2284,7 +2283,7 @@ function welcome(step) {
   if (!step) step = TW.loggedIn ? 'done' : 'login';
   if (step === 'login') {
     box.innerHTML = `<div class="wel">
-      <div class="logo"><i></i></div>
+      <img class="logo" src="logo.svg" alt="">
       <h1>Стримь игры с телефона на Twitch</h1>
       <p>Сцены, алерты, донаты, чат и цель доната — всё в одном приложении.</p>
       <button class="btn big twbtn" id="wTw">${I('user')}Войти через Twitch</button>
@@ -2324,14 +2323,14 @@ const GUIDE = [
   ['coin', 'DonationAlerts', `<p>Настройки → DonationAlerts → <b>Подключить</b>. После этого донаты приходят алертами на стрим и идут в цель доната.</p><p>Хочешь свои алерты с сайта DonationAlerts — добавь <b>Веб-виджет</b> и вставь ссылку «для OBS» из Виджеты → Оповещения.</p>`],
   ['bubble', 'Кружок поверх игры', `<p>Во время эфира поверх игры висит кружок. Его обводка показывает связь: <b>розовая</b> — всё хорошо, <b>жёлтая</b> — подключение, <b>красная</b> — переподключение.</p><p>Нажми на кружок — откроется меню: зрители, Мбит/с, события, чат (нажми на сообщение — покажу его на стриме), сцены и кнопки Микрофон, Скрыть, Запись, Правка, Стоп.</p><div class="tip">«Правка» открывает слои, а зрители в это время видят заставку. «К игре» — обратно.</div>`],
   ['rec', 'Запись видео', `<p>Настройки → Запись: <b>«Записывать эфир в файл»</b> — эфир сохранится в Галерею, папка Movies/StreamScene. Во время эфира запись включается кнопкой в кружке.</p><p>На Пульте есть <b>«Только запись, 1080p»</b> — запись без Twitch, например для YouTube или TikTok.</p>`],
-  ['eyeoff', 'Приватность', `<p><b>Скрыть экран</b> — зрители видят заставку вместо игры, а звук игры выключается. Удобно, когда вводишь пароль или читаешь личные сообщения.</p><p>Автоматически экран скрывается, когда телефон заблокирован и когда открыта СтримСцена. Заставку можно сделать из любой своей сцены.</p>`],
-  ['warn', 'Если что-то не так', `<ul><li><b>Кружок не появляется</b> — разреши «Поверх других приложений». Если Android пишет «Запрещено настройками» — Настройки телефона → Приложения → СтримСцена → ⋮ → «Разрешить ограниченные настройки».</li><li><b>Тормозит или падает качество</b> — выбери 720p 30 к/с и проверь интернет на Пульте.</li><li><b>Нет звука игры</b> — некоторые игры запрещают запись звука; это ограничение Android.</li><li><b>Телефон греется</b> — сними чехол, убавь яркость. Приложение само снизит качество при перегреве.</li></ul>`]
+  ['eyeoff', 'Приватность', `<p><b>Скрыть экран</b> — зрители видят заставку вместо игры, а звук игры выключается. Удобно, когда вводишь пароль или читаешь личные сообщения.</p><p>Автоматически экран скрывается, когда телефон заблокирован и когда открыт Glowcast. Заставку можно сделать из любой своей сцены.</p>`],
+  ['warn', 'Если что-то не так', `<ul><li><b>Кружок не появляется</b> — разреши «Поверх других приложений». Если Android пишет «Запрещено настройками» — Настройки телефона → Приложения → Glowcast → ⋮ → «Разрешить ограниченные настройки».</li><li><b>Тормозит или падает качество</b> — выбери 720p 30 к/с и проверь интернет на Пульте.</li><li><b>Нет звука игры</b> — некоторые игры запрещают запись звука; это ограничение Android.</li><li><b>Телефон греется</b> — сними чехол, убавь яркость. Приложение само снизит качество при перегреве.</li></ul>`]
 ];
 function openGuide(play) {
   let box = $('#guideBox');
   if (!box) { box = document.createElement('div'); box.id = 'guideBox'; box.className = 'full'; document.body.appendChild(box); }
   box.innerHTML = `<div class="gd">
-    <div class="bar"><h2>Гайд по СтримСцене</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
+    <div class="bar"><h2>Гайд по Glowcast</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
     <video id="gdVideo" src="guide.mp4" controls playsinline preload="metadata"></video>
     ${GUIDE.map(([ic, t, body], i) => `<details${i === 0 ? ' open' : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
     <button class="btn big pri" id="gdDone" style="margin-top:8px">Понятно, к делу</button>
@@ -2434,7 +2433,7 @@ window.onNative = o => {
     case 'scene': if (typeof o.index === 'number' && o.index !== cur && o.index < scenes.length) { cur = o.index; selId = null; renderUI(); if (tab === 'live') renderLive(); } return;
   }
   liveState = o.state; liveMsg = o.msg || '';
-  if (liveState === 'live' && !wasLive) { wasLive = true; liveSince = liveSince || Date.now(); toast(streamCfg.hideInApp ? 'Ты в эфире. Пока открыта СтримСцена, зрители видят заставку — переходи в игру' : 'Ты в эфире. Сворачивай и запускай игру'); }
+  if (liveState === 'live' && !wasLive) { wasLive = true; liveSince = liveSince || Date.now(); toast(streamCfg.hideInApp ? 'Ты в эфире. Пока открыт Glowcast, зрители видят заставку — переходи в игру' : 'Ты в эфире. Сворачивай и запускай игру'); }
   if (liveState === 'recording' && !wasLive) { wasLive = true; liveSince = liveSince || Date.now(); recOn = true; toast('Запись идёт. Файл попадёт в Галерею → Movies/StreamScene'); }
   if (!isLive()) { wasLive = false; liveKbps = 0; liveViewers = null; liveSince = 0; recOn = false; }
   if (liveState === 'error') toast(liveMsg || 'Ошибка');

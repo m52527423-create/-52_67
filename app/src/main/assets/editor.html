@@ -328,6 +328,36 @@ input[type=range]{accent-color:var(--cy)}
 .nchecks .chk:first-child{border-top:0}
 .nchecks .ic.st.ok{color:var(--cy)}
 .nchecks .btn.sm{border-radius:999px;border-color:var(--acc);color:var(--acc);background:transparent}
+
+/* Приветствие и гайд */
+.full{position:fixed;inset:0;z-index:70;background:radial-gradient(560px 380px at 100% -80px,rgba(255,61,168,.3),transparent 70%),radial-gradient(460px 360px at -100px 80%,rgba(61,242,255,.14),transparent 70%),var(--bg);display:flex;flex-direction:column;overflow-y:auto}
+.wel{flex:1;display:flex;flex-direction:column;justify-content:center;padding:32px 26px calc(28px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;width:100%;box-sizing:border-box}
+.wel .logo{width:64px;height:64px;border-radius:20px;background:var(--acc);box-shadow:0 0 34px rgba(255,61,168,.6);display:grid;place-items:center;margin-bottom:26px}
+.wel .logo i{width:20px;height:20px;border-radius:50%;background:var(--on-acc)}
+.wel h1{font-family:var(--disp);font-weight:800;font-size:30px;line-height:1.15;margin:0 0 14px}
+.wel p{color:var(--mute);font-size:16px;line-height:1.5;margin:0 0 26px}
+.wel .btn.big{height:58px;font-size:17px;border-radius:18px}
+.wel .twbtn{background:#9146FF;border-color:#9146FF;color:#fff;box-shadow:0 0 24px rgba(145,70,255,.45)}
+.wel .fine{font-size:13px;color:var(--mute);line-height:1.5;margin:16px 2px 0}
+.wel .later{margin-top:18px;align-self:center;color:var(--mute);font-weight:600;padding:10px 14px}
+.wel .who{display:flex;align-items:center;gap:14px;background:var(--s1);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:24px}
+.wel .who img,.wel .who .ph{width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--s3);flex:none}
+.wel .who b{display:block;font-size:17px}.wel .who small{color:var(--cy);font-size:13px}
+.wel .stack{display:flex;flex-direction:column;gap:10px}
+.gd{max-width:620px;margin:0 auto;width:100%;padding:0 16px calc(24px + env(safe-area-inset-bottom));box-sizing:border-box}
+.gd .bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:14px 0 10px;background:linear-gradient(var(--bg) 70%,transparent)}
+.gd .bar h2{flex:1;margin:0;font-family:var(--disp);font-size:19px}
+.gd video{width:100%;border-radius:18px;background:#000;display:block;outline:2px solid var(--cy);box-shadow:0 0 26px rgba(61,242,255,.25);margin:4px 0 18px;max-height:62vh}
+.gd details{background:var(--s1);border:1px solid var(--line);border-radius:16px;margin-bottom:10px;overflow:hidden}
+.gd summary{list-style:none;display:flex;align-items:center;gap:12px;padding:15px 14px;font-weight:700;font-size:15px;cursor:pointer}
+.gd summary::-webkit-details-marker{display:none}
+.gd summary .ic{width:22px;height:22px;color:var(--acc);flex:none}
+.gd summary .chev{margin-left:auto;color:var(--mute);transition:transform .2s;width:18px;height:18px}
+.gd details[open] summary .chev{transform:rotate(90deg)}
+.gd .body{padding:0 16px 16px 48px;color:var(--text);font-size:14.5px;line-height:1.55}
+.gd .body p{margin:0 0 10px}.gd .body ol,.gd .body ul{margin:0 0 10px;padding-left:18px}.gd .body li{margin-bottom:6px}
+.gd .body b{color:#fff}
+.gd .tip{background:var(--cy-d);color:var(--cy);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -1842,7 +1872,7 @@ function renderLive() {
   else if (TW.loggedIn) {
     html += `<div class="item"><div class="acct" style="flex:1">${TW.avatar ? `<img src="${esc(TW.avatar)}" alt="">` : `<span class="ph">${I('user')}</span>`}
         <div class="nm">${esc(TW.displayName || TW.login)}<small>twitch.tv/${esc(TW.login)}</small></div></div>
-        <button class="btn sm icon" id="twOut" aria-label="Выйти">${I('logout')}</button></div>
+        <button class="btn sm" id="twSwitch">Сменить</button><button class="btn sm icon" id="twOut" aria-label="Выйти">${I('logout')}</button></div>
       <div class="item col"><span class="lab">Название стрима</span><input class="inp" id="skTitle" maxlength="140" placeholder="${chanLoaded ? 'Название стрима' : 'Загружаю…'}" ${live ? 'disabled' : ''}></div>
       <div class="item col"><span class="lab">Категория</span><input class="inp" id="skCat" placeholder="Начни вводить название игры" autocomplete="off" ${live ? 'disabled' : ''}><div id="skSugg" class="sugg hidden"></div></div>`;
   } else {
@@ -1928,6 +1958,7 @@ function renderLive() {
     <div class="item"><div class="lbl">Плавающий кружок поверх игры<small>зрители, соединение, чат, сцены, микрофон</small></div><label class="sw"><input type="checkbox" id="skBub"${streamCfg.bubble ? ' checked' : ''}><span></span></label></div>
   </div>`;
 
+  html += `<button class="btn" id="skGuide" style="width:100%;margin:2px 0 8px">${I('live')}Гайд по приложению</button>`;
   html += `<button class="btn" id="skAdv" style="width:100%;margin:2px 0 12px">${I('sliders')}${streamCfg.advanced ? 'Скрыть дополнительные настройки' : 'Все настройки'}</button>`;
   if (!live) html += `<button class="btn pri big" id="skGo">${I('live')}Начать эфир</button>
     <p class="note" style="margin:8px 2px 0">Android спросит разрешение на запись экрана — выбери <b>«Весь экран»</b>.</p>`;
@@ -1952,6 +1983,7 @@ function renderLive() {
   $('#skAuto').onchange = e => { streamCfg.autoBitrate = e.target.checked; saveCfg(); };
   $('#skRec').onchange = e => { streamCfg.record = e.target.checked; saveCfg(); if (e.target.checked) toast('Эфир будет записываться. Запись можно включать и выключать в кружке'); };
   if ($('#skRecOnly')) $('#skRecOnly').onclick = () => startRecordOnly();
+  $('#skGuide').onclick = () => openGuide(true);
   $('#skAdv').onclick = () => { streamCfg.advanced = !streamCfg.advanced; saveCfg(); renderLive(); };
   $('#skDelay').onchange = e => {
     let v = Math.round(parseFloat(String(e.target.value).replace(',', '.')) || 0);
@@ -1985,6 +2017,7 @@ function renderLive() {
   }
   if (!NATIVE) return;
   if (TW.loggedIn) {
+    $('#twSwitch').onclick = () => changeAccount();
     $('#twOut').onclick = () => sheetOpts('Выйти из Twitch?', [{ label: 'Выйти', cls: 'danger', fn: () => { NATIVE.twLogout(); chan = null; chanLoaded = false; twRefresh(); } }]);
     const t = $('#skTitle'), c = $('#skCat'), sg = $('#skSugg');
     if (chan) { t.value = titleDraft ?? (chan.title || ''); c.value = catSel ? catSel.name : (chan.game_name || ''); }
@@ -2170,7 +2203,7 @@ function renderHome() {
       <button class="btn" id="homeRec" style="margin-top:22px;border-radius:999px;height:44px;padding:0 18px">${I('rec')}Только запись, 1080p</button>
       <div class="sub">Сцена «${esc(scene().name)}», ${q.label.split(' (')[0]}${streamCfg.testMode ? ', пробный эфир' : ''}${streamCfg.delay ? `, задержка ${streamCfg.delay} с` : ''}</div></div>`;
     h += `<div class="nsec">Готовность</div><div class="nchecks">`;
-    h += TW.loggedIn ? chkRow('ok', 'Twitch: ' + esc(TW.displayName || TW.login), chan ? esc(chan.title || '') : 'ключ трансляции возьмём сами')
+    h += TW.loggedIn ? chkRow('ok', 'Эфир пойдёт на канал ' + esc(TW.displayName || TW.login), chan ? esc(chan.title || '') : 'twitch.tv/' + esc(TW.login || ''), `<button class="btn sm" id="hSwitch">Сменить</button>`)
       : key ? chkRow('ok', 'Ключ трансляции указан', 'или войди через Twitch для названия и алертов', `<button class="btn sm" id="hTw">Войти</button>`)
       : chkRow('warn', 'Войди через Twitch', 'нужно для эфира', `<button class="btn sm" id="hTw">Войти</button>`);
     h += hasScreen ? chkRow('ok', 'Экран игры в сцене', 'зрители увидят игру') : chkRow('warn', 'В сценах нет экрана игры', 'зрители не увидят игру', `<button class="btn sm" id="hAddScreen">Добавить</button>`);
@@ -2180,11 +2213,14 @@ function renderHome() {
     if (NATIVE) h += DA.loggedIn ? chkRow('ok', 'DonationAlerts: ' + esc(DA.name || 'подключён'), '') : chkRow('no', 'DonationAlerts не подключён', 'по желанию', `<button class="btn sm" id="hDa">Подключить</button>`);
     if (NATIVE && streamCfg.bubble) h += NATIVE.canOverlay() ? chkRow('ok', 'Кружок поверх игры разрешён', '') : chkRow('warn', 'Кружок поверх игры не разрешён', '', `<button class="btn sm" id="hOv">Разрешить</button>`);
     h += `</div>`;
+    h += `<button class="btn" id="hGuide" style="width:100%;margin-top:16px;height:48px">${I('live')}Гайд по приложению · 1 минута</button>`;
     if (eventLog.length) h += `<div class="nsec">Прошлый эфир<small>${eventLog.length} событий</small></div><div class="feed nlist">${eventLog.slice(0, 10).map(e => `<div class="fe" style="color:${EV_COL[e.kind] || 'var(--cy)'}">${I(EV_ICON[e.kind] || 'star')}<div style="color:var(--text)"><b>${esc(e.name)}</b> ${esc(e.title)}</div><span class="t">${ago(e.t)}</span></div>`).join('')}</div>`;
   }
   p.innerHTML = h;
   const on = (id, fn) => { const e = $('#' + id); if (e) e.onclick = fn; };
   on('homeGo', () => startFlow());
+  on('hSwitch', () => changeAccount());
+  on('hGuide', () => openGuide(true));
   on('homeRec', () => startRecordOnly());
   on('hRec', () => { if (liveState === 'recording') return askStop(); NATIVE && NATIVE.toggleRecord(); });
   on('hTw', () => twLoginFlow(() => setTab('home')));
@@ -2239,6 +2275,73 @@ async function applyTheme(id, accent) {
   save(); renderUI(); renderThemes(); toast('Тема применена');
 }
 $('#themeApply').onclick = () => applyTheme(THEME.id, $('#themeAccent').value);
+
+
+/* ================= Приветствие: вход через Twitch ================= */
+function welcome(step) {
+  let box = $('#welcomeBox');
+  if (!box) { box = document.createElement('div'); box.id = 'welcomeBox'; box.className = 'full'; document.body.appendChild(box); }
+  if (!step) step = TW.loggedIn ? 'done' : 'login';
+  if (step === 'login') {
+    box.innerHTML = `<div class="wel">
+      <div class="logo"><i></i></div>
+      <h1>Стримь игры с телефона на Twitch</h1>
+      <p>Сцены, алерты, донаты, чат и цель доната — всё в одном приложении.</p>
+      <button class="btn big twbtn" id="wTw">${I('user')}Войти через Twitch</button>
+      <div class="fine">Трансляции будут идти на канал этого аккаунта. Сменить аккаунт можно в любой момент: Настройки → Канал Twitch.</div>
+      <button class="later" id="wLater">Войти позже</button>
+    </div>`;
+    $('#wTw').onclick = () => { if (!NATIVE) return toast('Вход работает в приложении на телефоне'); twLoginFlow(() => welcome('done')); };
+    $('#wLater').onclick = () => { store.set('welcomed', true); box.remove(); };
+  } else {
+    const name = esc(TW.displayName || TW.login || '');
+    box.innerHTML = `<div class="wel">
+      <h1>Готово, ${name}!</h1>
+      <div class="who">${TW.avatar ? `<img src="${esc(TW.avatar)}" alt="">` : `<div class="ph"></div>`}<div><b>${name}</b><small>эфиры пойдут на twitch.tv/${esc(TW.login || '')}</small></div></div>
+      <p>За минуту покажу, как всё устроено: сцены, живые слои, кружок поверх игры и первый эфир.</p>
+      <div class="stack">
+        <button class="btn big pri" id="wGuide">${I('live')}Смотреть гайд · 1 минута</button>
+        <button class="btn big" id="wGo">Сразу к делу</button>
+      </div>
+    </div>`;
+    $('#wGuide').onclick = () => { store.set('welcomed', true); box.remove(); openGuide(true); };
+    $('#wGo').onclick = () => { store.set('welcomed', true); box.remove(); setTab('home'); };
+  }
+}
+function changeAccount() {
+  sheetOpts('Сменить аккаунт Twitch? Эфиры пойдут на канал нового аккаунта.', [{ label: 'Войти в другой аккаунт', cls: 'pri', fn: () => {
+    if (NATIVE) NATIVE.twLogout(); chan = null; chanLoaded = false; titleDraft = null; catSel = null; twRefresh();
+    twLoginFlow(() => { renderUI(); if (tab === 'home') renderHome(); if (tab === 'live') renderLive(); toast('Теперь эфиры идут на канал ' + (TW.displayName || TW.login)); });
+  } }]);
+}
+
+/* ================= Гайд ================= */
+const GUIDE = [
+  ['live', 'Первый эфир за 3 шага', `<ol><li>Войди через Twitch — название, категория и ключ трансляции подтянутся сами.</li><li>На <b>Пульте</b> проверь «Готовность»: Twitch, экран игры в сцене, интернет.</li><li>Нажми <b>В ЭФИР</b>. Android спросит доступ к экрану — выбери <b>«Весь экран»</b>. Потом открывай игру.</li></ol><div class="tip">Хочешь проверить без зрителей — включи «Пробный эфир» в Настройках → Видео.</div>`],
+  ['layers', 'Сцены и слои', `<p><b>Сцена</b> — это то, что видят зрители: экран игры плюс всё, что ты положишь сверху. Сцены переключаются кнопками над превью: «Игра», «Скоро начнём», «Перерыв».</p><p><b>Слои</b> — части сцены: экран игры, картинки, тексты, чат, алерты. Во вкладке «Слои» их можно скрыть, перетащить за точки слева (что выше — то поверх) или открыть свойства.</p><div class="tip">Двойной тап по слою на превью сразу открывает его свойства.</div>`],
+  ['game', 'Экран игры', `<p>Тяни экран игры пальцем, уголки — размер. В «Свойствах» есть быстрые кнопки: <b>Вписать</b>, <b>Заполнить</b>, <b>Растянуть</b>, <b>По центру</b>, и обрезка краёв, если в кадр лезут кнопки игры.</p><p>Если играешь вертикально — укажи это в Настройках → Видео → «Как держишь телефон в игре».</p>`],
+  ['plus', 'Что можно добавить', `<ul><li><b>Фото, текст, готовые баннеры</b> — обычные слои.</li><li><b>Камера</b> — круг или прямоугольник с рамкой.</li><li><b>Чат</b> — сообщения зрителей прямо на стриме.</li><li><b>Алерты</b> — фолловы, сабы, биты, рейды и донаты, со своими картинками, звуками и озвучкой.</li><li><b>Цель доната</b> — полоса «собрано из». Считает донаты DonationAlerts, биты и сабы по твоему курсу.</li><li><b>Таймер, часы, зрители, бегущая строка, GIF, веб-виджет</b>.</li></ul><div class="tip">Живые слои можно добавлять прямо во время эфира — появятся сразу.</div>`],
+  ['coin', 'DonationAlerts', `<p>Настройки → DonationAlerts → <b>Подключить</b>. После этого донаты приходят алертами на стрим и идут в цель доната.</p><p>Хочешь свои алерты с сайта DonationAlerts — добавь <b>Веб-виджет</b> и вставь ссылку «для OBS» из Виджеты → Оповещения.</p>`],
+  ['bubble', 'Кружок поверх игры', `<p>Во время эфира поверх игры висит кружок. Его обводка показывает связь: <b>розовая</b> — всё хорошо, <b>жёлтая</b> — подключение, <b>красная</b> — переподключение.</p><p>Нажми на кружок — откроется меню: зрители, Мбит/с, события, чат (нажми на сообщение — покажу его на стриме), сцены и кнопки Микрофон, Скрыть, Запись, Правка, Стоп.</p><div class="tip">«Правка» открывает слои, а зрители в это время видят заставку. «К игре» — обратно.</div>`],
+  ['rec', 'Запись видео', `<p>Настройки → Запись: <b>«Записывать эфир в файл»</b> — эфир сохранится в Галерею, папка Movies/StreamScene. Во время эфира запись включается кнопкой в кружке.</p><p>На Пульте есть <b>«Только запись, 1080p»</b> — запись без Twitch, например для YouTube или TikTok.</p>`],
+  ['eyeoff', 'Приватность', `<p><b>Скрыть экран</b> — зрители видят заставку вместо игры, а звук игры выключается. Удобно, когда вводишь пароль или читаешь личные сообщения.</p><p>Автоматически экран скрывается, когда телефон заблокирован и когда открыта СтримСцена. Заставку можно сделать из любой своей сцены.</p>`],
+  ['warn', 'Если что-то не так', `<ul><li><b>Кружок не появляется</b> — разреши «Поверх других приложений». Если Android пишет «Запрещено настройками» — Настройки телефона → Приложения → СтримСцена → ⋮ → «Разрешить ограниченные настройки».</li><li><b>Тормозит или падает качество</b> — выбери 720p 30 к/с и проверь интернет на Пульте.</li><li><b>Нет звука игры</b> — некоторые игры запрещают запись звука; это ограничение Android.</li><li><b>Телефон греется</b> — сними чехол, убавь яркость. Приложение само снизит качество при перегреве.</li></ul>`]
+];
+function openGuide(play) {
+  let box = $('#guideBox');
+  if (!box) { box = document.createElement('div'); box.id = 'guideBox'; box.className = 'full'; document.body.appendChild(box); }
+  box.innerHTML = `<div class="gd">
+    <div class="bar"><h2>Гайд по СтримСцене</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
+    <video id="gdVideo" src="guide.mp4" controls playsinline preload="metadata"></video>
+    ${GUIDE.map(([ic, t, body], i) => `<details${i === 0 ? ' open' : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
+    <button class="btn big pri" id="gdDone" style="margin-top:8px">Понятно, к делу</button>
+  </div>`;
+  const v = $('#gdVideo');
+  v.onerror = () => v.remove();
+  if (play) v.play().catch(() => {});
+  const close = () => { try { v.pause(); } catch {} box.remove(); };
+  $('#gdClose').onclick = close; $('#gdDone').onclick = () => { close(); setTab('home'); };
+}
 
 /* ================= Обучение при первом запуске ================= */
 const OB = [
@@ -2349,7 +2452,7 @@ load();
 if (NATIVE && isLive()) { cur = clamp(INFO.current || 0, 0, scenes.length - 1); liveSince = Date.now(); wasLive = liveState === 'live'; }
 twRefresh();
 renderUI(); renderThemes(); setTab(tab); setStatus(); histPush(); requestAnimationFrame(loop);
-if (!store.get('onboarded', false)) setTimeout(() => onboarding(0), 400);
+if (!store.get('welcomed', false) && !(NATIVE && isLive())) setTimeout(() => welcome(), 200);
 window.addEventListener('resize', () => setTimeout(sizeStage, 50));
 </script>
 </body>

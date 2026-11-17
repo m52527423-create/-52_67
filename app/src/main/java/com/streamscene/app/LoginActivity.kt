@@ -119,6 +119,7 @@ class LoginActivity : Activity() {
       .appendQueryParameter("redirect_uri", REDIRECT)
       .appendQueryParameter("scope", TwitchClient.SCOPES)
       .appendQueryParameter("state", state)
+      .appendQueryParameter("force_verify", "true") // всегда показываем, какой аккаунт входит — можно сменить
       .build().toString()
     web.loadUrl(url)
   }

@@ -310,6 +310,7 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 .dalink{display:flex;align-items:center;gap:12px;padding:12px;border-top:1px solid var(--line)}
 .dalink:first-of-type{border-top:0}
 .dalink .lbl{flex:1;min-width:0}.dalink .lbl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dalink small.shown{color:var(--warn);white-space:normal;word-break:break-all}
 .dalink .ic{width:22px;height:22px;color:var(--warn);flex:none}
 .steps2{margin:0 0 4px;padding-left:20px;font-size:14px;line-height:1.5}.steps2 li{margin-bottom:6px}
 #livePane.simple .adv{display:none}
@@ -569,7 +570,7 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 
       <div class="group" id="gDa">
         <div class="ghead" id="gDaHead">DonationAlerts</div>
-        <div class="dalink"><div class="lbl">Ссылка на виджет<small id="pDaUrl"></small></div><button class="btn sm pri" id="pDaEdit">Изменить ссылку</button></div>
+        <div class="dalink"><div class="lbl">Ссылка на виджет<small id="pDaUrl"></small></div><button class="btn sm" id="pDaShow">Показать</button><button class="btn sm pri" id="pDaEdit">Изменить</button></div>
         <div class="item"><div class="lbl note">Поменял оформление на сайте DonationAlerts — ссылка та же, всё обновится само. Создал новый сбор или виджет — нажми «Изменить ссылку».</div></div>
         <div class="gbody" style="padding-top:0"><button class="btn" style="width:100%" id="pDaHow">Где взять ссылку — гайд</button></div>
       </div>
@@ -1166,7 +1167,7 @@ function drawLayer(c, l, t = performance.now()) {
       const fs = Math.min(l.h * .09, 30); c.font = `700 ${fs}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = '#cfe4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.fillText(l.daKind ? DA_KINDS[l.daKind].full : 'Веб-виджет', l.x + l.w / 2, l.y + l.h / 2 - fs * .7);
       c.font = `500 ${fs * .7}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(207,228,255,.75)';
-      let u = (l.url || 'вставь ссылку в свойствах').replace(/^https?:\/\//, ''); while (u.length > 4 && c.measureText(u).width > l.w * .9) u = u.slice(0, -4) + '…';
+      let u = l.daKind ? (l.url ? 'ссылка сохранена' : 'вставь ссылку в свойствах') : (l.url || 'вставь ссылку в свойствах').replace(/^https?:\/\//, ''); while (u.length > 4 && c.measureText(u).width > l.w * .9) u = u.slice(0, -4) + '…';
       c.fillText(u, l.x + l.w / 2, l.y + l.h / 2 + fs * .6); break;
     }
     case 'highlight': {
@@ -1561,7 +1562,7 @@ function renderProps() {
   }
   show('#gWeb', t === 'web' && !s.daKind);
   show('#gDa', t === 'web' && !!s.daKind);
-  if (t === 'web' && s.daKind) { $('#gDaHead').textContent = DA_KINDS[s.daKind].full; $('#pDaUrl').textContent = (s.url || 'не указана').replace(/^https?:\/\//, ''); }
+  if (t === 'web' && s.daKind) { $('#gDaHead').textContent = DA_KINDS[s.daKind].full; $('#pDaUrl').textContent = s.url ? maskUrl(s.url) : 'не указана'; $('#pDaShow').classList.toggle('hidden', !s.url); }
   show('#gGoal', t === 'goal');
   if (t === 'goal') {
     const ae = document.activeElement;
@@ -1723,7 +1724,8 @@ $('#pGoalSub').onchange = e => { const s = selected(); if (!s) return; s.rateSub
 $('#pGoalC').oninput = e => { const s = selected(); if (!s) return; s.strokeColor = e.target.value; save(); };
 $('#pGoalReset').onclick = () => sheetOpts('Обнулить собранную сумму?', [{ label: 'Обнулить', cls: 'danger', fn: () => { const s = selected(); if (!s) return; s.goalStart = 0; s.goalRev = 'g' + Date.now(); save(); renderUI(); toast('Сумма обнулена'); } }]);
 $('#pDaEdit').onclick = () => { const s = selected(); if (s && s.daKind) daLinkSheet(s.daKind, () => renderProps()); };
-$('#pDaHow').onclick = () => openGuide(false, 'da');
+$('#pDaHow').onclick = () => openGuide(true, 'da');
+$('#pDaShow').onclick = () => { const s = selected(); if (s && s.url) revealLink($('#pDaUrl'), s.url); };
 $('#pUrl').onchange = e => { const s = selected(); if (!s) return; let u = e.target.value.trim(); if (u && !/^https?:\/\//.test(u)) u = 'https://' + u; s.url = u; e.target.value = u; save(); };
 $('#pPageW').onchange = e => { const s = selected(); if (!s) return; s.pageWidth = clamp(parseInt(e.target.value) || 800, 200, 1920); e.target.value = s.pageWidth; save(); };
 $('#pKey').onchange = e => { const s = selected(); if (s) { s.key = e.target.checked; save(); } };
@@ -1922,7 +1924,7 @@ function renderLive() {
 
   // DonationAlerts: ссылки на виджеты
   html += `<div class="group"><div class="ghead">DonationAlerts</div>
-    ${Object.entries(DA_KINDS).map(([k, d]) => `<div class="dalink">${daLinks[k] ? '' : I('warn')}<div class="lbl">${d.title}<small>${daLinks[k] ? esc(daLinks[k].replace(/^https?:\/\//, '')) : 'ссылка не добавлена'}</small></div><button class="btn sm${daLinks[k] ? '' : ' pri'}" data-dalink="${k}">${daLinks[k] ? 'Изменить' : 'Добавить'}</button></div>`).join('')}
+    ${Object.entries(DA_KINDS).map(([k, d]) => `<div class="dalink">${daLinks[k] ? '' : I('warn')}<div class="lbl">${d.title}<small id="dl_${k}">${daLinks[k] ? esc(maskUrl(daLinks[k])) : 'ссылка не добавлена'}</small></div>${daLinks[k] ? `<button class="btn sm" data-dashow="${k}">Показать</button>` : ''}<button class="btn sm${daLinks[k] ? '' : ' pri'}" data-dalink="${k}">${daLinks[k] ? 'Изменить' : 'Добавить'}</button></div>`).join('')}
     <div class="gbody" style="padding-top:4px"><button class="btn" style="width:100%" id="daGuide">${I('live')}Как подключить алерты и сбор — гайд</button></div>`;
   if (NATIVE) html += DA.loggedIn
     ? `<div class="item adv"><div class="lbl">Донаты в ленте событий<small>${esc(DA.name || 'подключено')} · видно на Пульте и в кружке</small></div><button class="btn sm icon" id="daOut" aria-label="Отключить">${I('logout')}</button></div>`
@@ -2009,7 +2011,8 @@ function renderLive() {
   if ($('#skRecOnly')) $('#skRecOnly').onclick = () => startRecordOnly();
   $('#skGuide').onclick = () => openGuide(true);
   $$('[data-dalink]').forEach(b => b.onclick = () => daLinkSheet(b.dataset.dalink, () => renderLive()));
-  $('#daGuide').onclick = () => openGuide(false, 'da');
+  $$('[data-dashow]').forEach(b => b.onclick = () => revealLink($('#dl_' + b.dataset.dashow), daLinks[b.dataset.dashow]));
+  $('#daGuide').onclick = () => openGuide(true, 'da');
   $('#skAdv').onclick = () => { streamCfg.advanced = !streamCfg.advanced; saveCfg(); renderLive(); };
   $('#skDelay').onchange = e => {
     let v = Math.round(parseFloat(String(e.target.value).replace(',', '.')) || 0);
@@ -2338,13 +2341,25 @@ function saveDaLink(kind, url) {
   scenes.forEach(sc => sc.layers.forEach(l => { if (l.daKind === kind) l.url = url; }));
   save(); renderUI();
 }
+function maskUrl(u) {
+  if (!u) return '';
+  const m = u.replace(/^https?:\/\//, '').match(/^([^?#]*?\/widget\/[^/?#]+)/);
+  return (m ? m[1] : u.replace(/^https?:\/\//, '').split(/[/?#]/)[0]) + ' •••••••';
+}
+let revealT = null;
+function revealLink(el, url) {
+  if (isLive()) return toast('Во время эфира ссылку не показываю — вдруг зрители увидят');
+  el.textContent = url.replace(/^https?:\/\//, ''); el.classList.add('shown');
+  clearTimeout(revealT); revealT = setTimeout(() => { el.textContent = maskUrl(url); el.classList.remove('shown'); }, 10000);
+}
 function normUrl(u) { u = (u || '').trim(); const m = u.match(/https?:\/\/\S+/); if (m) u = m[0]; if (u && !/^https?:\/\//.test(u)) u = 'https://' + u; return u; }
 function daLinkSheet(kind, then) {
   const k = DA_KINDS[kind];
   sheet(k.full, box => {
     box.innerHTML = `
       <div class="note" style="font-size:14px;margin-bottom:10px">Вставь ссылку на виджет «${k.site}» из DonationAlerts. Она сохранится — второй раз вставлять не нужно.</div>
-      <input class="inp" id="daUrl" placeholder="https://www.donationalerts.com/widget/…" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(daLinks[kind] || '')}">
+      ${daLinks[kind] ? `<div class="note" style="font-size:13px;margin-bottom:8px">Сейчас сохранена: <b>${esc(maskUrl(daLinks[kind]))}</b></div>` : ''}
+      <input class="inp" id="daUrl" type="password" placeholder="${daLinks[kind] ? 'вставь новую ссылку' : 'вставь ссылку сюда'}" autocomplete="off" autocapitalize="off" spellcheck="false">
       <button class="btn pri" id="daSave">${I('check')}Сохранить</button>
       <button class="btn" id="daHow">${I('live')}Где взять ссылку — гайд</button>
       ${NATIVE ? `<button class="btn" id="daSite">${I('out')}Открыть DonationAlerts</button>` : ''}`;
@@ -2358,7 +2373,7 @@ function daLinkSheet(kind, then) {
       }
       closeSheet(); saveDaLink(kind, u); toast('Ссылка сохранена'); then && then(u);
     };
-    box.querySelector('#daHow').onclick = () => { closeSheet(); openGuide(false, 'da'); };
+    box.querySelector('#daHow').onclick = () => { closeSheet(); openGuide(true, 'da'); };
     const site = box.querySelector('#daSite'); if (site) site.onclick = () => NATIVE.openUrl('https://www.donationalerts.com/dashboard/widgets');
     setTimeout(() => inp.focus(), 250);
   });
@@ -2421,8 +2436,8 @@ const GUIDE = [
   ['game', 'Экран игры', `<p>Тяни экран игры пальцем, уголки — размер. В «Свойствах» есть быстрые кнопки: <b>Вписать</b>, <b>Заполнить</b>, <b>Растянуть</b>, <b>По центру</b>, и обрезка краёв, если в кадр лезут кнопки игры.</p><p>Если играешь вертикально — укажи это в Настройках → Видео → «Как держишь телефон в игре».</p>`],
   ['plus', 'Что можно добавить', `<ul><li><b>Фото, текст, готовые баннеры</b> — обычные слои.</li><li><b>Камера</b> — круг или прямоугольник с рамкой.</li><li><b>Чат</b> — сообщения зрителей прямо на стриме.</li><li><b>Алерты и Сбор средств</b> — твои виджеты из DonationAlerts, со всеми картинками, звуками и озвучкой (раздел ниже).</li><li><b>Таймер, часы, зрители, бегущая строка, GIF, веб-виджет</b>.</li></ul><div class="tip">Живые слои можно добавлять прямо во время эфира — появятся сразу.</div>`],
   ['coin', 'Алерты и сбор из DonationAlerts', `<p>Алерты и сбор средств настраиваются на сайте DonationAlerts — картинки, звуки, озвучка, оформление. Glowcast просто показывает их на стриме.</p>
-    <p><b>Алерты:</b></p><ol class="steps2"><li>Открой <b>donationalerts.com</b> и войди (можно через Twitch).</li><li>Слева: <b>Виджеты → Оповещения</b>. Настрой вид и звук, сохрани.</li><li>Найди поле <b>«Ссылка для OBS»</b> (или «Ссылка на виджет»), нажми <b>«Показать»</b> и <b>«Скопировать»</b>.</li><li>В Glowcast: <b>Добавить → Алерты</b>, вставь ссылку, <b>Сохранить</b>.</li></ol>
-    <p><b>Сбор средств:</b></p><ol class="steps2"><li>На сайте: <b>Виджеты → Сбор средств</b>, создай сбор (название, сумма).</li><li>Скопируй его <b>ссылку для OBS</b>.</li><li>В Glowcast: <b>Добавить → Сбор средств</b>, вставь ссылку.</li></ol>
+    <p><b>Алерты:</b></p><ol class="steps2"><li>Открой <b>donationalerts.com</b> и войди (можно через Twitch).</li><li>Слева: <b>«Оповещения»</b>. Настрой вид, звук и озвучку, сохрани.</li><li>Нажми <b>«Показать ссылку для встраивания»</b> и скопируй её.</li><li>В Glowcast: <b>Добавить → Алерты</b>, вставь ссылку, <b>Сохранить</b>.</li></ol>
+    <p><b>Сбор средств:</b></p><ol class="steps2"><li>На сайте слева: <b>«Сбор средств»</b> → <b>«Добавить сбор»</b>: название и сумма.</li><li>Скопируй <b>ссылку для встраивания</b> этого сбора.</li><li>В Glowcast: <b>Добавить → Сбор средств</b>, вставь ссылку.</li></ol>
     <p>Ссылки сохраняются: в следующий раз слой добавится сразу, без вставки.</p>
     <div class="tip">Поменял оформление на сайте — ссылка та же, ничего делать не надо. Новый сбор или новый виджет — выбери слой → <b>Изменить ссылку</b> (или Настройки → DonationAlerts). Ссылка обновится во всех сценах.</div>
     <p style="margin-top:10px">Фолловы и сабы Twitch тоже можно показывать: на сайте DonationAlerts подключи Twitch и включи эти оповещения.</p>
@@ -2436,8 +2451,8 @@ function openGuide(play, section) {
   let box = $('#guideBox');
   if (!box) { box = document.createElement('div'); box.id = 'guideBox'; box.className = 'full'; document.body.appendChild(box); }
   box.innerHTML = `<div class="gd">
-    <div class="bar"><h2>Гайд по Glowcast</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
-    <video id="gdVideo" src="guide.mp4" controls playsinline preload="metadata"></video>
+    <div class="bar"><h2>${section === 'da' ? 'Алерты из DonationAlerts' : 'Гайд по Glowcast'}</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
+    <video id="gdVideo" src="${section === 'da' ? 'guide_da.mp4' : 'guide.mp4'}" controls playsinline preload="metadata"></video>
     ${GUIDE.map(([ic, t, body, id], i) => `<details${(section ? id === section : i === 0) ? ' open' : ''}${id ? ` id="gd_${id}"` : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
     <button class="btn big pri" id="gdDone" style="margin-top:8px">Понятно, к делу</button>
   </div>`;

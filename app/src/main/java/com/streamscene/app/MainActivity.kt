@@ -51,13 +51,17 @@ class MainActivity : Activity() {
     DaClient.init(this)
     web = WebView(this)
     web.layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-    web.setBackgroundColor(0xFF0B0B0D.toInt())
-    setContentView(web)
-    // отступы под системные панели (Android 15 рисует под ними)
-    web.setOnApplyWindowInsetsListener { v, insets ->
-      @Suppress("DEPRECATION")
-      v.setPadding(0, insets.systemWindowInsetTop, 0, insets.systemWindowInsetBottom)
-      insets
+    web.setBackgroundColor(0xFF140F2B.toInt())
+    // WebView не учитывает свои отступы, поэтому кладём её в рамку и отодвигаем от системных панелей и клавиатуры
+    val root = FrameLayout(this)
+    root.setBackgroundColor(0xFF140F2B.toInt())
+    root.addView(web)
+    setContentView(root)
+    root.setOnApplyWindowInsetsListener { v, insets ->
+      val sys = insets.getInsets(android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout())
+      val ime = insets.getInsets(android.view.WindowInsets.Type.ime())
+      v.setPadding(sys.left, sys.top, sys.right, max(sys.bottom, ime.bottom))
+      android.view.WindowInsets.CONSUMED
     }
 
     with(web.settings) {

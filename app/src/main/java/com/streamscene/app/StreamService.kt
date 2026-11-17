@@ -398,7 +398,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       try { f.setGif(ByteArrayInputStream(firstGif)) } catch (e: Exception) { Log.w(TAG, "gif", e) }
       f.alpha = 0f; addF(f, R_GIF)
     }
-    val nWeb = min(2, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
+    val nWeb = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
     while (webFilters.size < nWeb) {
       val idx = webFilters.size
       webHosts += WebWidgetHost(this); webState += ""

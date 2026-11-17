@@ -295,6 +295,23 @@ nav.tabs .dot{background:var(--acc)}
 #sheet h4{font-family:var(--disp);font-weight:700}
 #toast{background:var(--s3);border-color:var(--line2);border-radius:999px}
 input[type=range]{accent-color:var(--cy)}
+
+.golive .recbtn{margin-top:22px;border-radius:999px;height:46px;padding:0 20px;font-size:14px}
+.golive .recbtn .ic{width:18px;height:18px;color:var(--acc)}
+select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A79FD0' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:36px;height:44px;border-radius:14px;font-weight:600}
+.pick{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;margin:-2px -2px 4px;padding:2px}
+.pick button{display:flex;align-items:center;gap:12px;min-height:58px;padding:10px 16px;border-radius:16px;background:var(--s2);border:2px solid transparent;text-align:left;font-size:15px;font-weight:600;color:var(--text)}
+.pick button small{display:block;font-weight:500;font-size:12.5px;color:var(--mute);margin-top:2px}
+.pick button .t{flex:1}
+.pick button .r{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);flex:none;display:grid;place-items:center}
+.pick button.on{border-color:var(--acc);background:var(--acc-d)}
+.pick button.on .r{border-color:var(--acc);background:var(--acc)}
+.pick button.on .r:after{content:"";width:8px;height:8px;border-radius:50%;background:var(--on-acc)}
+.dalink{display:flex;align-items:center;gap:12px;padding:12px;border-top:1px solid var(--line)}
+.dalink:first-of-type{border-top:0}
+.dalink .lbl{flex:1;min-width:0}.dalink .lbl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dalink .ic{width:22px;height:22px;color:var(--warn);flex:none}
+.steps2{margin:0 0 4px;padding-left:20px;font-size:14px;line-height:1.5}.steps2 li{margin-bottom:6px}
 #livePane.simple .adv{display:none}
 /* Пульт — неон */
 .nhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px}
@@ -319,10 +336,10 @@ input[type=range]{accent-color:var(--cy)}
 .nscenes{display:flex;gap:8px;overflow-x:auto;margin-top:12px;scrollbar-width:none}
 .nscenes .scene{height:36px;padding:0 16px}
 .golive{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
-.golive button{width:136px;height:136px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF7CC6,#FF3DA8 55%,#C3127A);color:var(--on-acc);box-shadow:0 0 0 9px rgba(255,61,168,.16),0 0 50px rgba(255,61,168,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:var(--disp);font-weight:800;font-size:15px}
-.golive button .ic{width:34px;height:34px;stroke-width:2.2}
-.golive button:active{transform:scale(.96)}
-.golive button:disabled{filter:grayscale(.7);opacity:.6}
+.golive #homeGo{width:136px;height:136px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FF7CC6,#FF3DA8 55%,#C3127A);color:var(--on-acc);box-shadow:0 0 0 9px rgba(255,61,168,.16),0 0 50px rgba(255,61,168,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:var(--disp);font-weight:800;font-size:15px}
+.golive #homeGo .ic{width:34px;height:34px;stroke-width:2.2}
+.golive #homeGo:active{transform:scale(.96)}
+.golive #homeGo:disabled{filter:grayscale(.7);opacity:.6}
 .golive .sub{margin-top:16px;color:var(--mute);font-size:13px;text-align:center}
 .nchecks .chk{padding:12px 2px;border-top:1px solid var(--line)}
 .nchecks .chk:first-child{border-top:0}
@@ -550,6 +567,13 @@ input[type=range]{accent-color:var(--cy)}
         <div class="item"><div class="lbl note">Донаты DonationAlerts считаются в рублях сами. Сумма сохраняется между эфирами.</div><button class="btn sm danger" id="pGoalReset">Обнулить</button></div>
       </div>
 
+      <div class="group" id="gDa">
+        <div class="ghead" id="gDaHead">DonationAlerts</div>
+        <div class="dalink"><div class="lbl">Ссылка на виджет<small id="pDaUrl"></small></div><button class="btn sm pri" id="pDaEdit">Изменить ссылку</button></div>
+        <div class="item"><div class="lbl note">Поменял оформление на сайте DonationAlerts — ссылка та же, всё обновится само. Создал новый сбор или виджет — нажми «Изменить ссылку».</div></div>
+        <div class="gbody" style="padding-top:0"><button class="btn" style="width:100%" id="pDaHow">Где взять ссылку — гайд</button></div>
+      </div>
+
       <div class="group" id="gWeb">
         <div class="ghead">Веб-виджет</div>
         <div class="item col"><span class="lab">Ссылка</span><input class="inp" id="pUrl" placeholder="https://www.donationalerts.com/widget/alerts?…" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
@@ -617,11 +641,11 @@ input[type=range]{accent-color:var(--cy)}
       <div class="gbody tiles">
         <button class="tile" data-add="camera"><svg class="ic"><use href="#i-camera"/></svg>Камера</button>
         <button class="tile" data-add="chat"><svg class="ic"><use href="#i-chat"/></svg>Чат</button>
-        <button class="tile" data-add="alerts"><svg class="ic"><use href="#i-bell"/></svg>Алерты</button>
+        <button class="tile" data-da="alerts"><svg class="ic"><use href="#i-bell"/></svg>Алерты</button>
+        <button class="tile" data-da="goal"><svg class="ic"><use href="#i-target"/></svg>Сбор средств</button>
         <button class="tile" data-add="timer"><svg class="ic"><use href="#i-timer"/></svg>Таймер эфира</button>
         <button class="tile" data-add="clock"><svg class="ic"><use href="#i-clock"/></svg>Часы</button>
         <button class="tile" data-add="viewers"><svg class="ic"><use href="#i-eye"/></svg>Зрители</button>
-        <button class="tile" data-add="goal"><svg class="ic"><use href="#i-target"/></svg>Цель доната</button>
         <button class="tile" data-add="ticker"><svg class="ic"><use href="#i-ticker"/></svg>Бегущая строка</button>
         <button class="tile" data-add="web"><svg class="ic"><use href="#i-globe"/></svg>Веб-виджет</button>
         <button class="tile" data-add="highlight"><svg class="ic"><use href="#i-pin"/></svg>Выделенное сообщение</button>
@@ -1140,7 +1164,7 @@ function drawLayer(c, l, t = performance.now()) {
       c.fillStyle = 'rgba(62,155,255,.12)'; c.fillRect(l.x, l.y, l.w, l.h);
       c.setLineDash([12, 8]); c.strokeStyle = 'rgba(120,180,255,.8)'; c.lineWidth = 3; c.strokeRect(l.x + 1.5, l.y + 1.5, l.w - 3, l.h - 3); c.setLineDash([]);
       const fs = Math.min(l.h * .09, 30); c.font = `700 ${fs}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = '#cfe4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillText('Веб-виджет', l.x + l.w / 2, l.y + l.h / 2 - fs * .7);
+      c.fillText(l.daKind ? DA_KINDS[l.daKind].full : 'Веб-виджет', l.x + l.w / 2, l.y + l.h / 2 - fs * .7);
       c.font = `500 ${fs * .7}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = 'rgba(207,228,255,.75)';
       let u = (l.url || 'вставь ссылку в свойствах').replace(/^https?:\/\//, ''); while (u.length > 4 && c.measureText(u).width > l.w * .9) u = u.slice(0, -4) + '…';
       c.fillText(u, l.x + l.w / 2, l.y + l.h / 2 + fs * .6); break;
@@ -1474,7 +1498,7 @@ function renderLayers() {
   [...layers()].reverse().forEach(l => {
     const d = document.createElement('div'); d.className = 'layer' + (l.id === selId ? ' on' : '');
     const th = (l.type === 'image' || l.type === 'gif') ? `<div class="th" style="background-image:url('${l.src}')"></div>` : `<div class="th">${I(TYPE_ICON[l.type])}</div>`;
-    d.innerHTML = `<span class="grip" aria-label="Перетащить">${I('grip')}</span>${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${TYPE_NAME[l.type]}${isDyn(l) ? ' · живой' : ''}${l.visible ? '' : ' · скрыт'}</small></div>
+    d.innerHTML = `<span class="grip" aria-label="Перетащить">${I('grip')}</span>${th}<div class="nm"><b>${esc(l.type === 'text' ? (l.text || l.name) : l.name)}</b><small>${l.daKind ? 'DonationAlerts' : TYPE_NAME[l.type]}${isDyn(l) ? ' · живой' : ''}${l.visible ? '' : ' · скрыт'}</small></div>
       <button class="tb${l.visible ? '' : ' off'}" data-v aria-label="Видимость">${I(l.visible ? 'eye' : 'eyeoff')}</button>
       <button class="tb" data-e aria-label="Свойства">${I('chev')}</button>`;
     d.onclick = e => {
@@ -1535,7 +1559,9 @@ function renderProps() {
     renderMediaList(s);
     $('#pSound').checked = s.sound !== false; $('#pSeconds').value = s.seconds || 6; $('#vSeconds').textContent = (s.seconds || 6) + ' с';
   }
-  show('#gWeb', t === 'web');
+  show('#gWeb', t === 'web' && !s.daKind);
+  show('#gDa', t === 'web' && !!s.daKind);
+  if (t === 'web' && s.daKind) { $('#gDaHead').textContent = DA_KINDS[s.daKind].full; $('#pDaUrl').textContent = (s.url || 'не указана').replace(/^https?:\/\//, ''); }
   show('#gGoal', t === 'goal');
   if (t === 'goal') {
     const ae = document.activeElement;
@@ -1696,6 +1722,8 @@ $('#pGoalB').onchange = e => { const s = selected(); if (!s) return; s.rateBits 
 $('#pGoalSub').onchange = e => { const s = selected(); if (!s) return; s.rateSub = Math.max(0, numIn(e.target.value) || 0); e.target.value = s.rateSub; save(); };
 $('#pGoalC').oninput = e => { const s = selected(); if (!s) return; s.strokeColor = e.target.value; save(); };
 $('#pGoalReset').onclick = () => sheetOpts('Обнулить собранную сумму?', [{ label: 'Обнулить', cls: 'danger', fn: () => { const s = selected(); if (!s) return; s.goalStart = 0; s.goalRev = 'g' + Date.now(); save(); renderUI(); toast('Сумма обнулена'); } }]);
+$('#pDaEdit').onclick = () => { const s = selected(); if (s && s.daKind) daLinkSheet(s.daKind, () => renderProps()); };
+$('#pDaHow').onclick = () => openGuide(false, 'da');
 $('#pUrl').onchange = e => { const s = selected(); if (!s) return; let u = e.target.value.trim(); if (u && !/^https?:\/\//.test(u)) u = 'https://' + u; s.url = u; e.target.value = u; save(); };
 $('#pPageW').onchange = e => { const s = selected(); if (!s) return; s.pageWidth = clamp(parseInt(e.target.value) || 800, 200, 1920); e.target.value = s.pageWidth; save(); };
 $('#pKey').onchange = e => { const s = selected(); if (s) { s.key = e.target.checked; save(); } };
@@ -1749,6 +1777,7 @@ function placeAt(o) {
   const map = { bc: [(W - o.w) / 2, H - o.h - m], hb: [(W - o.w) / 2, H * .7], br: [W - o.w - m, H - o.h - m], r: [W - o.w - m, (H - o.h) / 2], t: [(W - o.w) / 2, m], tl: [m, m], tr: [W - o.w - m, m], b: [0, H - o.h] };
   const [x, y] = map[o.pos] || [(W - o.w) / 2, (H - o.h) / 2]; return { x, y };
 }
+$$('[data-da]').forEach(b => b.onclick = () => addDaLayer(b.dataset.da));
 $$('[data-add]').forEach(b => b.onclick = () => {
   const type = b.dataset.add, d = LIVE_DEFAULTS()[type];
   if (type === 'camera' && layers().some(l => l.type === 'camera')) return toast('Камера уже есть в этой сцене');
@@ -1886,23 +1915,19 @@ function renderLive() {
   if (live) html += `<div class="group"><div class="ghead">Управление эфиром</div>
       <div class="gbody" style="display:flex;gap:8px">
         <button class="btn${privacyNow ? ' on' : ''}" style="flex:1" id="lvPriv">${I(privacyNow ? 'eye' : 'eyeoff')}${privacyNow ? 'Показать экран' : 'Скрыть экран'}</button>
-        <button class="btn" style="flex:1" id="lvTest">${I('bell')}Тестовый алерт</button>
       </div></div>`;
   if (TW.loggedIn && TW.needRelogin) html += `<div class="group"><div class="item"><span style="color:var(--warn)">${I('warn')}</span><div class="lbl">Для алертов нужен новый вход в Twitch<small>приложение получило новые возможности</small></div><button class="btn sm pri" id="twRe">Войти</button></div></div>`;
   if (!TW.loggedIn && NATIVE) html += `<div class="group"><div class="ghead">Чат на стриме</div>
       <div class="item col"><span class="lab">Ник канала для чата (без входа)</span><input class="inp" id="skChan" placeholder="например: pelmen_tv" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(streamCfg.chatChannel || '')}"></div></div>`;
 
-  // DonationAlerts
-  if (NATIVE) {
-    html += `<div class="group"><div class="ghead">DonationAlerts</div>`;
-    if (DA.loggedIn) html += `<div class="item"><div class="acct" style="flex:1">${DA.avatar ? `<img src="${esc(DA.avatar)}" alt="">` : `<span class="ph">${I('coin')}</span>`}
-        <div class="nm">${esc(DA.name || 'Подключено')}<small>донаты придут в слой «Алерты»</small></div></div>
-        <button class="btn sm icon" id="daOut" aria-label="Отключить">${I('logout')}</button></div>
-        ${scenes.some(sc => sc.layers.some(l => l.type === 'alerts')) ? '' : `<div class="item"><span style="color:var(--warn)">${I('warn')}</span><div class="lbl note">Добавь в сцену слой «Алерты» (вкладка «Добавить»), иначе донаты не будут видны на стриме</div></div>`}`;
-    else html += `<div class="gbody"><button class="btn" style="width:100%" id="daIn">${I('coin')}Подключить DonationAlerts</button>
-        <div class="note" style="margin-top:8px">Донаты будут появляться на стриме: имя, сумма, сообщение, твоя картинка и звук, озвучка текста.</div></div>`;
-    html += `</div>`;
-  }
+  // DonationAlerts: ссылки на виджеты
+  html += `<div class="group"><div class="ghead">DonationAlerts</div>
+    ${Object.entries(DA_KINDS).map(([k, d]) => `<div class="dalink">${daLinks[k] ? '' : I('warn')}<div class="lbl">${d.title}<small>${daLinks[k] ? esc(daLinks[k].replace(/^https?:\/\//, '')) : 'ссылка не добавлена'}</small></div><button class="btn sm${daLinks[k] ? '' : ' pri'}" data-dalink="${k}">${daLinks[k] ? 'Изменить' : 'Добавить'}</button></div>`).join('')}
+    <div class="gbody" style="padding-top:4px"><button class="btn" style="width:100%" id="daGuide">${I('live')}Как подключить алерты и сбор — гайд</button></div>`;
+  if (NATIVE) html += DA.loggedIn
+    ? `<div class="item adv"><div class="lbl">Донаты в ленте событий<small>${esc(DA.name || 'подключено')} · видно на Пульте и в кружке</small></div><button class="btn sm icon" id="daOut" aria-label="Отключить">${I('logout')}</button></div>`
+    : `<div class="item adv"><div class="lbl">Донаты в ленте событий<small>по желанию: увидишь донаты на Пульте и в кружке</small></div><button class="btn sm" id="daIn">Подключить</button></div>`;
+  html += `</div>`;
 
   // проверка перед эфиром
   if (!live) {
@@ -1983,6 +2008,8 @@ function renderLive() {
   $('#skRec').onchange = e => { streamCfg.record = e.target.checked; saveCfg(); if (e.target.checked) toast('Эфир будет записываться. Запись можно включать и выключать в кружке'); };
   if ($('#skRecOnly')) $('#skRecOnly').onclick = () => startRecordOnly();
   $('#skGuide').onclick = () => openGuide(true);
+  $$('[data-dalink]').forEach(b => b.onclick = () => daLinkSheet(b.dataset.dalink, () => renderLive()));
+  $('#daGuide').onclick = () => openGuide(false, 'da');
   $('#skAdv').onclick = () => { streamCfg.advanced = !streamCfg.advanced; saveCfg(); renderLive(); };
   $('#skDelay').onchange = e => {
     let v = Math.round(parseFloat(String(e.target.value).replace(',', '.')) || 0);
@@ -2185,8 +2212,7 @@ function renderHome() {
       <div class="nbtns">
         <button class="btn${privacyNow ? ' on' : ''}" id="hPriv">${I(privacyNow ? 'eye' : 'eyeoff')}${privacyNow ? 'Показать экран' : 'Скрыть экран'}</button>
         <button class="btn" id="hGame">${I('game')}К игре</button>
-        <button class="btn" id="hTest"${liveState === 'recording' ? ' style="grid-column:1/-1"' : ''}>${I('bell')}Тест алерта</button>
-        ${liveState === 'recording' ? '' : `<button class="btn${recOn ? ' on' : ''}" id="hRec">${I('rec')}${recOn ? 'Стоп запись' : 'Запись'}</button>`}
+        ${liveState === 'recording' ? '' : `<button class="btn${recOn ? ' on' : ''}" id="hRec" style="grid-column:1/-1">${I('rec')}${recOn ? 'Остановить запись' : 'Записывать эфир в файл'}</button>`}
         <button class="btn danger" id="hStop" style="grid-column:1/-1">${I('stop')}${liveState === 'recording' ? 'Закончить запись' : 'Остановить эфир'}</button>
       </div>
       <div class="nsec">События</div>
@@ -2199,7 +2225,7 @@ function renderHome() {
     const sp = speedRes, b = devStat;
     const q = QUALITY[streamCfg.quality];
     h += `<div class="golive"><button id="homeGo" aria-label="Начать эфир">${I('live')}В ЭФИР</button>
-      <button class="btn" id="homeRec" style="margin-top:22px;border-radius:999px;height:44px;padding:0 18px">${I('rec')}Только запись, 1080p</button>
+      <button class="btn recbtn" id="homeRec">${I('rec')}Только запись, 1080p</button>
       <div class="sub">Сцена «${esc(scene().name)}», ${q.label.split(' (')[0]}${streamCfg.testMode ? ', пробный эфир' : ''}${streamCfg.delay ? `, задержка ${streamCfg.delay} с` : ''}</div></div>`;
     h += `<div class="nsec">Готовность</div><div class="nchecks">`;
     h += TW.loggedIn ? chkRow('ok', 'Эфир пойдёт на канал ' + esc(TW.displayName || TW.login), chan ? esc(chan.title || '') : 'twitch.tv/' + esc(TW.login || ''), `<button class="btn sm" id="hSwitch">Сменить</button>`)
@@ -2209,7 +2235,8 @@ function renderHome() {
     h += sp && sp.ok ? chkRow(sp.mbps >= 5 ? 'ok' : 'warn', `Интернет: ${sp.mbps.toFixed(1)} Мбит/с`, sp.mbps >= 5 ? 'хватает для выбранного качества' : 'слабовато, выбери качество пониже', `<button class="btn sm" id="hSpeed">Ещё раз</button>`)
       : chkRow('no', speedBusy ? 'Проверяю интернет…' : 'Интернет не проверен', 'займёт 10 секунд', speedBusy ? '' : `<button class="btn sm" id="hSpeed">Проверить</button>`);
     if (b) h += chkRow(b.battery < 20 && !b.charging ? 'warn' : 'ok', `Батарея ${b.battery}%${b.charging ? ', заряжается' : ''}`, b.battery < 20 && !b.charging ? 'подключи зарядку' : '');
-    if (NATIVE) h += DA.loggedIn ? chkRow('ok', 'DonationAlerts: ' + esc(DA.name || 'подключён'), '') : chkRow('no', 'DonationAlerts не подключён', 'по желанию', `<button class="btn sm" id="hDa">Подключить</button>`);
+    const daN = Object.values(daLinks).filter(Boolean).length;
+    h += daN ? chkRow('ok', 'Виджеты DonationAlerts', daN === 2 ? 'алерты и сбор средств' : daLinks.alerts ? 'алерты' : 'сбор средств') : chkRow('no', 'Алерты DonationAlerts не добавлены', 'по желанию', `<button class="btn sm" id="hDa">Добавить</button>`);
     if (NATIVE && streamCfg.bubble) h += NATIVE.canOverlay() ? chkRow('ok', 'Кружок поверх игры разрешён', '') : chkRow('warn', 'Кружок поверх игры не разрешён', '', `<button class="btn sm" id="hOv">Разрешить</button>`);
     h += `</div>`;
     h += `<button class="btn" id="hGuide" style="width:100%;margin-top:16px;height:48px">${I('live')}Гайд по приложению · 1 минута</button>`;
@@ -2223,7 +2250,7 @@ function renderHome() {
   on('homeRec', () => startRecordOnly());
   on('hRec', () => { if (liveState === 'recording') return askStop(); NATIVE && NATIVE.toggleRecord(); });
   on('hTw', () => twLoginFlow(() => setTab('home')));
-  on('hDa', () => daLoginFlow());
+  on('hDa', () => daLinkSheet('alerts', () => renderHome()));
   on('hOv', () => overlayHelp(() => renderHome(), () => { streamCfg.bubble = false; store.set('streamCfg', streamCfg); renderHome(); }));
   on('hSpeed', () => { if (!NATIVE) return toast('Проверка работает в приложении'); speedBusy = true; speedRes = null; NATIVE.speedTest(); renderHome(); });
   on('hAddScreen', () => { setTab('add'); });
@@ -2276,6 +2303,79 @@ async function applyTheme(id, accent) {
 $('#themeApply').onclick = () => applyTheme(THEME.id, $('#themeAccent').value);
 
 
+
+/* ================= Выбор из списка (вместо системного окна Android) ================= */
+function pickerFor(sel) {
+  const label = sel.closest('.item')?.querySelector('.lab, .lbl')?.childNodes[0]?.textContent?.trim() || 'Выбери';
+  sheet(label, box => {
+    const opts = [...sel.options];
+    box.innerHTML = `<div class="pick">${opts.map((o, i) => {
+      const m = o.textContent.match(/^(.*?)\s*\((.+)\)\s*$/);
+      const main = m ? m[1] : o.textContent, sub = m ? m[2] : '';
+      const font = sel.id === 'pFont' && FONTS[o.value] ? ` style="font-family:${FONTS[o.value].css}"` : '';
+      return `<button data-i="${i}" class="${o.selected ? 'on' : ''}"><span class="t"${font}>${esc(main)}${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="r"></span></button>`;
+    }).join('')}</div>`;
+    box.querySelectorAll('[data-i]').forEach(b => b.onclick = () => {
+      sel.selectedIndex = +b.dataset.i; closeSheet();
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+}
+document.addEventListener('mousedown', e => { const s = e.target.closest && e.target.closest('select.inp'); if (s) e.preventDefault(); }, true);
+document.addEventListener('click', e => {
+  const s = e.target.closest && e.target.closest('select.inp'); if (!s) return;
+  e.preventDefault(); if (s.disabled) return toast('Это меняется только до начала эфира'); pickerFor(s);
+}, true);
+
+/* ================= Виджеты DonationAlerts ================= */
+const DA_KINDS = {
+  alerts: { title: 'Алерты', full: 'Алерты DonationAlerts', site: 'Оповещения', w: .5, h: .42, pw: 800, icon: 'bell' },
+  goal: { title: 'Сбор средств', full: 'Сбор средств DonationAlerts', site: 'Сбор средств', w: .45, h: .16, pw: 700, icon: 'target' }
+};
+let daLinks = Object.assign({ alerts: '', goal: '' }, store.get('daLinks', {}));
+function saveDaLink(kind, url) {
+  daLinks[kind] = url; store.set('daLinks', daLinks);
+  scenes.forEach(sc => sc.layers.forEach(l => { if (l.daKind === kind) l.url = url; }));
+  save(); renderUI();
+}
+function normUrl(u) { u = (u || '').trim(); const m = u.match(/https?:\/\/\S+/); if (m) u = m[0]; if (u && !/^https?:\/\//.test(u)) u = 'https://' + u; return u; }
+function daLinkSheet(kind, then) {
+  const k = DA_KINDS[kind];
+  sheet(k.full, box => {
+    box.innerHTML = `
+      <div class="note" style="font-size:14px;margin-bottom:10px">Вставь ссылку на виджет «${k.site}» из DonationAlerts. Она сохранится — второй раз вставлять не нужно.</div>
+      <input class="inp" id="daUrl" placeholder="https://www.donationalerts.com/widget/…" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(daLinks[kind] || '')}">
+      <button class="btn pri" id="daSave">${I('check')}Сохранить</button>
+      <button class="btn" id="daHow">${I('live')}Где взять ссылку — гайд</button>
+      ${NATIVE ? `<button class="btn" id="daSite">${I('out')}Открыть DonationAlerts</button>` : ''}`;
+    const inp = box.querySelector('#daUrl');
+    box.querySelector('#daSave').onclick = () => {
+      const u = normUrl(inp.value);
+      if (!u) { toast('Вставь ссылку'); inp.focus(); return; }
+      if (!/donationalerts\.(com|ru)\/widget\//i.test(u)) {
+        return sheetOpts('Это не похоже на ссылку виджета DonationAlerts (должно быть …donationalerts.com/widget/…). Всё равно сохранить?', [
+          { label: 'Сохранить как есть', cls: 'pri', fn: () => { saveDaLink(kind, u); toast('Ссылка сохранена'); then && then(u); } }]);
+      }
+      closeSheet(); saveDaLink(kind, u); toast('Ссылка сохранена'); then && then(u);
+    };
+    box.querySelector('#daHow').onclick = () => { closeSheet(); openGuide(false, 'da'); };
+    const site = box.querySelector('#daSite'); if (site) site.onclick = () => NATIVE.openUrl('https://www.donationalerts.com/dashboard/widgets');
+    setTimeout(() => inp.focus(), 250);
+  });
+}
+function addDaLayer(kind) {
+  const k = DA_KINDS[kind];
+  const go = url => {
+    if (layers().some(l => l.daKind === kind)) return toast(`${k.title} уже есть в этой сцене`);
+    const o = { name: k.title, w: W * k.w, h: H * k.h, url, pageWidth: k.pw, key: true, daKind: kind, lock: false, pos: kind === 'goal' ? 'bc' : 't' };
+    const { pos, ...rest } = o;
+    const l = newLayer('web', { ...rest, ...placeAt(o) });
+    layers().push(l); selId = l.id; save(); renderUI(); setTab('props');
+    toast('Готово. Виджет оживёт в эфире');
+  };
+  if (daLinks[kind]) go(daLinks[kind]); else daLinkSheet(kind, go);
+}
+
 /* ================= Приветствие: вход через Twitch ================= */
 function welcome(step) {
   let box = $('#welcomeBox');
@@ -2319,25 +2419,32 @@ const GUIDE = [
   ['live', 'Первый эфир за 3 шага', `<ol><li>Войди через Twitch — название, категория и ключ трансляции подтянутся сами.</li><li>На <b>Пульте</b> проверь «Готовность»: Twitch, экран игры в сцене, интернет.</li><li>Нажми <b>В ЭФИР</b>. Android спросит доступ к экрану — выбери <b>«Весь экран»</b>. Потом открывай игру.</li></ol><div class="tip">Хочешь проверить без зрителей — включи «Пробный эфир» в Настройках → Видео.</div>`],
   ['layers', 'Сцены и слои', `<p><b>Сцена</b> — это то, что видят зрители: экран игры плюс всё, что ты положишь сверху. Сцены переключаются кнопками над превью: «Игра», «Скоро начнём», «Перерыв».</p><p><b>Слои</b> — части сцены: экран игры, картинки, тексты, чат, алерты. Во вкладке «Слои» их можно скрыть, перетащить за точки слева (что выше — то поверх) или открыть свойства.</p><div class="tip">Двойной тап по слою на превью сразу открывает его свойства.</div>`],
   ['game', 'Экран игры', `<p>Тяни экран игры пальцем, уголки — размер. В «Свойствах» есть быстрые кнопки: <b>Вписать</b>, <b>Заполнить</b>, <b>Растянуть</b>, <b>По центру</b>, и обрезка краёв, если в кадр лезут кнопки игры.</p><p>Если играешь вертикально — укажи это в Настройках → Видео → «Как держишь телефон в игре».</p>`],
-  ['plus', 'Что можно добавить', `<ul><li><b>Фото, текст, готовые баннеры</b> — обычные слои.</li><li><b>Камера</b> — круг или прямоугольник с рамкой.</li><li><b>Чат</b> — сообщения зрителей прямо на стриме.</li><li><b>Алерты</b> — фолловы, сабы, биты, рейды и донаты, со своими картинками, звуками и озвучкой.</li><li><b>Цель доната</b> — полоса «собрано из». Считает донаты DonationAlerts, биты и сабы по твоему курсу.</li><li><b>Таймер, часы, зрители, бегущая строка, GIF, веб-виджет</b>.</li></ul><div class="tip">Живые слои можно добавлять прямо во время эфира — появятся сразу.</div>`],
-  ['coin', 'DonationAlerts', `<p>Настройки → DonationAlerts → <b>Подключить</b>. После этого донаты приходят алертами на стрим и идут в цель доната.</p><p>Хочешь свои алерты с сайта DonationAlerts — добавь <b>Веб-виджет</b> и вставь ссылку «для OBS» из Виджеты → Оповещения.</p>`],
+  ['plus', 'Что можно добавить', `<ul><li><b>Фото, текст, готовые баннеры</b> — обычные слои.</li><li><b>Камера</b> — круг или прямоугольник с рамкой.</li><li><b>Чат</b> — сообщения зрителей прямо на стриме.</li><li><b>Алерты и Сбор средств</b> — твои виджеты из DonationAlerts, со всеми картинками, звуками и озвучкой (раздел ниже).</li><li><b>Таймер, часы, зрители, бегущая строка, GIF, веб-виджет</b>.</li></ul><div class="tip">Живые слои можно добавлять прямо во время эфира — появятся сразу.</div>`],
+  ['coin', 'Алерты и сбор из DonationAlerts', `<p>Алерты и сбор средств настраиваются на сайте DonationAlerts — картинки, звуки, озвучка, оформление. Glowcast просто показывает их на стриме.</p>
+    <p><b>Алерты:</b></p><ol class="steps2"><li>Открой <b>donationalerts.com</b> и войди (можно через Twitch).</li><li>Слева: <b>Виджеты → Оповещения</b>. Настрой вид и звук, сохрани.</li><li>Найди поле <b>«Ссылка для OBS»</b> (или «Ссылка на виджет»), нажми <b>«Показать»</b> и <b>«Скопировать»</b>.</li><li>В Glowcast: <b>Добавить → Алерты</b>, вставь ссылку, <b>Сохранить</b>.</li></ol>
+    <p><b>Сбор средств:</b></p><ol class="steps2"><li>На сайте: <b>Виджеты → Сбор средств</b>, создай сбор (название, сумма).</li><li>Скопируй его <b>ссылку для OBS</b>.</li><li>В Glowcast: <b>Добавить → Сбор средств</b>, вставь ссылку.</li></ol>
+    <p>Ссылки сохраняются: в следующий раз слой добавится сразу, без вставки.</p>
+    <div class="tip">Поменял оформление на сайте — ссылка та же, ничего делать не надо. Новый сбор или новый виджет — выбери слой → <b>Изменить ссылку</b> (или Настройки → DonationAlerts). Ссылка обновится во всех сценах.</div>
+    <p style="margin-top:10px">Фолловы и сабы Twitch тоже можно показывать: на сайте DonationAlerts подключи Twitch и включи эти оповещения.</p>
+    <p><b>Не показывай ссылку никому</b> — по ней можно открыть твои алерты.</p>`, 'da'],
   ['bubble', 'Кружок поверх игры', `<p>Во время эфира поверх игры висит кружок. Его обводка показывает связь: <b>розовая</b> — всё хорошо, <b>жёлтая</b> — подключение, <b>красная</b> — переподключение.</p><p>Нажми на кружок — откроется меню: зрители, Мбит/с, события, чат (нажми на сообщение — покажу его на стриме), сцены и кнопки Микрофон, Скрыть, Запись, Правка, Стоп.</p><div class="tip">«Правка» открывает слои, а зрители в это время видят заставку. «К игре» — обратно.</div>`],
   ['rec', 'Запись видео', `<p>Настройки → Запись: <b>«Записывать эфир в файл»</b> — эфир сохранится в Галерею, папка Movies/StreamScene. Во время эфира запись включается кнопкой в кружке.</p><p>На Пульте есть <b>«Только запись, 1080p»</b> — запись без Twitch, например для YouTube или TikTok.</p>`],
   ['eyeoff', 'Приватность', `<p><b>Скрыть экран</b> — зрители видят заставку вместо игры, а звук игры выключается. Удобно, когда вводишь пароль или читаешь личные сообщения.</p><p>Автоматически экран скрывается, когда телефон заблокирован и когда открыт Glowcast. Заставку можно сделать из любой своей сцены.</p>`],
   ['warn', 'Если что-то не так', `<ul><li><b>Кружок не появляется</b> — разреши «Поверх других приложений». Если Android пишет «Запрещено настройками» — Настройки телефона → Приложения → Glowcast → ⋮ → «Разрешить ограниченные настройки».</li><li><b>Тормозит или падает качество</b> — выбери 720p 30 к/с и проверь интернет на Пульте.</li><li><b>Нет звука игры</b> — некоторые игры запрещают запись звука; это ограничение Android.</li><li><b>Телефон греется</b> — сними чехол, убавь яркость. Приложение само снизит качество при перегреве.</li></ul>`]
 ];
-function openGuide(play) {
+function openGuide(play, section) {
   let box = $('#guideBox');
   if (!box) { box = document.createElement('div'); box.id = 'guideBox'; box.className = 'full'; document.body.appendChild(box); }
   box.innerHTML = `<div class="gd">
     <div class="bar"><h2>Гайд по Glowcast</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
     <video id="gdVideo" src="guide.mp4" controls playsinline preload="metadata"></video>
-    ${GUIDE.map(([ic, t, body], i) => `<details${i === 0 ? ' open' : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
+    ${GUIDE.map(([ic, t, body, id], i) => `<details${(section ? id === section : i === 0) ? ' open' : ''}${id ? ` id="gd_${id}"` : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
     <button class="btn big pri" id="gdDone" style="margin-top:8px">Понятно, к делу</button>
   </div>`;
   const v = $('#gdVideo');
   v.onerror = () => v.remove();
   if (play) v.play().catch(() => {});
+  if (section) setTimeout(() => { const d = $('#gd_' + section); if (d) d.scrollIntoView({ block: 'start' }); }, 60);
   const close = () => { try { v.pause(); } catch {} box.remove(); };
   $('#gdClose').onclick = close; $('#gdDone').onclick = () => { close(); setTab('home'); };
 }
@@ -2450,6 +2557,10 @@ window.onBack = () => {
 load();
 if (NATIVE && isLive()) { cur = clamp(INFO.current || 0, 0, scenes.length - 1); liveSince = Date.now(); wasLive = liveState === 'live'; }
 twRefresh();
+if (!store.get('noOwnAlerts', false)) {
+  let n = 0; scenes.forEach(sc => { const before = sc.layers.length; sc.layers = sc.layers.filter(l => l.type !== 'alerts' && l.type !== 'goal'); n += before - sc.layers.length; });
+  store.set('noOwnAlerts', true); if (n) { save(); setTimeout(() => toast('Старые алерты убраны — теперь алерты и сбор берутся из DonationAlerts (вкладка «Добавить»)'), 1500); }
+}
 renderUI(); renderThemes(); setTab(tab); setStatus(); histPush(); requestAnimationFrame(loop);
 if (!store.get('welcomed', false) && !(NATIVE && isLive())) setTimeout(() => welcome(), 200);
 window.addEventListener('resize', () => setTimeout(sizeStage, 50));

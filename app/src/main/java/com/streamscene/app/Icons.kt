@@ -10,7 +10,7 @@ import android.graphics.Typeface
 import android.view.View
 
 /** Собственный набор иконок приложения (рисуются линиями в сетке 24×24). */
-enum class Ic { EYE, EYE_OFF, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK, HEART, STAR, GIFT, GEM, RAID, WARN, CHAT, COIN }
+enum class Ic { EYE, EYE_OFF, MIC, MIC_OFF, SOUND, SOUND_OFF, STOP, APP, UP, BROADCAST, CLOCK, HEART, STAR, GIFT, GEM, RAID, WARN, CHAT, COIN, REC, LAYERS }
 
 object Icons {
   private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -41,6 +41,13 @@ object Icons {
         else { c.drawLine(16f, 9f, 21f, 15f, stroke); c.drawLine(21f, 9f, 16f, 15f, stroke) }
       }
       Ic.STOP -> c.drawRoundRect(RectF(6f, 6f, 18f, 18f), 2.5f, 2.5f, fill)
+      Ic.REC -> { c.drawCircle(12f, 12f, 8.5f, stroke); c.drawCircle(12f, 12f, 4.5f, fill) }
+      Ic.LAYERS -> {
+        val p = Path().apply { moveTo(12f, 4f); lineTo(21f, 9f); lineTo(12f, 14f); lineTo(3f, 9f); close() }
+        c.drawPath(p, stroke)
+        val q = Path().apply { moveTo(3f, 14f); lineTo(12f, 19f); lineTo(21f, 14f) }
+        c.drawPath(q, stroke)
+      }
       Ic.APP -> {
         c.drawRoundRect(RectF(3f, 4f, 21f, 20f), 3f, 3f, stroke)
         c.drawLine(3f, 9f, 21f, 9f, stroke); c.drawCircle(6f, 6.5f, 0.6f, fill); c.drawCircle(8.5f, 6.5f, 0.6f, fill)

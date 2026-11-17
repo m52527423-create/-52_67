@@ -37,6 +37,7 @@ class MainActivity : Activity() {
     private const val REQ_PROJECTION = 1
     private const val REQ_FILE = 2
     private const val REQ_PERMS = 3
+    private const val REQ_CAM_LIVE = 4
   }
 
   private lateinit var web: WebView
@@ -98,6 +99,20 @@ class MainActivity : Activity() {
     web.addJavascriptInterface(Bridge(), "Native")
     StreamState.listener = { o -> runOnUiThread { if (pageReady) web.evaluateJavascript("window.onNative && window.onNative($o)", null) } }
     web.loadUrl("file:///android_asset/editor.html")
+    openTabFromIntent(intent)
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    openTabFromIntent(intent)
+  }
+
+  private fun openTabFromIntent(i: Intent?) {
+    val tab = i?.getStringExtra("tab") ?: return
+    i.removeExtra("tab")
+    if (pageReady) web.evaluateJavascript("window.openTab && window.openTab('$tab')", null)
+    else web.postDelayed({ openTabFromIntent(Intent().putExtra("tab", tab)) }, 400)
   }
 
   override fun onPause() {
@@ -139,6 +154,10 @@ class MainActivity : Activity() {
 
   override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    if (requestCode == REQ_CAM_LIVE) {
+      if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) StreamService.instance?.let { it.switchScene(StreamState.config?.current ?: 0) }
+      return
+    }
     if (requestCode != REQ_PERMS) return
     if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
       StreamState.emit("error", "Без разрешения на звук стрим не запустится. Разреши «Микрофон» в настройках приложения.")
@@ -246,7 +265,17 @@ class MainActivity : Activity() {
       } catch (e: Exception) {
         return
       }
-      runOnUiThread { StreamService.instance?.switchScene(index) }
+      runOnUiThread {
+        val wantsCamera = cfg.scenes.any { s -> s.widgets.any { it.type == "camera" } }
+        if (wantsCamera && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+          requestPermissions(arrayOf(Manifest.permission.CAMERA), REQ_CAM_LIVE)
+        StreamService.instance?.switchScene(index)
+      }
+    }
+
+    @JavascriptInterface
+    fun toggleRecord() {
+      runOnUiThread { StreamService.instance?.toggleRecording() }
     }
 
     // ---------- Twitch ----------
@@ -369,7 +398,8 @@ class MainActivity : Activity() {
     @JavascriptInterface
     fun goHome() {
       runOnUiThread {
-        startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        // назад в игру: прячем приложение, система вернёт предыдущее окно
+        if (!moveTaskToBack(true)) startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
       }
     }
   }

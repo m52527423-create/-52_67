@@ -45,6 +45,7 @@ class ChatLine(val name: String, val color: Int, val text: String)
 
 class AlertEvent(val kind: String, val name: String, val title: String, val message: String = "") {
   var amount: Double = 0.0
+  var rub: Double = 0.0
 }
 
 /** Рисует живые слои (тексты, чат, бегущая строка, алерт, заставка приватности) в картинки. */
@@ -91,6 +92,39 @@ class WidgetRenderer(private val ctx: Context) {
     else tp.clearShadowLayer()
     c.drawText(text, x, base, tp)
     tp.clearShadowLayer()
+  }
+
+  /** Цель доната: название, «собрано / цель» и полоса прогресса. */
+  fun drawGoal(c: Canvas, w: Widget, r: RectF, amount: Double, target: Double) {
+    val op = w.opacity
+    val rr = cornerR(w, r)
+    if (w.bg != null) { fill.color = alphaOf(w.bg, op); c.drawRoundRect(r, rr, rr, fill) }
+    val pad = r.height() * 0.14f
+    val inner = RectF(r.left + pad, r.top + pad, r.right - pad, r.bottom - pad)
+    val barH = inner.height() * 0.32f
+    val textH = inner.height() - barH - inner.height() * 0.1f
+    val fmt = java.text.DecimalFormat("#,##0").apply { decimalFormatSymbols = decimalFormatSymbols.apply { groupingSeparator = ' ' } }
+    val right = "${fmt.format(amount)} / ${fmt.format(target)} ₽"
+    tp.typeface = Fonts.get(ctx, w.font); tp.clearShadowLayer()
+    var fs = textH * 0.85f
+    tp.textSize = fs
+    val gap = fs * 0.8f
+    var need = tp.measureText(w.text) + gap + tp.measureText(right)
+    if (need > inner.width()) { fs *= inner.width() / need; tp.textSize = fs; need = inner.width() }
+    val base = inner.top + textH / 2f - (tp.descent() + tp.ascent()) / 2f
+    tp.color = alphaOf(w.color, op)
+    tp.textAlign = Paint.Align.LEFT; c.drawText(w.text, inner.left, base, tp)
+    tp.textAlign = Paint.Align.RIGHT; c.drawText(right, inner.right, base, tp)
+    tp.textAlign = Paint.Align.LEFT
+    val bar = RectF(inner.left, inner.bottom - barH, inner.right, inner.bottom)
+    fill.color = alphaOf(w.color, op * 0.22f)
+    c.drawRoundRect(bar, barH / 2f, barH / 2f, fill)
+    val k = if (target > 0) (amount / target).coerceIn(0.0, 1.0).toFloat() else 0f
+    if (k > 0f) {
+      val f = RectF(bar.left, bar.top, bar.left + maxOf(barH, bar.width() * k), bar.bottom)
+      fill.color = alphaOf(w.strokeColor, op)
+      c.drawRoundRect(f, barH / 2f, barH / 2f, fill)
+    }
   }
 
   /** Чат: последние сообщения снизу вверх. */

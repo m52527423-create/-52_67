@@ -37,7 +37,8 @@ class LiveInfo(
   val privacy: Boolean = false,
   val warn: String = "",
   val chat: List<ChatLine> = emptyList(),
-  val events: List<AlertEvent> = emptyList()
+  val events: List<AlertEvent> = emptyList(),
+  val recording: Boolean = false
 )
 
 /**
@@ -52,6 +53,8 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     fun onTogglePrivacy()
     fun onHighlight(line: ChatLine)
     fun onOpenApp()
+    fun onToggleRecord()
+    fun onQuickEdit()
     fun onStop()
   }
 
@@ -107,6 +110,9 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   private lateinit var micText: TextView
   private lateinit var stopBox: LinearLayout
   private lateinit var stopText: TextView
+  private lateinit var recBox: LinearLayout
+  private lateinit var recIcon: IconView
+  private lateinit var recText: TextView
   private lateinit var privIcon: IconView
   private lateinit var privText: TextView
   private lateinit var privBox: LinearLayout
@@ -137,7 +143,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
   fun update(i: LiveInfo) {
     info = i
     val (lvl, col) = quality(i)
-    bubble.ringColor = when { i.privacy -> MUTE; i.state == "live" -> ACCENT; i.state == "reconnecting" -> RED; else -> YELLOW }
+    bubble.ringColor = when { i.privacy -> MUTE; i.state == "live" || i.state == "rec" -> ACCENT; i.state == "reconnecting" -> RED; else -> YELLOW }
     bubble.viewers = i.viewers
     bubble.signalColor = col
     bubble.invalidate()
@@ -285,8 +291,10 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     hs.addView(scenesRow)
     p.addView(hs)
 
-    // 4. кнопки
+    // 4. кнопки: два ряда по три
     val r4 = row()
+    val r5 = row()
+    var target = r4
     fun action(ic: Ic, label: String, bg: Int, onClick: () -> Unit): Triple<LinearLayout, IconView, TextView> {
       val box = LinearLayout(ctx).apply {
         orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
@@ -297,14 +305,18 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
       box.addView(iv, LinearLayout.LayoutParams(dp(22), dp(22)))
       val tv = text(12f).apply { text = label; gravity = Gravity.CENTER }
       box.addView(tv, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(4) })
-      r4.addView(box, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
+      target.addView(box, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = dp(3); marginEnd = dp(3) })
       return Triple(box, iv, tv)
     }
     val (_, mi, mt) = action(Ic.MIC, "Микрофон", CARD2) { actions.onToggleMic() }
     micIcon = mi; micText = mt
     val (pb, pi, pt) = action(Ic.EYE_OFF, "Скрыть", CARD2) { actions.onTogglePrivacy() }
     privBox = pb; privIcon = pi; privText = pt
-    action(Ic.APP, "Редактор", CARD2) { closePanel(); actions.onOpenApp() }
+    val (rb, ri, rt) = action(Ic.REC, "Запись", CARD2) { actions.onToggleRecord() }
+    recBox = rb; recIcon = ri; recText = rt
+    target = r5
+    action(Ic.LAYERS, "Правка", CARD2) { closePanel(); actions.onQuickEdit() }
+    action(Ic.APP, "Приложение", CARD2) { closePanel(); actions.onOpenApp() }
     val (sb, si, st) = action(Ic.STOP, "Стоп", Color.parseColor("#2A1433")) {
       if (stopArmed) { closePanel(); actions.onStop() }
       else {
@@ -317,6 +329,7 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
     stopBox = sb; stopText = st; si.color = RED; st.setTextColor(RED)
     sb.background = rounded(Color.parseColor("#2A1433"), 14f, RED)
     p.addView(r4, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(14) })
+    p.addView(r5, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(6) })
 
     // положение рядом с кружком; в горизонтальной игре — прокрутка, ничего не обрезается
     val s = screenSize()
@@ -373,8 +386,11 @@ class FloatingControls(private val ctx: Context, private val actions: Actions) {
 
   private fun fillPanel(i: LiveInfo, lvl: Int, col: Int) {
     signal.level = lvl; signal.color = col
-    tState.text = when (i.state) { "live" -> "В эфире"; "reconnecting" -> "Переподключение"; else -> "Подключение…" }
-    tState.setTextColor(if (i.state == "live") TEXT else YELLOW)
+    tState.text = when (i.state) { "live" -> if (i.recording) "В эфире · запись" else "В эфире"; "rec" -> "Запись"; "reconnecting" -> "Переподключение"; else -> "Подключение…" }
+    tState.setTextColor(if (i.state == "live" || i.state == "rec") TEXT else YELLOW)
+    recIcon.color = if (i.recording) RED else TEXT; recIcon.invalidate()
+    recText.text = if (i.recording) "Стоп запись" else "Запись"
+    recBox.background = rounded(if (i.recording) Color.parseColor("#3A1430") else CARD2, 14f, if (i.recording) RED else LINE)
     tUptime.text = if (i.uptimeMs > 0) fmtUptime(i.uptimeMs) else "--:--"
     tViewers.text = i.viewers?.toString() ?: "—"
     tBitrate.text = if (i.kbps > 0) String.format("%.1f", i.kbps / 1000f) else "—"

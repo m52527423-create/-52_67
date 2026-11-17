@@ -188,13 +188,13 @@ class AlertsClient(
     fun tier() = when (e.optString("tier")) { "2000" -> " 2 уровня"; "3000" -> " 3 уровня"; else -> "" }
     return when (type) {
       "channel.follow" -> AlertEvent("follow", name(), "новый фолловер")
-      "channel.subscribe" -> if (e.optBoolean("is_gift")) null else AlertEvent("sub", name(), "подписка" + tier())
+      "channel.subscribe" -> if (e.optBoolean("is_gift")) null else AlertEvent("sub", name(), "подписка" + tier()).apply { amount = 1.0 }
       "channel.subscription.message" -> {
         val n = e.optInt("cumulative_months", 1)
-        AlertEvent("sub", name(), "подписка · $n ${ruPlural(n, "месяц", "месяца", "месяцев")}", e.optJSONObject("message")?.optString("text").orEmpty())
+        AlertEvent("sub", name(), "подписка · $n ${ruPlural(n, "месяц", "месяца", "месяцев")}", e.optJSONObject("message")?.optString("text").orEmpty()).apply { amount = 1.0 }
       }
-      "channel.subscription.gift" -> { val n = e.optInt("total", 1); AlertEvent("gift", name(), "дарит $n ${ruPlural(n, "подписку", "подписки", "подписок")}") }
-      "channel.cheer" -> { val n = e.optInt("bits"); AlertEvent("cheer", name(), "$n ${ruPlural(n, "бит", "бита", "битов")}", e.optString("message")) }
+      "channel.subscription.gift" -> { val n = e.optInt("total", 1); AlertEvent("gift", name(), "дарит $n ${ruPlural(n, "подписку", "подписки", "подписок")}").apply { amount = n.toDouble() } }
+      "channel.cheer" -> { val n = e.optInt("bits"); AlertEvent("cheer", name(), "$n ${ruPlural(n, "бит", "бита", "битов")}", e.optString("message")).apply { amount = n.toDouble() } }
       "channel.raid" -> { val n = e.optInt("viewers"); AlertEvent("raid", e.optString("from_broadcaster_user_name"), "рейд · $n ${ruPlural(n, "зритель", "зрителя", "зрителей")}") }
       else -> null
     }

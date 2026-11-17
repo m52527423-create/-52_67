@@ -151,6 +151,8 @@ class DaAlertsClient(private val onAlert: (AlertEvent) -> Unit, private val onSt
     val msg = d.optString("message").takeIf { it != "null" }.orEmpty()
     val ev = AlertEvent("donate", name, DaClient.formatAmount(amount, cur), if (d.optString("message_type") == "audio") "" else msg)
     ev.amount = amount
+    // в рублях для цели доната (DA присылает сумму в валюте стримера)
+    ev.rub = d.optDouble("amount_in_user_currency", Double.NaN).takeIf { !it.isNaN() } ?: if (cur == "RUB") amount else 0.0
     main.post { onAlert(ev) }
   }
 

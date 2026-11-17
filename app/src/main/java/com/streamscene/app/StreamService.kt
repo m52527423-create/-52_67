@@ -10,6 +10,7 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.ContentValues
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
@@ -29,12 +30,15 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.Environment
+import android.provider.MediaStore
 import android.os.PowerManager
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
 import com.pedro.common.ConnectChecker
 import com.pedro.common.StreamingStatsReport
+import com.pedro.encoder.input.gl.render.filters.BaseFilterRender
 import com.pedro.encoder.input.gl.render.filters.`object`.GifFilterRender
 import com.pedro.encoder.input.gl.render.filters.`object`.ImageObjectFilterRender
 import com.pedro.encoder.input.sources.audio.AudioSource
@@ -43,7 +47,9 @@ import com.pedro.encoder.input.sources.audio.MicrophoneSource
 import com.pedro.encoder.input.sources.audio.MixAudioSource
 import com.pedro.encoder.input.sources.video.NoVideoSource
 import com.pedro.encoder.input.sources.video.ScreenSource
+import com.pedro.library.base.recording.RecordController
 import com.pedro.library.generic.GenericStream
+import com.pedro.library.view.GlStreamInterface
 import com.pedro.library.util.QueueAwareBitrateAdapter
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
@@ -73,7 +79,27 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     private const val AUDIO_BITRATE = 160 * 1000
 
     @Volatile var instance: StreamService? = null
+    private val DYN_TYPES = setOf("timer", "clock", "viewers", "chat", "goal")
+    // порядок слоёв в кадре (снизу вверх)
+    private const val R_PLACE = 0; private const val R_OVERLAY = 1; private const val R_CAM = 2; private const val R_DYN = 3
+    private const val R_TICK = 4; private const val R_GIF = 5; private const val R_WEB = 6; private const val R_AGIF = 7
+    private const val R_ALERT = 8; private const val R_HL = 9; private const val R_PRIV = 10
   }
+
+  // зеркало цепочки фильтров, чтобы добавлять слои на лету в нужное место
+  private var glI: GlStreamInterface? = null
+  private val chain = ArrayList<BaseFilterRender>()
+  private val rankOf = HashMap<BaseFilterRender, Int>()
+  private var tickerRunning = false
+  private var camTypeOn = false
+
+  // цель доната
+  private var goalAmount = 0.0
+  private var goalRev = ""
+
+  // запись
+  private var recFile: File? = null
+  private var recordOnly = false
 
   private val main = Handler(Looper.getMainLooper())
   private var stream: GenericStream? = null
@@ -227,7 +253,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   private fun startForegroundTyped() {
     var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
     if (granted(Manifest.permission.RECORD_AUDIO)) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-    if (needCamera() && granted(Manifest.permission.CAMERA)) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA
+    if (needCamera() && granted(Manifest.permission.CAMERA)) { type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA; camTypeOn = true }
     startForeground(NOTIF_ID, buildNotification("Подключение…"), type)
   }
 
@@ -268,7 +294,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       screenSource = screen
       s.getStreamClient().setReTries(10)
       if (cfg.delaySec > 0) s.getStreamClient().setDelay(cfg.delaySec * 1000L)
-      if (cfg.autoBitrate) makeAdapter(cfg.bitrate)
+      recordOnly = cfg.recordOnly
+      if (cfg.autoBitrate && !recordOnly) makeAdapter(cfg.bitrate)
 
       buildFilters(s, cfg)
       stream = s
@@ -280,8 +307,15 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       applyVolumes()
       updatePrivacy()
 
-      StreamState.emit("connecting")
-      s.startStream(cfg.url)
+      if (recordOnly) {
+        if (!startRecording()) return stopAll("Не удалось начать запись")
+        statusText = "Запись"; uiState = "rec"; liveSince = System.currentTimeMillis()
+        StreamState.emit("recording")
+      } else {
+        StreamState.emit("connecting")
+        s.startStream(cfg.url)
+        if (cfg.record) startRecording()
+      }
       fitVirtualDisplay(cfg)
       main.postDelayed({ fitVirtualDisplay(cfg) }, 800)
 
@@ -289,7 +323,6 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       startLiveData(cfg)
       main.post(ticker)
       main.postDelayed(viewerPoll, 15000)
-      if (tickerFilters.isNotEmpty()) main.post(tickerLoop)
 
       val flt = IntentFilter().apply {
         addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_SCREEN_ON)
@@ -308,61 +341,92 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   }
 
   // ---------------- фильтры ----------------
+  private fun addF(f: BaseFilterRender, rank: Int) {
+    val gl = glI ?: return
+    var pos = chain.indexOfFirst { (rankOf[it] ?: 0) > rank }
+    if (pos < 0) pos = chain.size
+    chain.add(pos, f); rankOf[f] = rank
+    if (pos == chain.size - 1) gl.addFilter(f) else gl.addFilter(pos, f)
+  }
+
   private fun buildFilters(s: GenericStream, cfg: StreamConfig) {
-    val gl = s.getGlInterface()
-    gl.addFilter(place)
-    gl.addFilter(overlay)
-    if (needCamera() && granted(Manifest.permission.CAMERA)) {
-      val ctl = CameraController(this).apply { onError = { m -> main.post { warnUser(m) } } }
-      camCtl = ctl
-      camFilter = CameraFilterRender { st ->
-        val w = cfg.scenes.flatMap { it.widgets }.firstOrNull { it.type == "camera" }
-        camFacing = w?.facing ?: "front"
-        ctl.open(st, camFacing == "front")
-      }.also { gl.addFilter(it) }
-    }
-    val dynTypes = setOf("timer", "clock", "viewers", "chat")
-    if (cfg.scenes.any { sc -> sc.widgets.any { it.type in dynTypes } }) {
-      dynFilter = ImageObjectFilterRender().also {
-        it.setImage(Bitmap.createBitmap(fw, fh, Bitmap.Config.ARGB_8888)); it.setScale(100f, 100f); it.setPosition(0f, 0f)
-        gl.addFilter(it)
-      }
-    }
-    val nTick = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "ticker" } } ?: 0)
-    repeat(nTick) { tickerFilters += ImageObjectFilterRender().also { f -> f.alpha = 0f; gl.addFilter(f) } }
-    val allGifs = cfg.scenes.flatMap { sc -> sc.widgets.filter { it.type == "gif" && it.gif != null } }
-    val nGif = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "gif" && it.gif != null } } ?: 0)
-    repeat(nGif) {
-      gifFilters += GifFilterRender().also { f ->
-        try { f.setGif(ByteArrayInputStream(allGifs.first().gif)) } catch (e: Exception) { Log.w(TAG, "gif", e) }
-        f.alpha = 0f; gl.addFilter(f)
-      }
-    }
-    val nWeb = min(2, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
-    repeat(nWeb) { idx ->
-      val host = WebWidgetHost(this)
-      webHosts += host; webState += ""
-      webFilters += WebFilterRender { st -> attachWeb(idx, st) }.also { gl.addFilter(it) }
-    }
-    val gifMedia = cfg.scenes.flatMap { it.widgets }.filter { it.type == "alerts" }.flatMap { it.media.values }.firstOrNull { it.isGif && it.img != null }
-    if (gifMedia != null) {
-      alertGif = GifFilterRender().also { f ->
-        try { f.setGif(ByteArrayInputStream(gifMedia.img)) } catch (e: Exception) { Log.w(TAG, "alert gif", e) }
-        f.alpha = 0f; gl.addFilter(f)
-      }
-    }
-    if (cfg.scenes.any { sc -> sc.widgets.any { it.type == "alerts" } }) {
-      alertFilter = ImageObjectFilterRender().also { f ->
-        f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; gl.addFilter(f)
-      }
-    }
+    glI = s.getGlInterface()
+    chain.clear(); rankOf.clear()
+    addF(place, R_PLACE)
+    addF(overlay, R_OVERLAY)
     highlightFilter = ImageObjectFilterRender().also { f ->
-      f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; gl.addFilter(f)
+      f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; addF(f, R_HL)
     }
     val customPriv = cfg.privacyPng?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
     privacyFilter.setImage(customPriv ?: renderer.privacyBitmap(fw, fh))
     privacyFilter.setScale(100f, 100f); privacyFilter.setPosition(0f, 0f); privacyFilter.alpha = 0f
-    gl.addFilter(privacyFilter)
+    addF(privacyFilter, R_PRIV)
+    ensureFilters(cfg)
+  }
+
+  /** Добавляет слои, которых ещё нет (можно во время эфира — без перезапуска). */
+  private fun ensureFilters(cfg: StreamConfig) {
+    if (glI == null) return
+    val all = cfg.scenes.flatMap { it.widgets }
+    if (camFilter == null && needCamera()) {
+      if (!granted(Manifest.permission.CAMERA)) warnUser("Разреши камеру для СтримСцены, чтобы она появилась в эфире")
+      else {
+        if (!camTypeOn && running) try { startForegroundTyped() } catch (e: Exception) { Log.w(TAG, "fg camera", e) }
+        val ctl = CameraController(this).apply { onError = { m -> main.post { warnUser(m) } } }
+        camCtl = ctl
+        camFilter = CameraFilterRender { st ->
+          val w = sceneWidgets("camera").firstOrNull() ?: StreamState.config?.scenes?.flatMap { it.widgets }?.firstOrNull { it.type == "camera" }
+          camFacing = w?.facing ?: "front"
+          ctl.open(st, camFacing == "front")
+        }.also { it.visible = false; addF(it, R_CAM) }
+      }
+    }
+    if (dynFilter == null && all.any { it.type in DYN_TYPES }) {
+      dynFilter = ImageObjectFilterRender().also {
+        it.setImage(Bitmap.createBitmap(fw, fh, Bitmap.Config.ARGB_8888)); it.setScale(100f, 100f); it.setPosition(0f, 0f)
+        addF(it, R_DYN)
+      }
+    }
+    val nTick = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "ticker" } } ?: 0)
+    while (tickerFilters.size < nTick) tickerFilters += ImageObjectFilterRender().also { f ->
+      f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; addF(f, R_TICK)
+    }
+    if (tickerFilters.isNotEmpty() && !tickerRunning && running) { tickerRunning = true; main.post(tickerLoop) }
+    val firstGif = all.firstOrNull { it.type == "gif" && it.gif != null }?.gif
+    val nGif = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "gif" && it.gif != null } } ?: 0)
+    while (gifFilters.size < nGif && firstGif != null) gifFilters += GifFilterRender().also { f ->
+      try { f.setGif(ByteArrayInputStream(firstGif)) } catch (e: Exception) { Log.w(TAG, "gif", e) }
+      f.alpha = 0f; addF(f, R_GIF)
+    }
+    val nWeb = min(2, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
+    while (webFilters.size < nWeb) {
+      val idx = webFilters.size
+      webHosts += WebWidgetHost(this); webState += ""
+      webFilters += WebFilterRender { st -> attachWeb(idx, st) }.also { it.visible = false; addF(it, R_WEB) }
+    }
+    val alertWs = all.filter { it.type == "alerts" }
+    val gifMedia = alertWs.flatMap { it.media.values }.firstOrNull { it.isGif && it.img != null }
+    if (alertGif == null && gifMedia != null) {
+      alertGif = GifFilterRender().also { f ->
+        try { f.setGif(ByteArrayInputStream(gifMedia.img)) } catch (e: Exception) { Log.w(TAG, "alert gif", e) }
+        f.alpha = 0f; addF(f, R_AGIF)
+      }
+    }
+    if (alertFilter == null && alertWs.isNotEmpty()) {
+      alertFilter = ImageObjectFilterRender().also { f ->
+        f.setImage(Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)); f.alpha = 0f; addF(f, R_ALERT)
+      }
+    }
+    if (tts == null && alertWs.any { it.tts }) {
+      tts = TextToSpeech(this) { st ->
+        ttsReady = st == TextToSpeech.SUCCESS
+        if (ttsReady) {
+          tts?.language = Locale("ru", "RU")
+          tts?.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
+        }
+      }
+    }
+    syncGoal(cfg)
   }
 
   private fun sceneWidgets(type: String) = StreamState.config?.scenes?.getOrNull(current)?.widgets?.filter { it.type == type }.orEmpty()
@@ -373,6 +437,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     current = current.coerceIn(0, cfg.scenes.size - 1)
     cfg.current = current
     val sc = cfg.scenes[current]
+    ensureFilters(cfg)
     val r = sc.screen
     if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); place.setCrop(r.cl, r.ct, r.cr, r.cb) }
     else { place.setRect(0f, 0f, 1f, 1f, false); place.setCrop(0f, 0f, 0f, 0f) }
@@ -475,12 +540,12 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
 
   private fun redrawDyn(force: Boolean) {
     val f = dynFilter ?: return
-    val ws = StreamState.config?.scenes?.getOrNull(current)?.widgets?.filter { it.type in setOf("timer", "clock", "viewers", "chat") }.orEmpty()
+    val ws = StreamState.config?.scenes?.getOrNull(current)?.widgets?.filter { it.type in DYN_TYPES }.orEmpty()
     val now = System.currentTimeMillis()
     val up = if (liveSince > 0) fmtUp(now - liveSince) else "0:00:00"
     val clock = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
     val vtxt = viewers?.toString() ?: "—"
-    val sig = "$current|$up|$clock|$vtxt|${chatLines.size}|${chatLines.lastOrNull()?.text}|${ws.size}"
+    val sig = "$current|$up|$clock|$vtxt|${chatLines.size}|${chatLines.lastOrNull()?.text}|${ws.size}|$goalAmount|${ws.hashCode()}"
     if (!force && sig == dynSig) return
     if (now - lastDynDraw < 400) {
       if (!dynPending) { dynPending = true; main.postDelayed({ dynPending = false; redrawDyn(true) }, 450) }
@@ -496,6 +561,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         "clock" -> renderer.drawTextBox(c, w, r, clock)
         "viewers" -> renderer.drawTextBox(c, w, r, vtxt, Ic.EYE)
         "chat" -> renderer.drawChat(c, w, r, fh, chatLines.toList())
+        "goal" -> renderer.drawGoal(c, w, r, goalAmount, w.goalTarget)
       }
     }
     f.setImage(bmp); f.setScale(100f, 100f); f.setPosition(0f, 0f)
@@ -544,27 +610,46 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         redrawDyn(false); pushUi()
       }.also { it.start() }
     }
-    val alertWs = cfg.scenes.flatMap { it.widgets }.filter { it.type == "alerts" }
-    if (alertWs.any { "donate" in it.alertKinds } && DaClient.loggedIn) {
+    if (DaClient.loggedIn) {
       da = DaAlertsClient({ ev -> queueAlert(ev) }, { msg -> StreamState.send(JSONObject().put("state", "info").put("msg", msg)) }).also { it.start() }
     }
-    if (alertWs.any { it.tts }) {
-      tts = TextToSpeech(this) { st ->
-        ttsReady = st == TextToSpeech.SUCCESS
-        if (ttsReady) {
-          tts?.language = Locale("ru", "RU")
-          tts?.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_GAME).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
-        }
-      }
-    }
-    if (alertFilter != null && TwitchClient.loggedIn) {
+    if (TwitchClient.loggedIn) {
       alerts = AlertsClient(TwitchClient.userId, { ev -> queueAlert(ev) }, { msg ->
         StreamState.send(JSONObject().put("state", "info").put("msg", msg))
       }).also { it.start() }
     }
   }
 
+  // ---------------- цель доната ----------------
+  private fun goalWidget(cfg: StreamConfig? = StreamState.config) = cfg?.scenes?.flatMap { it.widgets }?.firstOrNull { it.type == "goal" }
+
+  private fun syncGoal(cfg: StreamConfig) {
+    val w = goalWidget(cfg) ?: return
+    val prefs = getSharedPreferences("goal", MODE_PRIVATE)
+    if (w.goalRev != prefs.getString("rev", null)) {
+      goalAmount = w.goalStart
+      prefs.edit().putString("rev", w.goalRev).putFloat("amount", goalAmount.toFloat()).apply()
+    } else goalAmount = prefs.getFloat("amount", w.goalStart.toFloat()).toDouble()
+    goalRev = w.goalRev
+  }
+
+  private fun addToGoal(ev: AlertEvent) {
+    val w = goalWidget() ?: return
+    val add = when (ev.kind) {
+      "donate" -> ev.rub
+      "cheer" -> ev.amount / 100.0 * w.rateBits
+      "sub", "gift" -> ev.amount * w.rateSub
+      else -> 0.0
+    }
+    if (add <= 0.0) return
+    goalAmount += add
+    getSharedPreferences("goal", MODE_PRIVATE).edit().putString("rev", goalRev).putFloat("amount", goalAmount.toFloat()).apply()
+    StreamState.send(JSONObject().put("state", "goal").put("amount", goalAmount))
+    redrawDyn(true)
+  }
+
   private fun queueAlert(ev: AlertEvent) {
+    addToGoal(ev)
     StreamState.send(JSONObject().put("state", "alert").put("kind", ev.kind).put("name", ev.name).put("title", ev.title).put("message", ev.message))
     events.addLast(ev); while (events.size > 50) events.removeFirst()
     pushUi()
@@ -789,8 +874,72 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     getSystemService(NotificationManager::class.java).notify(NOTIF_ID, buildNotification("$statusText · $name$extra" + if (warn.isNotEmpty()) " · $warn" else ""))
   }
 
+  // ---------------- запись в файл ----------------
+  private fun startRecording(): Boolean {
+    val s = stream ?: return false
+    if (s.isRecording) return true
+    return try {
+      val dir = getExternalFilesDir(Environment.DIRECTORY_MOVIES) ?: filesDir
+      dir.mkdirs()
+      val f = File(dir, "StreamScene_" + SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date()) + ".mp4")
+      recFile = f
+      s.startRecord(f.absolutePath, null, RecordController.Listener { st ->
+        if (st == RecordController.Status.STARTED || st == RecordController.Status.RECORDING) main.post { pushUi() }
+      })
+      StreamState.send(JSONObject().put("state", "rec").put("on", true))
+      pushUi()
+      true
+    } catch (e: Exception) {
+      Log.w(TAG, "record", e)
+      warnUser("Запись не запустилась: ${e.message}")
+      false
+    }
+  }
+
+  private fun stopRecording() {
+    val s = stream ?: return
+    if (!s.isRecording) return
+    try { s.stopRecord() } catch (e: Exception) { Log.w(TAG, "stop record", e) }
+    StreamState.send(JSONObject().put("state", "rec").put("on", false))
+    recFile?.let { saveToGallery(it) }
+    recFile = null
+    pushUi()
+  }
+
+  /** Переносит файл записи в Галерею: Movies/StreamScene. */
+  private fun saveToGallery(f: File) {
+    val app = applicationContext
+    thread {
+      Thread.sleep(600)
+      if (!f.exists() || f.length() < 1024) {
+        StreamState.send(JSONObject().put("state", "info").put("msg", "Запись пустая — ничего не сохранено")); f.delete(); return@thread
+      }
+      try {
+        val cr = app.contentResolver
+        val v = ContentValues().apply {
+          put(MediaStore.Video.Media.DISPLAY_NAME, f.name)
+          put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
+          put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/StreamScene")
+          put(MediaStore.Video.Media.IS_PENDING, 1)
+        }
+        val uri = cr.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, v) ?: throw IllegalStateException("нет доступа к Галерее")
+        cr.openOutputStream(uri)?.use { o -> f.inputStream().use { it.copyTo(o, 1 shl 16) } }
+        v.clear(); v.put(MediaStore.Video.Media.IS_PENDING, 0)
+        cr.update(uri, v, null, null)
+        f.delete()
+        StreamState.send(JSONObject().put("state", "info").put("msg", "Запись сохранена в Галерею: Movies/StreamScene"))
+      } catch (e: Exception) {
+        Log.w(TAG, "gallery", e)
+        StreamState.send(JSONObject().put("state", "info").put("msg", "Не удалось перенести запись в Галерею. Файл: ${f.absolutePath}"))
+      }
+    }
+  }
+
+  fun toggleRecording() { if (stream?.isRecording == true) stopRecording() else startRecording() }
+
   private fun stopAll(error: String = "") {
     running = false
+    try { stopRecording() } catch (_: Exception) {}
     main.removeCallbacksAndMessages(null)
     controls?.hide(); controls = null
     chat?.stop(); chat = null
@@ -808,6 +957,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     try {
       stream?.let {
         if (it.isStreaming) it.stopStream()
+        if (it.isRecording) it.stopRecord()
         it.release()
       }
     } catch (e: Exception) {
@@ -822,6 +972,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     stopForeground(STOP_FOREGROUND_REMOVE)
     stopSelf()
     StreamState.emit(if (error.isEmpty()) "stopped" else "error", error)
+    glI = null; chain.clear(); rankOf.clear()
   }
 
   override fun onDestroy() {
@@ -889,7 +1040,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         state = uiState, viewers = viewers, kbps = kbps, targetKbps = maxVideoBitrate / 1000,
         uptimeMs = if (liveSince > 0) System.currentTimeMillis() - liveSince else 0L,
         scenes = cfg.scenes.map { it.name }, current = current, micMuted = micMuted, micLabel = micLabel(),
-        privacy = privacyOn, warn = warn, chat = chatLines.toList().takeLast(4), events = events.toList()
+        privacy = privacyOn, warn = warn, chat = chatLines.toList().takeLast(4), events = events.toList(),
+        recording = stream?.isRecording == true
       )
     )
   }
@@ -923,4 +1075,13 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   }
 
   override fun onStop() = stopAll()
+
+  override fun onToggleRecord() = toggleRecording()
+
+  override fun onQuickEdit() {
+    try {
+      startActivity(Intent(this, MainActivity::class.java).putExtra("tab", "layers")
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+    } catch (_: Exception) {}
+  }
 }

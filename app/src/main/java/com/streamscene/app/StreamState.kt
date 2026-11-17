@@ -43,7 +43,13 @@ class Widget(
   val ttsMin: Double = 0.0,
   val url: String = "",
   val pageWidth: Int = 800,
-  val key: Boolean = true
+  val key: Boolean = true,
+  // цель доната
+  val goalTarget: Double = 0.0,
+  val goalStart: Double = 0.0,
+  val goalRev: String = "",
+  val rateBits: Double = 0.0,   // ₽ за 100 битов
+  val rateSub: Double = 0.0     // ₽ за подписку
 )
 
 /** Готовая сцена: экран игры + картинка всех обычных слоёв (с «окном» под экран) + живые слои. */
@@ -68,6 +74,8 @@ class StreamConfig(
   val chatChannel: String,
   val privacyPng: ByteArray?,
   val delaySec: Int,
+  val record: Boolean,       // писать эфир в файл
+  val recordOnly: Boolean,   // только запись, без Twitch
   var scenes: List<SceneOut>,
   var current: Int
 )
@@ -97,7 +105,7 @@ object StreamState {
   fun parseConfig(json: String): StreamConfig {
     val o = JSONObject(json)
     return StreamConfig(
-      url = o.getString("url"),
+      url = o.optString("url", ""),
       width = o.getInt("width"),
       height = o.getInt("height"),
       fps = o.optInt("fps", 30),
@@ -114,6 +122,8 @@ object StreamState {
       hideInApp = o.optBoolean("hideInApp", true),
       chatChannel = o.optString("chatChannel", ""),
       delaySec = o.optInt("delay", 0).coerceIn(0, 300),
+      record = o.optBoolean("record", false),
+      recordOnly = o.optBoolean("recordOnly", false),
       privacyPng = o.optString("privacy", "").takeIf { it.isNotEmpty() }?.let { decodeData(it) },
       scenes = parseScenes(o.getJSONArray("scenes")),
       current = o.optInt("current", 0)
@@ -186,7 +196,12 @@ object StreamState {
           ttsMin = w.optDouble("ttsMin", 0.0),
           url = w.optString("url", ""),
           pageWidth = w.optInt("pageWidth", 800),
-          key = w.optBoolean("key", true)
+          key = w.optBoolean("key", true),
+          goalTarget = w.optDouble("goalTarget", 0.0),
+          goalStart = w.optDouble("goalStart", 0.0),
+          goalRev = w.optString("goalRev", ""),
+          rateBits = w.optDouble("rateBits", 0.0),
+          rateSub = w.optDouble("rateSub", 0.0)
         )
       }
     )

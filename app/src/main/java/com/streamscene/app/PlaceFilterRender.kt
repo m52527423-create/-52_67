@@ -52,7 +52,7 @@ class PlaceFilterRender : BaseFilterRender() {
   private var downProgram = -1
   private var dPos = -1; private var dTex = -1; private var dSampler = -1
   private var dCover = -1; private var dStep = -1; private var dCrop = -1
-  private var dMvp = -1; private var dSt = -1
+  private var dMvp = -1; private var dSt = -1; private var dFlip = -1
   private val smallFbo = IntArray(1)
   private val smallTex = IntArray(1)
   private var smallOk = false
@@ -61,7 +61,8 @@ class PlaceFilterRender : BaseFilterRender() {
 
   // поиск чёрных полос
   private val probeFbo = IntArray(1)
-  private var frame = 0
+  private var lastProbe = 0L
+  private var useBlur = false
   private var colBuf: ByteBuffer? = null
   private var rowBuf: ByteBuffer? = null
   private var lastCand = floatArrayOf(-1f, -1f, -1f, -1f)
@@ -80,6 +81,8 @@ class PlaceFilterRender : BaseFilterRender() {
 
   // итоговая обрезка (полосы Android + обрезка пользователя) и вписывание — считаются на каждом кадре
   private val eff = FloatArray(4)
+  private var sx = 0f; private var sy = 0f; private var sW = 1f; private var sH = 1f; private var sFlip = 0f
+  private var uc0 = 0f; private var uc1 = 0f; private var uc2 = 0f; private var uc3 = 0f
   private val fit = floatArrayOf(0f, 0f, 1f, 1f)
   private var coverX = 1f
   private var coverY = 1f
@@ -117,6 +120,7 @@ class PlaceFilterRender : BaseFilterRender() {
     dCrop = GLES20.glGetUniformLocation(downProgram, "uCrop")
     dMvp = GLES20.glGetUniformLocation(downProgram, "uMVPMatrix")
     dSt = GLES20.glGetUniformLocation(downProgram, "uSTMatrix")
+    dFlip = GLES20.glGetUniformLocation(downProgram, "uFlip")
 
     val w = getWidth().coerceAtLeast(1); val h = getHeight().coerceAtLeast(1)
     if (w >= h) { sw = 96; sh = (96f * h / w).toInt().coerceAtLeast(8) } else { sh = 96; sw = (96f * w / h).toInt().coerceAtLeast(8) }
@@ -141,10 +145,14 @@ class PlaceFilterRender : BaseFilterRender() {
 
   override fun draw() {
     val w = getWidth().coerceAtLeast(1); val h = getHeight().coerceAtLeast(1)
-    if (frame++ % 45 == 0) try { probeBars(w, h) } catch (e: Exception) { Log.w(TAG, "probe", e) }
+    val now = System.nanoTime()
+    if (now - lastProbe > 700_000_000L) { lastProbe = now; try { probeBars(w, h) } catch (e: Exception) { Log.w(TAG, "probe", e) } }
+    // снимок настроек на весь кадр, чтобы они не поменялись между проходами
+    sx = rx; sy = ry; sW = rw; sH = rh; sFlip = flip; uc0 = cl; uc1 = ct; uc2 = cr; uc3 = cb
+    useBlur = blur && smallOk
     computeLayout(w, h)
 
-    if (blur && smallOk) {
+    if (useBlur) {
       // маленькая текстура не должна быть привязана ни к одному слоту, пока в неё рисуем
       GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
       GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
@@ -162,6 +170,7 @@ class PlaceFilterRender : BaseFilterRender() {
       GLES20.glUniform2f(dCover, coverX, coverY)
       GLES20.glUniform2f(dStep, 1f / sw, 1f / sh)
       GLES20.glUniform4f(dCrop, eff[0], eff[1], eff[2], eff[3])
+      GLES20.glUniform1f(dFlip, sFlip)
       GLES20.glUniform1i(dSampler, 0)
       GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
       GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, previousTexId)
@@ -179,10 +188,10 @@ class PlaceFilterRender : BaseFilterRender() {
   private fun computeLayout(w: Int, h: Int) {
     val a = auto
     val iw = 1f - a[0] - a[2]; val ih = 1f - a[1] - a[3]
-    eff[0] = a[0] + cl * iw; eff[1] = a[1] + ct * ih; eff[2] = a[2] + cr * iw; eff[3] = a[3] + cb * ih
+    eff[0] = a[0] + uc0 * iw; eff[1] = a[1] + uc1 * ih; eff[2] = a[2] + uc2 * iw; eff[3] = a[3] + uc3 * ih
     // пропорции самой картинки телефона (в пикселях) и окна игры
     val cAR = (w.toFloat() * (1f - eff[0] - eff[2])) / (h.toFloat() * (1f - eff[1] - eff[3])).coerceAtLeast(1f)
-    val rAR = (rw * w) / (rh * h).coerceAtLeast(1f)
+    val rAR = (sW * w) / (sH * h).coerceAtLeast(1f)
     // если картинка повернута иначе, чем окно (вертикальный рабочий стол в горизонтальном окне), — вписываем без искажений
     if ((cAR > 1f) != (rAR > 1f) && cAR > 0f && rAR > 0f) {
       if (cAR > rAR) { val s = rAR / cAR; fit[0] = 0f; fit[1] = (1f - s) / 2f; fit[2] = 1f; fit[3] = s }
@@ -209,16 +218,7 @@ class PlaceFilterRender : BaseFilterRender() {
       val r = b.get(i * 4).toInt() and 0xff; val g = b.get(i * 4 + 1).toInt() and 0xff; val bl = b.get(i * 4 + 2).toInt() and 0xff
       return r < 14 && g < 14 && bl < 14
     }
-    // сверху/снизу: по 3 столбцам
-    var top = h; var bottom = h
-    for (fx in floatArrayOf(.25f, .5f, .75f)) {
-      col.clear()
-      GLES20.glReadPixels((w * fx).toInt(), 0, 1, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, col)
-      var b = 0; while (b < h && black(col, b)) b++              // строка 0 — низ картинки
-      var t = 0; while (t < h && black(col, h - 1 - t)) t++
-      bottom = min(bottom, b); top = min(top, t)
-    }
-    // слева/справа: по 3 строкам
+    // сначала слева/справа (по 3 строкам)
     var left = w; var right = w
     for (fy in floatArrayOf(.25f, .5f, .75f)) {
       row.clear()
@@ -227,14 +227,29 @@ class PlaceFilterRender : BaseFilterRender() {
       var r = 0; while (r < w && black(row, w - 1 - r)) r++
       left = min(left, l); right = min(right, r)
     }
+    // потом сверху/снизу — по столбцам внутри картинки, а не в боковых полосах
+    var top = h; var bottom = h
+    if (left < w) {
+      val x0 = left.toFloat() / w; val x1 = 1f - right.toFloat() / w
+      for (k in floatArrayOf(.25f, .5f, .75f)) {
+        col.clear()
+        GLES20.glReadPixels(((x0 + (x1 - x0) * k) * w).toInt().coerceIn(0, w - 1), 0, 1, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, col)
+        var bb = 0; while (bb < h && black(col, bb)) bb++              // строка 0 — низ картинки
+        var t = 0; while (t < h && black(col, h - 1 - t)) t++
+        bottom = min(bottom, bb); top = min(top, t)
+      }
+    }
     GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, 0, 0)
     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
 
+    // весь кадр чёрный (загрузка, затемнение) — ничего не решаем, оставляем как было
+    if (left >= w || top >= h) return
     val ft = top.toFloat() / h; val fb = bottom.toFloat() / h
     val fl = left.toFloat() / w; val fr = right.toFloat() / w
     val cand = floatArrayOf(0f, 0f, 0f, 0f)
-    if (ft < .45f && fb < .45f && ft > .012f && fb > .012f && abs(ft - fb) < .025f) { val v = (ft + fb) / 2f + .002f; cand[1] = v; cand[3] = v }
+    // Android добавляет полосы только с одной стороны: либо по бокам, либо сверху-снизу
     if (fl < .45f && fr < .45f && fl > .012f && fr > .012f && abs(fl - fr) < .025f) { val v = (fl + fr) / 2f + .002f; cand[0] = v; cand[2] = v }
+    else if (ft < .45f && fb < .45f && ft > .012f && fb > .012f && abs(ft - fb) < .025f) { val v = (ft + fb) / 2f + .002f; cand[1] = v; cand[3] = v }
     val same = (0..3).all { abs(cand[it] - lastCand[it]) < .006f }
     lastCand = cand
     if (same && (0..3).any { abs(cand[it] - auto[it]) > .004f }) {
@@ -253,11 +268,11 @@ class PlaceFilterRender : BaseFilterRender() {
     GLES20.glEnableVertexAttribArray(aTextureHandle)
     GLES20.glUniformMatrix4fv(uMVPMatrixHandle, 1, false, MVPMatrix, 0)
     GLES20.glUniformMatrix4fv(uSTMatrixHandle, 1, false, STMatrix, 0)
-    GLES20.glUniform4f(uRectHandle, rx, ry, rw.coerceAtLeast(0.0001f), rh.coerceAtLeast(0.0001f))
-    GLES20.glUniform1f(uFlipHandle, flip)
+    GLES20.glUniform4f(uRectHandle, sx, sy, sW.coerceAtLeast(0.0001f), sH.coerceAtLeast(0.0001f))
+    GLES20.glUniform1f(uFlipHandle, sFlip)
     GLES20.glUniform4f(uCropHandle, eff[0], eff[1], eff[2], eff[3])
     GLES20.glUniform4f(uFitHandle, fit[0], fit[1], fit[2].coerceAtLeast(0.0001f), fit[3].coerceAtLeast(0.0001f))
-    GLES20.glUniform1f(uBlurHandle, if (blur && smallOk) 1f else 0f)
+    GLES20.glUniform1f(uBlurHandle, if (useBlur) 1f else 0f)
     GLES20.glUniform2f(uBgStepHandle, 1f / sw, 1f / sh)
     GLES20.glUniform1i(uBgHandle, 1)
     GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
@@ -307,14 +322,20 @@ void main() {
 """
     // уменьшенная копия картинки «по кадру» (16 выборок на пиксель — уже мягкая)
     private const val DOWN = """
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform sampler2D uSampler;
 uniform vec2 uCover;
 uniform vec2 uStep;
 uniform vec4 uCrop;
+uniform float uFlip;
 varying vec2 vTextureCoord;
 vec4 at(vec2 q) {
   vec2 t = clamp(vec2(0.5) + (q - vec2(0.5)) * uCover, 0.0, 1.0);
+  if (uFlip > 0.5) t.x = 1.0 - t.x;
   vec2 s = vec2(uCrop.x + t.x * (1.0 - uCrop.x - uCrop.z), uCrop.y + t.y * (1.0 - uCrop.y - uCrop.w));
   return texture2D(uSampler, vec2(s.x, 1.0 - s.y));
 }
@@ -332,7 +353,11 @@ void main() {
     // В цепочке фильтров верх кадра — это v = 1, поэтому переворачиваем Y,
     // чтобы прямоугольник задавался от левого верхнего угла, как в редакторе.
     private const val FRAGMENT = """
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
+#endif
 uniform sampler2D uSampler;
 uniform sampler2D uBg;
 uniform float uBlur;

@@ -439,8 +439,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     val sc = cfg.scenes[current]
     ensureFilters(cfg)
     val r = sc.screen
-    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); place.setCrop(r.cl, r.ct, r.cr, r.cb) }
-    else { place.setRect(0f, 0f, 1f, 1f, false); place.setCrop(0f, 0f, 0f, 0f) }
+    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); place.setCrop(r.cl, r.ct, r.cr, r.cb); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh) }
+    else { place.setRect(0f, 0f, 1f, 1f, false); place.setCrop(0f, 0f, 0f, 0f); place.setBlur(false, 1f, 1f) }
     BitmapFactory.decodeByteArray(sc.overlayPng, 0, sc.overlayPng.size)?.let {
       overlay.setImage(it); overlay.setScale(100f, 100f); overlay.setPosition(0f, 0f)
     }

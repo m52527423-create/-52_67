@@ -100,6 +100,7 @@ main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 1
 .seg button:active{background:var(--s3)}
 .seg button .ic{width:18px;height:18px}
 .seg button.danger{color:var(--red)}
+.seg button.on{background:var(--acc-d);color:var(--acc)}
 .seg.txt button{min-height:34px;flex-direction:row;font-size:13px;font-weight:600;color:var(--mute)}
 .seg.txt button.on{background:var(--acc-d);color:#fff}
 
@@ -432,6 +433,7 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 <symbol id="i-raid" viewBox="0 0 24 24"><path d="M4 12h12M12 6l6 6-6 6M20 5v14"/></symbol>
 <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
 <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
+<symbol id="i-blur" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="7.5" y="8" width="9" height="8" rx="1"/><path d="M4.5 9h1.5M4.5 12h1.5M4.5 15h1.5M18 9h1.5M18 12h1.5M18 15h1.5"/></symbol>
 <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
@@ -497,6 +499,7 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
             <button data-op="fit"><svg class="ic"><use href="#i-fit"/></svg>Вписать</button>
             <button data-op="fill"><svg class="ic"><use href="#i-fill"/></svg>Заполнить</button>
             <button data-op="stretch"><svg class="ic"><use href="#i-stretch"/></svg>Растянуть</button>
+            <button data-op="blur" id="opBlur"><svg class="ic"><use href="#i-blur"/></svg>Размытие</button>
             <button data-op="center"><svg class="ic"><use href="#i-center"/></svg>По центру</button>
           </div>
           <div class="nums">
@@ -1193,8 +1196,22 @@ function drawLayer(c, l, t = performance.now()) {
   c.restore();
 }
 let gridOn = false;
+const blurCv = document.createElement('canvas'); blurCv.width = 128; blurCv.height = 72;
+function drawBlurBg(c) {
+  const l = layers().find(x => x.type === 'screen' && x.visible && x.blurBg); if (!l) return false;
+  const src = layerSrcEl(l); const sw = src.videoWidth || src.naturalWidth || src.width, sh = src.videoHeight || src.naturalHeight || src.height;
+  if (!sw || !sh) return false;
+  blurCv.height = Math.round(128 * H / W);
+  const b = blurCv.getContext('2d'), bw = blurCv.width, bh = blurCv.height;
+  const ar = sw / sh, k = Math.max(bw / sw, bh / sh), dw = sw * k, dh = sh * k;
+  b.filter = 'blur(3px)'; b.drawImage(src, (bw - dw) / 2, (bh - dh) / 2, dw, dh); b.filter = 'none';
+  b.fillStyle = 'rgba(0,0,0,.28)'; b.fillRect(0, 0, bw, bh);
+  c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(blurCv, 0, 0, W, H); c.restore();
+  return true;
+}
 function render(c, withUI) {
   c.fillStyle = scene().bg || '#000'; c.fillRect(0, 0, W, H);
+  drawBlurBg(c);
   const t = performance.now();
   drawOrder().forEach(l => drawLayer(c, l, t));
   if (!withUI) return;
@@ -1427,7 +1444,8 @@ function widgetOut(l) {
 function buildScene(sc, EW, EH) {
   const c = document.createElement('canvas'); c.width = EW; c.height = EH;
   const x = c.getContext('2d'); x.scale(EW / W, EH / H);
-  x.fillStyle = sc.bg || '#000'; x.fillRect(0, 0, W, H);
+  const blurScr = sc.layers.some(l => l.type === 'screen' && l.visible && l.blurBg);
+  if (!blurScr) { x.fillStyle = sc.bg || '#000'; x.fillRect(0, 0, W, H); }
   let screen = null; const widgets = [];
   for (const l of sc.layers) {
     if (!l.visible) continue;
@@ -1436,7 +1454,7 @@ function buildScene(sc, EW, EH) {
       const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
       x.save(); x.globalCompositeOperation = 'destination-out'; x.globalAlpha = l.opacity;
       x.beginPath(); x.roundRect(l.x, l.y, l.w, l.h, r); x.fill(); x.restore();
-      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip, cl: (l.cl || 0) / 100, ct: (l.ct || 0) / 100, cr: (l.cr || 0) / 100, cb: (l.cb || 0) / 100 };
+      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip, cl: (l.cl || 0) / 100, ct: (l.ct || 0) / 100, cr: (l.cr || 0) / 100, cb: (l.cb || 0) / 100, blur: !!l.blurBg };
     } else drawLayer(x, l);
   }
   return { name: sc.name, screen, overlay: c.toDataURL('image/png'), widgets };
@@ -1560,6 +1578,7 @@ function renderProps() {
     renderMediaList(s);
     $('#pSound').checked = s.sound !== false; $('#pSeconds').value = s.seconds || 6; $('#vSeconds').textContent = (s.seconds || 6) + ' с';
   }
+  show('#opBlur', t === 'screen'); $('#opBlur').classList.toggle('on', t === 'screen' && !!s.blurBg);
   show('#gWeb', t === 'web' && !s.daKind);
   show('#gDa', t === 'web' && !!s.daKind);
   if (t === 'web' && s.daKind) { $('#gDaHead').textContent = DA_KINDS[s.daKind].full; $('#pDaUrl').textContent = s.url ? maskUrl(s.url) : 'не указана'; $('#pDaShow').classList.toggle('hidden', !s.url); }
@@ -1591,7 +1610,8 @@ function op(name) {
   const s = selected(); if (!s) return;
   const ls = layers(), i = ls.indexOf(s);
   switch (name) {
-    case 'fit': case 'fill': case 'stretch': Object.assign(s, fitRect(natAR(s), name)); if (name === 'stretch') s.lock = false; break;
+    case 'fit': case 'fill': case 'stretch': Object.assign(s, fitRect(natAR(s), name)); if (name === 'stretch') s.lock = false; s.blurBg = false; break;
+    case 'blur': Object.assign(s, fitRect(natAR(s), 'fit')); s.blurBg = true; s.lock = true; toast('Края кадра — размытая игра'); break;
     case 'center': s.x = (W - s.w) / 2; s.y = (H - s.h) / 2; break;
     case 'up': if (i < ls.length - 1) { ls.splice(i, 1); ls.splice(i + 1, 0, s); } break;
     case 'down': if (i > 0) { ls.splice(i, 1); ls.splice(i - 1, 0, s); } break;
@@ -2433,7 +2453,7 @@ function changeAccount() {
 const GUIDE = [
   ['live', 'Первый эфир за 3 шага', `<ol><li>Войди через Twitch — название, категория и ключ трансляции подтянутся сами.</li><li>На <b>Пульте</b> проверь «Готовность»: Twitch, экран игры в сцене, интернет.</li><li>Нажми <b>В ЭФИР</b>. Android спросит доступ к экрану — выбери <b>«Весь экран»</b>. Потом открывай игру.</li></ol><div class="tip">Хочешь проверить без зрителей — включи «Пробный эфир» в Настройках → Видео.</div>`],
   ['layers', 'Сцены и слои', `<p><b>Сцена</b> — это то, что видят зрители: экран игры плюс всё, что ты положишь сверху. Сцены переключаются кнопками над превью: «Игра», «Скоро начнём», «Перерыв».</p><p><b>Слои</b> — части сцены: экран игры, картинки, тексты, чат, алерты. Во вкладке «Слои» их можно скрыть, перетащить за точки слева (что выше — то поверх) или открыть свойства.</p><div class="tip">Двойной тап по слою на превью сразу открывает его свойства.</div>`],
-  ['game', 'Экран игры', `<p>Тяни экран игры пальцем, уголки — размер. В «Свойствах» есть быстрые кнопки: <b>Вписать</b>, <b>Заполнить</b>, <b>Растянуть</b>, <b>По центру</b>, и обрезка краёв, если в кадр лезут кнопки игры.</p><p>Если играешь вертикально — укажи это в Настройках → Видео → «Как держишь телефон в игре».</p>`],
+  ['game', 'Экран игры', `<p>Тяни экран игры пальцем, уголки — размер. В «Свойствах» есть быстрые кнопки: <b>Вписать</b>, <b>Заполнить</b>, <b>Растянуть</b>, <b>Размытие</b> (вместо чёрных полос по краям — размытая игра), <b>По центру</b>, и обрезка краёв, если в кадр лезут кнопки игры.</p><p>Если играешь вертикально — укажи это в Настройках → Видео → «Как держишь телефон в игре».</p>`],
   ['plus', 'Что можно добавить', `<ul><li><b>Фото, текст, готовые баннеры</b> — обычные слои.</li><li><b>Камера</b> — круг или прямоугольник с рамкой.</li><li><b>Чат</b> — сообщения зрителей прямо на стриме.</li><li><b>Алерты и Сбор средств</b> — твои виджеты из DonationAlerts, со всеми картинками, звуками и озвучкой (раздел ниже).</li><li><b>Таймер, часы, зрители, бегущая строка, GIF, веб-виджет</b>.</li></ul><div class="tip">Живые слои можно добавлять прямо во время эфира — появятся сразу.</div>`],
   ['coin', 'Алерты и сбор из DonationAlerts', `<p>Алерты и сбор средств настраиваются на сайте DonationAlerts — картинки, звуки, озвучка, оформление. Glowcast просто показывает их на стриме.</p>
     <p><b>Алерты:</b></p><ol class="steps2"><li>Открой <b>donationalerts.com</b> и войди (можно через Twitch).</li><li>Слева: <b>«Оповещения»</b>. Настрой вид, звук и озвучку, сохрани.</li><li>Нажми <b>«Показать ссылку для встраивания»</b> и скопируй её.</li><li>В Glowcast: <b>Добавить → Алерты</b>, вставь ссылку, <b>Сохранить</b>.</li></ol>
@@ -2453,13 +2473,13 @@ function openGuide(play, section) {
   box.innerHTML = `<div class="gd">
     <div class="bar"><h2>${section === 'da' ? 'Алерты из DonationAlerts' : 'Гайд по Glowcast'}</h2><button class="btn icon" id="gdClose" aria-label="Закрыть">${I('close')}</button></div>
     <video id="gdVideo" src="${section === 'da' ? 'guide_da.mp4' : 'guide.mp4'}" controls playsinline preload="metadata"></video>
-    ${GUIDE.map(([ic, t, body, id], i) => `<details${(section ? id === section : i === 0) ? ' open' : ''}${id ? ` id="gd_${id}"` : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
+    ${(section ? [...GUIDE.filter(g => g[3] === section), ...GUIDE.filter(g => g[3] !== section)] : GUIDE).map(([ic, t, body, id], i) => `<details${i === 0 ? ' open' : ''}${id ? ` id="gd_${id}"` : ''}><summary>${I(ic)}${t}${I('chev', 'chev')}</summary><div class="body">${body}</div></details>`).join('')}
     <button class="btn big pri" id="gdDone" style="margin-top:8px">Понятно, к делу</button>
   </div>`;
   const v = $('#gdVideo');
   v.onerror = () => v.remove();
   if (play) v.play().catch(() => {});
-  if (section) setTimeout(() => { const d = $('#gd_' + section); if (d) d.scrollIntoView({ block: 'start' }); }, 60);
+  box.scrollTop = 0;
   const close = () => { try { v.pause(); } catch {} box.remove(); };
   $('#gdClose').onclick = close; $('#gdDone').onclick = () => { close(); setTab('home'); };
 }

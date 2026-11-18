@@ -315,6 +315,16 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 .dalink .ic{width:22px;height:22px;color:var(--warn);flex:none}
 .steps2{margin:0 0 4px;padding-left:20px;font-size:14px;line-height:1.5}.steps2 li{margin-bottom:6px}
 #livePane.simple .adv{display:none}
+body.fs .top,body.fs .scenes,body.fs main,body.fs nav.tabs,body.fs .stagemeta{display:none!important}
+body.fs .stagewrap{position:fixed;inset:0;z-index:60;padding:0;border:0;background:#000;display:flex;align-items:center;justify-content:center}
+body.fs .stage{border-radius:0;outline:0;box-shadow:none;margin:0}
+#fsBar{position:fixed;left:10px;right:10px;top:10px;z-index:61;display:flex;gap:8px;align-items:center;pointer-events:none}
+#fsBar>*{pointer-events:auto}
+#fsScenes{flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+#fsScenes .scene{height:36px;background:rgba(20,15,43,.82);backdrop-filter:blur(6px)}
+#fsScenes .scene.on{background:var(--acc);color:var(--on-acc)}
+#fsBar .btn{background:rgba(20,15,43,.85);height:40px;border-radius:999px}
+#fsBar .btn.icon{width:40px}
 /* Пульт — неон */
 .nhead{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px}
 .nhead .t{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:700;font-size:17px}
@@ -435,6 +445,7 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 <symbol id="i-rec" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4" fill="currentColor"/></symbol>
 <symbol id="i-blur" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="7.5" y="8" width="9" height="8" rx="1"/><path d="M4.5 9h1.5M4.5 12h1.5M4.5 15h1.5M18 9h1.5M18 12h1.5M18 15h1.5"/></symbol>
 <symbol id="i-rotate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 14a9 9 0 0 0 6 6.5M21 10a9 9 0 0 0-6-6.5"/><path d="M3 11v3h3M21 13v-3h-3"/></symbol>
+<symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
 <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
@@ -455,9 +466,10 @@ select.inp{appearance:none;-webkit-appearance:none;background:var(--s2) url("dat
 
 <div class="stagewrap">
   <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+  <div id="fsBar" class="hidden"><div id="fsScenes"></div><button class="btn icon" id="fsUndo" aria-label="Отменить"><svg class="ic"><use href="#i-undo"/></svg></button><button class="btn" id="fsClose"><svg class="ic"><use href="#i-close"/></svg>Готово</button></div>
   <div class="stagemeta">
     <span id="metaFmt">16:9</span><span id="metaSel"></span><span class="sp"></span>
-    <button class="btn sm icon" id="btnUndo" aria-label="Отменить"><svg class="ic"><use href="#i-undo"/></svg></button><button class="btn sm icon" id="btnRedo" aria-label="Повторить"><svg class="ic"><use href="#i-redo"/></svg></button><button class="btn sm icon" id="btnGrid" aria-label="Сетка"><svg class="ic"><use href="#i-grid"/></svg></button><button class="btn sm icon" id="btnRotate" aria-label="Повернуть экран"><svg class="ic"><use href="#i-rotate"/></svg></button><button class="btn sm icon" id="btnPreview" aria-label="Предпросмотр"><svg class="ic"><use href="#i-eye"/></svg></button><button class="btn sm pri hidden" id="btnToGame"><svg class="ic"><use href="#i-game"/></svg>К игре</button>
+    <button class="btn sm icon" id="btnUndo" aria-label="Отменить"><svg class="ic"><use href="#i-undo"/></svg></button><button class="btn sm icon" id="btnRedo" aria-label="Повторить"><svg class="ic"><use href="#i-redo"/></svg></button><button class="btn sm icon" id="btnGrid" aria-label="Сетка"><svg class="ic"><use href="#i-grid"/></svg></button><button class="btn sm icon" id="btnRotate" aria-label="Повернуть экран"><svg class="ic"><use href="#i-rotate"/></svg></button><button class="btn sm icon" id="btnPreview" aria-label="На весь экран"><svg class="ic"><use href="#i-expand"/></svg></button><button class="btn sm pri hidden" id="btnToGame"><svg class="ic"><use href="#i-game"/></svg>К игре</button>
   </div>
 </div>
 
@@ -977,6 +989,11 @@ function applyOrient() {
   sizeStage();
 }
 function sizeStage() {
+  if (document.body.classList.contains('fs')) {
+    const st = $('#stage'); const mw = window.innerWidth, mh = window.innerHeight;
+    let w = mw, h = w * H / W; if (h > mh) { h = mh; w = h * W / H; }
+    st.style.width = w + 'px'; st.style.height = h + 'px'; return;
+  }
   const st = $('#stage'), land = matchMedia('(orientation:landscape) and (max-height:620px)').matches;
   const maxW = st.parentElement.clientWidth - 24;
   const maxH = land ? window.innerHeight - 44 - 52 - 56 : window.innerHeight * (ORIENT === 'h' ? .30 : .40);
@@ -1876,7 +1893,27 @@ $('#btnGrid').onclick = () => { gridOn = !gridOn; $('#btnGrid').classList.toggle
 gridOn = !!store.get('grid', false); $('#btnGrid').classList.toggle('on', gridOn);
 
 /* ================= Предпросмотр ================= */
-$('#btnPreview').onclick = () => {
+/* ---------- Сцена на весь экран: смотришь как зритель и двигаешь слои пальцами ---------- */
+let fsPrevOrient = null;
+function openFull() {
+  selId = null; document.body.classList.add('fs'); $('#fsBar').classList.remove('hidden');
+  fsPrevOrient = store.get('appOrient', 'auto');
+  if (ORIENT === 'h' && window.innerWidth < window.innerHeight) applyAppOrient('land');
+  drawFsScenes(); renderUI(); setTimeout(sizeStage, 60); setTimeout(sizeStage, 400);
+  toast('Нажми на слой и тяни. Уголки — размер');
+}
+function closeFull() {
+  document.body.classList.remove('fs'); $('#fsBar').classList.add('hidden');
+  applyAppOrient(fsPrevOrient || 'auto'); save(); renderUI(); setTimeout(sizeStage, 60); setTimeout(sizeStage, 400);
+}
+function drawFsScenes() {
+  const box = $('#fsScenes'); box.innerHTML = '';
+  scenes.forEach((sc, i) => { const b = document.createElement('button'); b.className = 'scene' + (i === cur ? ' on' : ''); b.textContent = sc.name; b.onclick = () => { cur = i; selId = null; if (NATIVE && isLive()) NATIVE.setScene(cur); save(); renderUI(); drawFsScenes(); }; box.appendChild(b); });
+}
+$('#fsClose').onclick = closeFull;
+$('#fsUndo').onclick = () => { if ($('#btnUndo')) $('#btnUndo').click(); };
+$('#btnPreview').onclick = () => openFull();
+function oldPreview() {
   liveOn = true; liveStart = Date.now(); selId = null; $('#live').classList.remove('hidden');
   const bar = $('#lvBar');
   const drawBar = () => {
@@ -1885,7 +1922,7 @@ $('#btnPreview').onclick = () => {
     const x = document.createElement('button'); x.className = 'btn'; x.innerHTML = I('close') + 'Закрыть'; x.onclick = () => { liveOn = false; $('#live').classList.add('hidden'); save(); renderUI(); }; bar.appendChild(x);
   };
   drawBar();
-};
+}
 
 /* ================= Вкладка «Эфир» ================= */
 let chan = null, catSel = null, catT = null, chanLoaded = false, liveSince = 0, titleDraft = null;
@@ -2607,6 +2644,8 @@ window.onNative = o => {
 };
 window.onBack = () => {
   if ($('#sheetBg')) { closeSheet(); return true; }
+  if (document.body.classList.contains('fs')) { closeFull(); return true; }
+  if ($('#guideBox')) { $('#guideBox').remove(); return true; }
   if (liveOn) { liveOn = false; $('#live').classList.add('hidden'); renderUI(); return true; }
   if (tab !== 'home') { setTab('home'); return true; }
   return false;

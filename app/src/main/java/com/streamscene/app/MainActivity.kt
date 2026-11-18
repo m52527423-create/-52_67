@@ -277,6 +277,18 @@ class MainActivity : Activity() {
       }
     }
 
+    /** Поворот экрана приложения: land — горизонтально, port — вертикально, auto — как телефон. */
+    @JavascriptInterface
+    fun setOrientation(mode: String) {
+      runOnUiThread {
+        requestedOrientation = when (mode) {
+          "land" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+          "port" -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+          else -> android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        }
+      }
+    }
+
     @JavascriptInterface
     fun toggleRecord() {
       runOnUiThread { StreamService.instance?.toggleRecording() }

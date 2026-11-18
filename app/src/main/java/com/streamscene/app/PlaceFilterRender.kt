@@ -55,6 +55,9 @@ class PlaceFilterRender : BaseFilterRender() {
   private var uBgHandle = -1; private var uBlurHandle = -1; private var uBgStepHandle = -1
   private val smallFbo = IntArray(1)
   private val smallTex = IntArray(1)
+  private var smallOk = false
+  private var uModeHandle = -1
+  private var uCoverHandle = -1
   private var sw = 96
   private var sh = 54
 
@@ -80,6 +83,8 @@ class PlaceFilterRender : BaseFilterRender() {
     uBgHandle = GLES20.glGetUniformLocation(program, "uBg")
     uBlurHandle = GLES20.glGetUniformLocation(program, "uBlur")
     uBgStepHandle = GLES20.glGetUniformLocation(program, "uBgStep")
+    uModeHandle = GLES20.glGetUniformLocation(program, "uMode")
+    uCoverHandle = GLES20.glGetUniformLocation(program, "uCover")
 
     downProgram = GlUtil.createProgram(VERTEX, DOWN)
     dPos = GLES20.glGetAttribLocation(downProgram, "aPosition")
@@ -100,13 +105,17 @@ class PlaceFilterRender : BaseFilterRender() {
     GLES20.glGenFramebuffers(1, smallFbo, 0)
     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, smallFbo[0])
     GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, smallTex[0], 0)
+    smallOk = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) == GLES20.GL_FRAMEBUFFER_COMPLETE && downProgram > 0
     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
   }
 
   /** Сначала (если включено размытие) ужимаем игру в маленький кадр, потом обычный проход. */
   override fun draw() {
-    if (blur && downProgram > 0) {
+    if (blur && smallOk) {
+      // маленькая текстура не должна быть привязана ни к одному слоту, пока в неё рисуем
+      GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+      GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
       GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, smallFbo[0])
       GLES20.glViewport(0, 0, sw, sh)
       GLES20.glUseProgram(downProgram)
@@ -127,6 +136,9 @@ class PlaceFilterRender : BaseFilterRender() {
       GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     }
     super.draw()
+    GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+    GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+    GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
   }
 
   override fun drawFilter() {
@@ -149,6 +161,8 @@ class PlaceFilterRender : BaseFilterRender() {
     GLES20.glUniform1f(uFlipHandle, flip)
     GLES20.glUniform4f(uCropHandle, cl, ct, cr, cb)
     GLES20.glUniform1f(uBlurHandle, if (blur) 1f else 0f)
+    GLES20.glUniform1f(uModeHandle, if (smallOk) 1f else 0f)
+    GLES20.glUniform2f(uCoverHandle, coverX, coverY)
     GLES20.glUniform2f(uBgStepHandle, 1f / sw, 1f / sh)
     GLES20.glUniform1i(uBgHandle, 1)
     GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
@@ -228,6 +242,8 @@ precision mediump float;
 uniform sampler2D uSampler;
 uniform sampler2D uBg;
 uniform float uBlur;
+uniform float uMode;
+uniform vec2 uCover;
 uniform vec2 uBgStep;
 uniform vec4 uRect;
 uniform float uFlip;
@@ -237,7 +253,20 @@ void main() {
   vec2 t = vec2(vTextureCoord.x, 1.0 - vTextureCoord.y);
   vec2 p = (t - uRect.xy) / uRect.zw;
   if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) {
-    if (uBlur > 0.5) {
+    if (uBlur > 0.5 && uMode < 0.5) {
+      // запасной вариант без маленькой текстуры: размытие прямо по игре
+      vec2 q = vec2(0.5) + (t - vec2(0.5)) * uCover;
+      vec4 c = vec4(0.0);
+      for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+          vec2 o = (vec2(float(i), float(j)) - 2.0) * 0.012;
+          vec2 sq = q + o;
+          vec2 s2 = vec2(uCrop.x + sq.x * (1.0 - uCrop.x - uCrop.z), uCrop.y + sq.y * (1.0 - uCrop.y - uCrop.w));
+          c += texture2D(uSampler, vec2(s2.x, 1.0 - s2.y));
+        }
+      }
+      gl_FragColor = vec4(c.rgb / 25.0 * 0.72, 1.0);
+    } else if (uBlur > 0.5) {
       vec2 u = vTextureCoord;
       vec4 c = texture2D(uBg, u) * 0.25;
       c += texture2D(uBg, u + vec2(uBgStep.x, 0.0)) * 0.125;

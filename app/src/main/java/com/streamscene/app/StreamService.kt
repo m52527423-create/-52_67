@@ -91,6 +91,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   private val chain = ArrayList<BaseFilterRender>()
   private val rankOf = HashMap<BaseFilterRender, Int>()
   private var tickerRunning = false
+  private var fitTries = 0
   private var camTypeOn = false
 
   // цель доната
@@ -174,6 +175,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       pushUi()
       redrawDyn(false)
       checkCameraRotation()
+      // виртуальный экран создаётся не сразу — подгоняем его размер несколько раз в первые секунды
+      if (fitTries < 12) { fitTries++; StreamState.config?.let { fitVirtualDisplay(it) } }
       main.postDelayed(this, 1000)
     }
   }
@@ -301,7 +304,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       stream = s
       running = true
       current = cfg.current.coerceIn(0, max(0, cfg.scenes.size - 1))
-      uiState = "connecting"; liveSince = 0L; viewers = null; kbps = 0L; micMuted = false
+      uiState = "connecting"; liveSince = 0L; viewers = null; kbps = 0L; micMuted = false; fitTries = 0
       privManual = false; screenLocked = false; appForeground = true
       applyScene()
       applyVolumes()

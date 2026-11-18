@@ -177,8 +177,6 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       pushUi()
       redrawDyn(false)
       checkCameraRotation()
-      // телефон могли повернуть — пересчитываем, где в кадре картинка телефона
-      updateContentCrop()
       main.postDelayed(this, 1000)
     }
   }
@@ -322,7 +320,6 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         s.startStream(cfg.url)
         if (cfg.record) startRecording()
       }
-      updateContentCrop()
 
       if (cfg.bubble) controls = FloatingControls(this, this).also { it.show() }
       startLiveData(cfg)
@@ -831,33 +828,9 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   }
 
   /** Делаем виртуальный экран с пропорциями телефона, чтобы не было чёрных полос. */
-  /**
-   * Android вписывает экран телефона в кадр с чёрными полосами (сохраняя пропорции).
-   * Размер виртуального экрана не трогаем — на разных телефонах это давало обрезку и сплющивание.
-   * Вместо этого считаем, где внутри кадра лежит картинка телефона, и берём только её.
-   */
+  // чёрные полосы Android и поворот картинки телефона теперь находит сам фильтр экрана (PlaceFilterRender)
   private var userCrop = floatArrayOf(0f, 0f, 0f, 0f)
-  private var autoCrop = floatArrayOf(0f, 0f, 0f, 0f)
-  private fun updateContentCrop() {
-    try {
-      val dm = DisplayMetrics()
-      @Suppress("DEPRECATION")
-      getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY).getRealMetrics(dm)
-      if (dm.widthPixels <= 0 || dm.heightPixels <= 0) return
-      val cAR = dm.widthPixels.toFloat() / dm.heightPixels   // картинка телефона сейчас
-      val tAR = fw.toFloat() / fh                             // кадр, в который её вписал Android
-      val a = if (cAR > tAR) { val bar = (1f - tAR / cAR) / 2f; floatArrayOf(0f, bar, 0f, bar) }
-              else { val bar = (1f - cAR / tAR) / 2f; floatArrayOf(bar, 0f, bar, 0f) }
-      if (a.contentEquals(autoCrop)) return
-      autoCrop = a
-      applyCrop()
-    } catch (e: Exception) { Log.w(TAG, "content crop", e) }
-  }
-  private fun applyCrop() {
-    val a = autoCrop; val u = userCrop
-    val iw = 1f - a[0] - a[2]; val ih = 1f - a[1] - a[3]
-    place.setCrop(a[0] + u[0] * iw, a[1] + u[1] * ih, a[2] + u[2] * iw, a[3] + u[3] * ih)
-  }
+  private fun applyCrop() { val u = userCrop; place.setCrop(u[0], u[1], u[2], u[3]) }
 
   // ---------------- уведомление ----------------
   private fun buildNotification(text: String): Notification {

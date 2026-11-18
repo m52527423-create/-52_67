@@ -78,6 +78,11 @@ class PlaceFilterRender : BaseFilterRender() {
   @Volatile private var cr = 0f
   @Volatile private var cb = 0f
   @Volatile private var blur = false
+  @Volatile private var phoneAR = 0f   // пропорции экрана телефона сейчас (ширина/высота), 0 — неизвестно
+  private var lastRaw = ""
+
+  /** Пропорции экрана телефона с учётом поворота — по ним понимаем, какие полосы должен был добавить Android. */
+  fun setPhoneAspect(ar: Float) { phoneAR = ar }
 
   // итоговая обрезка (полосы Android + обрезка пользователя) и вписывание — считаются на каждом кадре
   private val eff = FloatArray(4)
@@ -247,9 +252,19 @@ class PlaceFilterRender : BaseFilterRender() {
     val ft = top.toFloat() / h; val fb = bottom.toFloat() / h
     val fl = left.toFloat() / w; val fr = right.toFloat() / w
     val cand = floatArrayOf(0f, 0f, 0f, 0f)
-    // Android добавляет полосы только с одной стороны: либо по бокам, либо сверху-снизу
-    if (fl < .45f && fr < .45f && fl > .012f && fr > .012f && abs(fl - fr) < .025f) { val v = (fl + fr) / 2f + .002f; cand[0] = v; cand[2] = v }
-    else if (ft < .45f && fb < .45f && ft > .012f && fb > .012f && abs(ft - fb) < .025f) { val v = (ft + fb) / 2f + .002f; cand[1] = v; cand[3] = v }
+    // Сколько полос в сумме должен был добавить Android при таких пропорциях телефона.
+    // Принимаем найденные полосы, если их сумма совпадает с ожидаемой (как бы Android их ни расположил),
+    // или если они симметричные. Так тёмная игра не примется за полосу.
+    val tAR = w.toFloat() / h; val pAR = phoneAR
+    val expV = if (pAR > tAR) 1f - tAR / pAR else 0f      // сверху+снизу
+    val expH = if (pAR in 0.01f..tAR) 1f - pAR / tAR else 0f   // слева+справа
+    val pad = .003f
+    fun okSum(a: Float, b: Float, exp: Float) = exp > .02f && abs(a + b - exp) < .03f
+    fun okSym(a: Float, b: Float) = a < .45f && b < .45f && a > .012f && b > .012f && abs(a - b) < .025f
+    if (okSum(fl, fr, expH) || (pAR == 0f && okSym(fl, fr))) { cand[0] = if (fl > .004f) fl + pad else 0f; cand[2] = if (fr > .004f) fr + pad else 0f }
+    else if (okSum(ft, fb, expV) || (pAR == 0f && okSym(ft, fb))) { cand[1] = if (ft > .004f) ft + pad else 0f; cand[3] = if (fb > .004f) fb + pad else 0f }
+    val raw = "raw l=%.3f t=%.3f r=%.3f b=%.3f phone=%.3f frame=%.3f".format(fl, ft, fr, fb, pAR, tAR)
+    if (raw != lastRaw) { lastRaw = raw; Log.i(TAG, raw) }
     val same = (0..3).all { abs(cand[it] - lastCand[it]) < .006f }
     lastCand = cand
     if (same && (0..3).any { abs(cand[it] - auto[it]) > .004f }) {

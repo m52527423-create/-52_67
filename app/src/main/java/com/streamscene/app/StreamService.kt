@@ -177,6 +177,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       pushUi()
       redrawDyn(false)
       checkCameraRotation()
+      updatePhoneAspect()
       main.postDelayed(this, 1000)
     }
   }
@@ -441,7 +442,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     val sc = cfg.scenes[current]
     ensureFilters(cfg)
     val r = sc.screen
-    if (r != null) Log.i(TAG, "screen rect ${r.x},${r.y} ${r.w}x${r.h} blur=${r.blur} frame=${fw}x$fh")
+    if (r != null) Log.i(TAG, "screen rect ${r.x},${r.y} ${r.w}x${r.h} crop ${r.cl},${r.ct},${r.cr},${r.cb} blur=${r.blur} frame=${fw}x$fh")
     if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); userCrop = floatArrayOf(r.cl, r.ct, r.cr, r.cb); applyCrop(); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh) }
     else { place.setRect(0f, 0f, 1f, 1f, false); userCrop = floatArrayOf(0f, 0f, 0f, 0f); applyCrop(); place.setBlur(false, 1f, 1f) }
     BitmapFactory.decodeByteArray(sc.overlayPng, 0, sc.overlayPng.size)?.let {
@@ -829,6 +830,14 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
 
   /** Делаем виртуальный экран с пропорциями телефона, чтобы не было чёрных полос. */
   // чёрные полосы Android и поворот картинки телефона теперь находит сам фильтр экрана (PlaceFilterRender)
+  private fun updatePhoneAspect() {
+    try {
+      val dm = DisplayMetrics()
+      @Suppress("DEPRECATION")
+      getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY).getRealMetrics(dm)
+      if (dm.heightPixels > 0) place.setPhoneAspect(dm.widthPixels.toFloat() / dm.heightPixels)
+    } catch (_: Exception) {}
+  }
   private var userCrop = floatArrayOf(0f, 0f, 0f, 0f)
   private fun applyCrop() { val u = userCrop; place.setCrop(u[0], u[1], u[2], u[3]) }
 

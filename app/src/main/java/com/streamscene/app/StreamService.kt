@@ -177,8 +177,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       pushUi()
       redrawDyn(false)
       checkCameraRotation()
-      // виртуальный экран создаётся не сразу — подгоняем его размер несколько раз в первые секунды
-      if (fitTries < 12) { fitTries++; StreamState.config?.let { fitVirtualDisplay(it) } }
+      // телефон могли повернуть — пересчитываем, где в кадре картинка телефона
+      updateContentCrop()
       main.postDelayed(this, 1000)
     }
   }
@@ -223,6 +223,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   override fun onCreate() {
     super.onCreate()
     instance = this
+    CrashLog.install(this)
     TwitchClient.init(this)
     DaClient.init(this)
     renderer = WidgetRenderer(this)
@@ -321,8 +322,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
         s.startStream(cfg.url)
         if (cfg.record) startRecording()
       }
-      fitVirtualDisplay(cfg)
-      main.postDelayed({ fitVirtualDisplay(cfg) }, 800)
+      updateContentCrop()
 
       if (cfg.bubble) controls = FloatingControls(this, this).also { it.show() }
       startLiveData(cfg)
@@ -444,8 +444,9 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     val sc = cfg.scenes[current]
     ensureFilters(cfg)
     val r = sc.screen
-    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); place.setCrop(r.cl, r.ct, r.cr, r.cb); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh) }
-    else { place.setRect(0f, 0f, 1f, 1f, false); place.setCrop(0f, 0f, 0f, 0f); place.setBlur(false, 1f, 1f) }
+    if (r != null) Log.i(TAG, "screen rect ${r.x},${r.y} ${r.w}x${r.h} blur=${r.blur} frame=${fw}x$fh")
+    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); userCrop = floatArrayOf(r.cl, r.ct, r.cr, r.cb); applyCrop(); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh) }
+    else { place.setRect(0f, 0f, 1f, 1f, false); userCrop = floatArrayOf(0f, 0f, 0f, 0f); applyCrop(); place.setBlur(false, 1f, 1f) }
     BitmapFactory.decodeByteArray(sc.overlayPng, 0, sc.overlayPng.size)?.let {
       overlay.setImage(it); overlay.setScale(100f, 100f); overlay.setPosition(0f, 0f)
     }
@@ -830,27 +831,32 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   }
 
   /** Делаем виртуальный экран с пропорциями телефона, чтобы не было чёрных полос. */
-  private fun fitVirtualDisplay(cfg: StreamConfig) {
+  /**
+   * Android вписывает экран телефона в кадр с чёрными полосами (сохраняя пропорции).
+   * Размер виртуального экрана не трогаем — на разных телефонах это давало обрезку и сплющивание.
+   * Вместо этого считаем, где внутри кадра лежит картинка телефона, и берём только её.
+   */
+  private var userCrop = floatArrayOf(0f, 0f, 0f, 0f)
+  private var autoCrop = floatArrayOf(0f, 0f, 0f, 0f)
+  private fun updateContentCrop() {
     try {
       val dm = DisplayMetrics()
       @Suppress("DEPRECATION")
       getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY).getRealMetrics(dm)
-      val l = max(dm.widthPixels, dm.heightPixels).toFloat()
-      val sh = min(dm.widthPixels, dm.heightPixels).toFloat()
-      val base = max(cfg.width, cfg.height)
-      val other = ((base * sh / l) / 2f).roundToInt() * 2
-      val vw = if (cfg.gameLandscape) base else other
-      val vh = if (cfg.gameLandscape) other else base
-      val src = screenSource ?: return
-      if (vw == fitW && vh == fitH && src.isRunning()) return
-      // буфер, в который рисует виртуальный экран, должен быть ровно его размера —
-      // иначе Android вписывает картинку с чёрной полосой и обрезает край
-      src.surfaceTexture?.setDefaultBufferSize(vw, vh)
-      src.resize(vw, vh)
-      if (src.isRunning()) { fitW = vw; fitH = vh }
-    } catch (e: Exception) {
-      Log.w(TAG, "resize failed", e)
-    }
+      if (dm.widthPixels <= 0 || dm.heightPixels <= 0) return
+      val cAR = dm.widthPixels.toFloat() / dm.heightPixels   // картинка телефона сейчас
+      val tAR = fw.toFloat() / fh                             // кадр, в который её вписал Android
+      val a = if (cAR > tAR) { val bar = (1f - tAR / cAR) / 2f; floatArrayOf(0f, bar, 0f, bar) }
+              else { val bar = (1f - cAR / tAR) / 2f; floatArrayOf(bar, 0f, bar, 0f) }
+      if (a.contentEquals(autoCrop)) return
+      autoCrop = a
+      applyCrop()
+    } catch (e: Exception) { Log.w(TAG, "content crop", e) }
+  }
+  private fun applyCrop() {
+    val a = autoCrop; val u = userCrop
+    val iw = 1f - a[0] - a[2]; val ih = 1f - a[1] - a[3]
+    place.setCrop(a[0] + u[0] * iw, a[1] + u[1] * ih, a[2] + u[2] * iw, a[3] + u[3] * ih)
   }
 
   // ---------------- уведомление ----------------

@@ -47,6 +47,7 @@ class MainActivity : Activity() {
   @SuppressLint("SetJavaScriptEnabled")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    CrashLog.install(this)
     TwitchClient.init(this)
     DaClient.init(this)
     web = WebView(this)
@@ -274,6 +275,20 @@ class MainActivity : Activity() {
         if (wantsCamera && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
           requestPermissions(arrayOf(Manifest.permission.CAMERA), REQ_CAM_LIVE)
         StreamService.instance?.switchScene(index)
+      }
+    }
+
+    @JavascriptInterface
+    fun lastCrash(): String = CrashLog.take(this@MainActivity)
+
+    @JavascriptInterface
+    fun logs(): String = CrashLog.recentLog(400)
+
+    @JavascriptInterface
+    fun copyText(text: String) {
+      runOnUiThread {
+        val cm = getSystemService(android.content.ClipboardManager::class.java)
+        cm.setPrimaryClip(android.content.ClipData.newPlainText("Glowcast", text))
       }
     }
 

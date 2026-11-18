@@ -56,6 +56,8 @@ class PlaceFilterRender : BaseFilterRender() {
   private val smallFbo = IntArray(1)
   private val smallTex = IntArray(1)
   private var smallOk = false
+  private var dMvp = -1
+  private var dSt = -1
   private var uModeHandle = -1
   private var uCoverHandle = -1
   private var sw = 96
@@ -93,6 +95,8 @@ class PlaceFilterRender : BaseFilterRender() {
     dCover = GLES20.glGetUniformLocation(downProgram, "uCover")
     dStep = GLES20.glGetUniformLocation(downProgram, "uStep")
     dCrop = GLES20.glGetUniformLocation(downProgram, "uCrop")
+    dMvp = GLES20.glGetUniformLocation(downProgram, "uMVPMatrix")
+    dSt = GLES20.glGetUniformLocation(downProgram, "uSTMatrix")
     val w = getWidth().coerceAtLeast(1); val h = getHeight().coerceAtLeast(1)
     if (w >= h) { sw = 96; sh = (96f * h / w).toInt().coerceAtLeast(8) } else { sh = 96; sw = (96f * w / h).toInt().coerceAtLeast(8) }
     GLES20.glGenTextures(1, smallTex, 0)
@@ -108,6 +112,7 @@ class PlaceFilterRender : BaseFilterRender() {
     smallOk = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) == GLES20.GL_FRAMEBUFFER_COMPLETE && downProgram > 0
     GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+    android.util.Log.i("StreamScene", "blur buffer ${sw}x$sh ok=$smallOk prog=$downProgram")
   }
 
   /** Сначала (если включено размытие) ужимаем игру в маленький кадр, потом обычный проход. */
@@ -125,6 +130,9 @@ class PlaceFilterRender : BaseFilterRender() {
       squareVertex.position(BaseRenderOffScreen.SQUARE_VERTEX_DATA_UV_OFFSET)
       GLES20.glVertexAttribPointer(dTex, 2, GLES20.GL_FLOAT, false, BaseRenderOffScreen.SQUARE_VERTEX_DATA_STRIDE_BYTES, squareVertex)
       GLES20.glEnableVertexAttribArray(dTex)
+      // без матриц вершины схлопываются в точку и маленькая картинка остаётся чёрной
+      GLES20.glUniformMatrix4fv(dMvp, 1, false, MVPMatrix, 0)
+      GLES20.glUniformMatrix4fv(dSt, 1, false, STMatrix, 0)
       GLES20.glUniform2f(dCover, coverX, coverY)
       GLES20.glUniform2f(dStep, 1f / sw, 1f / sh)
       GLES20.glUniform4f(dCrop, cl, ct, cr, cb)

@@ -2006,6 +2006,7 @@ function renderLive() {
   </div>`;
 
   html += `<button class="btn" id="skGuide" style="width:100%;margin:2px 0 8px">${I('live')}Гайд по приложению</button>`;
+  if (NATIVE && NATIVE.logs) html += `<button class="btn" id="skDiag" style="width:100%;margin:2px 0 8px">${I('warn')}Журнал для разработчика</button>`;
   html += `<button class="btn" id="skAdv" style="width:100%;margin:2px 0 12px">${I('sliders')}${streamCfg.advanced ? 'Скрыть дополнительные настройки' : 'Все настройки'}</button>`;
   if (!live) html += `<button class="btn pri big" id="skGo">${I('live')}Начать эфир</button>
     <p class="note" style="margin:8px 2px 0">Android спросит разрешение на запись экрана — выбери <b>«Весь экран»</b>.</p>`;
@@ -2031,6 +2032,7 @@ function renderLive() {
   $('#skRec').onchange = e => { streamCfg.record = e.target.checked; saveCfg(); if (e.target.checked) toast('Эфир будет записываться. Запись можно включать и выключать в кружке'); };
   if ($('#skRecOnly')) $('#skRecOnly').onclick = () => startRecordOnly();
   $('#skGuide').onclick = () => openGuide(true);
+  if ($('#skDiag')) $('#skDiag').onclick = () => showReport('Журнал Glowcast', NATIVE.logs(), 'Если что-то работает не так — скопируй и пришли разработчику.');
   $$('[data-dalink]').forEach(b => b.onclick = () => daLinkSheet(b.dataset.dalink, () => renderLive()));
   $$('[data-dashow]').forEach(b => b.onclick = () => revealLink($('#dl_' + b.dataset.dashow), daLinks[b.dataset.dashow]));
   $('#daGuide').onclick = () => openGuide(true, 'da');
@@ -2327,6 +2329,19 @@ async function applyTheme(id, accent) {
 $('#themeApply').onclick = () => applyTheme(THEME.id, $('#themeAccent').value);
 
 
+
+/* ================= Отчёт о сбое ================= */
+function showReport(title, text, note) {
+  sheet(title, box => {
+    box.innerHTML = `<div class="note" style="font-size:14px;margin-bottom:8px">${note}</div>
+      <textarea class="inp" readonly style="height:40vh;font:12px/1.4 monospace;padding:10px;white-space:pre">${esc(text || 'пусто')}</textarea>
+      <button class="btn pri" id="rpCopy">${I('copy')}Скопировать</button>`;
+    box.querySelector('#rpCopy').onclick = () => { NATIVE.copyText(text || ''); toast('Скопировано — вставь в чат'); };
+  });
+}
+setTimeout(() => {
+  try { const c = NATIVE && NATIVE.lastCrash && NATIVE.lastCrash(); if (c) showReport('Glowcast упал в прошлый раз', c, 'Скопируй это и пришли разработчику — так он найдёт и исправит причину.'); } catch {}
+}, 1200);
 
 /* ================= Выбор из списка (вместо системного окна Android) ================= */
 function pickerFor(sel) {

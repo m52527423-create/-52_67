@@ -265,7 +265,7 @@ void main() {
           c += texture2D(uSampler, vec2(s2.x, 1.0 - s2.y));
         }
       }
-      gl_FragColor = vec4(c.rgb / 25.0 * 0.72, 1.0);
+      gl_FragColor = vec4(c.rgb / 25.0 * 0.8, 1.0);
     } else if (uBlur > 0.5) {
       vec2 u = vTextureCoord;
       vec4 c = texture2D(uBg, u) * 0.25;
@@ -277,7 +277,7 @@ void main() {
       c += texture2D(uBg, u - uBgStep) * 0.0625;
       c += texture2D(uBg, u + vec2(uBgStep.x, -uBgStep.y)) * 0.0625;
       c += texture2D(uBg, u + vec2(-uBgStep.x, uBgStep.y)) * 0.0625;
-      gl_FragColor = vec4(c.rgb * 0.72, 1.0);
+      gl_FragColor = vec4(c.rgb * 0.8, 1.0);
     } else {
       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     }

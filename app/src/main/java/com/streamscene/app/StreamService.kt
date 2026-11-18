@@ -92,6 +92,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
   private val rankOf = HashMap<BaseFilterRender, Int>()
   private var tickerRunning = false
   private var fitTries = 0
+  private var fitW = 0
+  private var fitH = 0
   private var camTypeOn = false
 
   // цель доната
@@ -304,7 +306,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       stream = s
       running = true
       current = cfg.current.coerceIn(0, max(0, cfg.scenes.size - 1))
-      uiState = "connecting"; liveSince = 0L; viewers = null; kbps = 0L; micMuted = false; fitTries = 0
+      uiState = "connecting"; liveSince = 0L; viewers = null; kbps = 0L; micMuted = false; fitTries = 0; fitW = 0; fitH = 0
       privManual = false; screenLocked = false; appForeground = true
       applyScene()
       applyVolumes()
@@ -837,7 +839,15 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       val sh = min(dm.widthPixels, dm.heightPixels).toFloat()
       val base = max(cfg.width, cfg.height)
       val other = ((base * sh / l) / 2f).roundToInt() * 2
-      if (cfg.gameLandscape) screenSource?.resize(base, other) else screenSource?.resize(other, base)
+      val vw = if (cfg.gameLandscape) base else other
+      val vh = if (cfg.gameLandscape) other else base
+      val src = screenSource ?: return
+      if (vw == fitW && vh == fitH && src.isRunning()) return
+      // буфер, в который рисует виртуальный экран, должен быть ровно его размера —
+      // иначе Android вписывает картинку с чёрной полосой и обрезает край
+      src.surfaceTexture?.setDefaultBufferSize(vw, vh)
+      src.resize(vw, vh)
+      if (src.isRunning()) { fitW = vw; fitH = vh }
     } catch (e: Exception) {
       Log.w(TAG, "resize failed", e)
     }

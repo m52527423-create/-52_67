@@ -166,6 +166,34 @@ class BubbleView(ctx: Context) : View(ctx) {
     color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.DEFAULT_BOLD
   }
 
+  init { setLayerType(LAYER_TYPE_SOFTWARE, null) } // для неонового свечения логотипа
+
+  private val logo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
+  }
+  private val logoDot = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.parseColor("#FF3DA8") }
+  private val logoPath = android.graphics.Path()
+
+  /** Логотип Glowcast (телефон + волны сигнала), как в assets/logo.svg: размер sz — сторона квадрата 108 единиц без фона. */
+  private fun drawLogo(c: Canvas, cx: Float, cy: Float, sz: Float) {
+    // в svg содержимое занимает x 27..83, y 19..87 → центр (55,53), сторона ~68
+    val k = sz / 68f
+    fun X(v: Float) = cx + (v - 55f) * k
+    fun Y(v: Float) = cy + (v - 53f) * k
+    logo.strokeWidth = 6f * k
+    logo.shader = android.graphics.LinearGradient(X(27f), Y(87f), X(83f), Y(19f),
+      Color.parseColor("#FF3DA8"), Color.parseColor("#3DF2FF"), android.graphics.Shader.TileMode.CLAMP)
+    logo.setShadowLayer(3.2f * k, 0f, 0f, Color.argb(170, 255, 61, 168))
+    logoPath.reset()
+    logoPath.addRoundRect(X(30f), Y(22f), X(64f), Y(84f), 9f * k, 9f * k, android.graphics.Path.Direction.CW)
+    // волны из svg: «M72 40 a14 14 0 0 1 0 20» → центр (62.2,50), ±45.6°; «M80 32 a26 26 0 0 1 0 36» → центр (61.24,50), ±43.8°
+    logoPath.addArc(X(48.2f), Y(36f), X(76.2f), Y(64f), -45.6f, 91.2f)
+    logoPath.addArc(X(35.24f), Y(24f), X(87.24f), Y(76f), -43.8f, 87.6f)
+    c.drawPath(logoPath, logo)
+    logoDot.setShadowLayer(3.2f * k, 0f, 0f, Color.argb(200, 255, 61, 168))
+    c.drawCircle(X(47f), Y(53f), 6f * k, logoDot)
+  }
+
   override fun onDraw(canvas: Canvas) {
     val s = minOf(width, height).toFloat()
     val cx = width / 2f; val cy = height / 2f
@@ -173,17 +201,7 @@ class BubbleView(ctx: Context) : View(ctx) {
     canvas.drawCircle(cx, cy, s / 2f - rw / 2f, bg)
     ring.color = ringColor; ring.strokeWidth = rw
     canvas.drawCircle(cx, cy, s / 2f - rw, ring)
-    val v = viewers
-    if (v != null) {
-      val isz = s * 0.30f
-      Icons.draw(canvas, Ic.EYE, cx - isz / 2f, cy - s * 0.30f, isz, Color.argb(220, 255, 255, 255))
-      text.textSize = s * (if (v >= 1000) 0.22f else 0.28f)
-      val label = if (v >= 10000) "${v / 1000}k" else if (v >= 1000) String.format("%.1fk", v / 1000f) else v.toString()
-      canvas.drawText(label, cx, cy + s * 0.22f, text)
-    } else {
-      val isz = s * 0.46f
-      Icons.draw(canvas, Ic.BROADCAST, cx - isz / 2f, cy - isz / 2f, isz, Color.WHITE)
-    }
+    drawLogo(canvas, cx, cy, s * 0.62f)
     dot.color = signalColor
     canvas.drawCircle(cx + s * 0.32f, cy + s * 0.32f, s * 0.09f, dot)
   }

@@ -1197,6 +1197,7 @@ function drawLayer(c, l, t = performance.now()) {
     case 'alerts': drawAlertDemo(c, l, t); break;
     case 'camera': drawCamDemo(c, l); break;
     case 'web': {
+      if (WP_ON && l.url && !((l.rot || 0) % 360) && withUIFlag) { c.setLineDash([10, 8]); c.strokeStyle = 'rgba(120,180,255,.45)'; c.lineWidth = 2; c.strokeRect(l.x + 1, l.y + 1, l.w - 2, l.h - 2); c.setLineDash([]); break; }
       c.fillStyle = 'rgba(62,155,255,.12)'; c.fillRect(l.x, l.y, l.w, l.h);
       c.setLineDash([12, 8]); c.strokeStyle = 'rgba(120,180,255,.8)'; c.lineWidth = 3; c.strokeRect(l.x + 1.5, l.y + 1.5, l.w - 3, l.h - 3); c.setLineDash([]);
       const fs = Math.min(l.h * .09, 30); c.font = `700 ${fs}px "Segoe UI",Roboto,sans-serif`; c.fillStyle = '#cfe4ff'; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -1241,11 +1242,14 @@ function drawBlurBg(c) {
   c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(blurCv, 0, 0, W, H); c.restore();
   return true;
 }
+let withUIFlag = false;
 function render(c, withUI) {
+  withUIFlag = !!withUI && c === ctx;
   c.fillStyle = scene().bg || '#000'; c.fillRect(0, 0, W, H);
   drawBlurBg(c);
   const t = performance.now();
   drawOrder().forEach(l => drawLayer(c, l, t));
+  withUIFlag = false;
   if (!withUI) return;
   const s = selected(), k = W / cv.clientWidth;
   if (gridOn) {
@@ -1272,7 +1276,31 @@ function loop(t) {
     const s = Math.floor((Date.now() - liveStart) / 1000);
     $('#lvTime').textContent = `ТЕСТ ${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   } else render(ctx, true);
+  syncWidgetPreview(t);
   requestAnimationFrame(loop);
+}
+
+/* Живое превью веб-виджетов: настоящие страницы DA поверх сцены (нативные WebView, касания проходят насквозь) */
+let wpLast = '', wpT = 0;
+const WP_ON = !!(NATIVE && NATIVE.previewWidgets);
+function wpFree(cv, x, y) { const e = document.elementFromPoint(x, y); return e === cv; }
+function syncWidgetPreview(t) {
+  if (!WP_ON || t - wpT < 90) return; wpT = t;
+  const cv = $('#cv'), r = cv.getBoundingClientRect(), dpr = devicePixelRatio || 1, k = r.width / W;
+  let show = !liveOn && !document.hidden && r.width > 20 && r.height > 20;
+  const items = [];
+  if (show) for (const l of layers()) {
+    if (l.type !== 'web' || !l.visible || !l.url || (l.rot || 0) % 360) continue;
+    const x = r.left + l.x * k, y = r.top + l.y * k, w = l.w * k, h = l.h * k;
+    // если поверх слоя что-то открыто (шторка, меню, гайд) — превью прячем, иначе оно закроет интерфейс
+    const ix = Math.min(12, w / 4), iy = Math.min(12, h / 4);
+    if (![[x + w / 2, y + h / 2], [x + ix, y + iy], [x + w - ix, y + iy], [x + ix, y + h - iy], [x + w - ix, y + h - iy]].every(p => wpFree(cv, p[0], p[1]))) continue;
+    items.push({ id: l.id, url: l.url, x: Math.round(x * dpr), y: Math.round(y * dpr), w: Math.round(w * dpr), h: Math.round(h * dpr), pw: +l.pageWidth || (l.daKind && DA_KINDS[l.daKind] ? DA_KINDS[l.daKind].pw : 800) });
+  }
+  if (!items.length) show = false;
+  const msg = JSON.stringify({ show, stage: { x: Math.round(r.left * dpr), y: Math.round(r.top * dpr), w: Math.round(r.width * dpr), h: Math.round(r.height * dpr) }, items });
+  if (msg === wpLast) return; wpLast = msg;
+  try { NATIVE.previewWidgets(msg); } catch {}
 }
 
 /* ================= Жесты ================= */

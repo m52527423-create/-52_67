@@ -41,6 +41,7 @@ class MainActivity : Activity() {
   }
 
   private lateinit var web: WebView
+  private lateinit var widgetPreview: WidgetPreview
   private var fileCallback: ValueCallback<Array<Uri>>? = null
   private var pageReady = false
 
@@ -57,6 +58,8 @@ class MainActivity : Activity() {
     val root = FrameLayout(this)
     root.setBackgroundColor(0xFF140F2B.toInt())
     root.addView(web)
+    widgetPreview = WidgetPreview(this)
+    root.addView(widgetPreview.box, FrameLayout.LayoutParams(0, 0))
     setContentView(root)
     root.setOnApplyWindowInsetsListener { v, insets ->
       val sys = insets.getInsets(android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout())
@@ -122,16 +125,19 @@ class MainActivity : Activity() {
 
   override fun onPause() {
     super.onPause()
+    if (::widgetPreview.isInitialized) widgetPreview.pause()
     StreamService.instance?.setAppForeground(false)
   }
 
   override fun onResume() {
     super.onResume()
+    if (::widgetPreview.isInitialized) widgetPreview.resume()
     StreamService.instance?.setAppForeground(true)
     if (pageReady) StreamState.send(JSONObject().put("state", "resume"))
   }
 
   override fun onDestroy() {
+    if (::widgetPreview.isInitialized) widgetPreview.clear()
     StreamState.listener = null
     web.destroy()
     super.onDestroy()
@@ -276,6 +282,12 @@ class MainActivity : Activity() {
           requestPermissions(arrayOf(Manifest.permission.CAMERA), REQ_CAM_LIVE)
         StreamService.instance?.switchScene(index)
       }
+    }
+
+    /** Живое превью виджетов DonationAlerts поверх сцены в редакторе. */
+    @JavascriptInterface
+    fun previewWidgets(json: String) {
+      runOnUiThread { if (::widgetPreview.isInitialized) widgetPreview.apply(json) }
     }
 
     @JavascriptInterface

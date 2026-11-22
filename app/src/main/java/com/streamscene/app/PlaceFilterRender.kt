@@ -47,6 +47,7 @@ class PlaceFilterRender : BaseFilterRender() {
   private var uBgHandle = -1
   private var uBlurHandle = -1
   private var uBgStepHandle = -1
+  private var uSatHandle = -1
 
   // уменьшенная копия для размытия
   private var downProgram = -1
@@ -78,11 +79,15 @@ class PlaceFilterRender : BaseFilterRender() {
   @Volatile private var cr = 0f
   @Volatile private var cb = 0f
   @Volatile private var blur = false
+  @Volatile private var sat = 1f
   @Volatile private var phoneAR = 0f   // пропорции экрана телефона сейчас (ширина/высота), 0 — неизвестно
   private var lastRaw = ""
 
   /** Пропорции экрана телефона с учётом поворота — по ним понимаем, какие полосы должен был добавить Android. */
   fun setPhoneAspect(ar: Float) { phoneAR = ar }
+
+  /** Насыщенность цвета картинки игры: 0 — чёрно-белая, 1 — как есть, 2 — вдвое ярче цвета. */
+  fun setSaturation(v: Float) { sat = v }
 
   // итоговая обрезка (полосы Android + обрезка пользователя) и вписывание — считаются на каждом кадре
   private val eff = FloatArray(4)
@@ -115,6 +120,7 @@ class PlaceFilterRender : BaseFilterRender() {
     uBgHandle = GLES20.glGetUniformLocation(program, "uBg")
     uBlurHandle = GLES20.glGetUniformLocation(program, "uBlur")
     uBgStepHandle = GLES20.glGetUniformLocation(program, "uBgStep")
+    uSatHandle = GLES20.glGetUniformLocation(program, "uSat")
 
     downProgram = GlUtil.createProgram(VERTEX, DOWN)
     dPos = GLES20.glGetAttribLocation(downProgram, "aPosition")
@@ -288,6 +294,7 @@ class PlaceFilterRender : BaseFilterRender() {
     GLES20.glUniform4f(uCropHandle, eff[0], eff[1], eff[2], eff[3])
     GLES20.glUniform4f(uFitHandle, fit[0], fit[1], fit[2].coerceAtLeast(0.0001f), fit[3].coerceAtLeast(0.0001f))
     GLES20.glUniform1f(uBlurHandle, if (useBlur) 1f else 0f)
+    GLES20.glUniform1f(uSatHandle, sat)
     GLES20.glUniform2f(uBgStepHandle, 1f / sw, 1f / sh)
     GLES20.glUniform1i(uBgHandle, 1)
     GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
@@ -381,7 +388,12 @@ uniform vec4 uRect;
 uniform float uFlip;
 uniform vec4 uCrop;
 uniform vec4 uFit;
+uniform float uSat;
 varying vec2 vTextureCoord;
+vec3 satur(vec3 c) {
+  float l = dot(c, vec3(0.299, 0.587, 0.114));
+  return clamp(mix(vec3(l), c, uSat), 0.0, 1.0);
+}
 vec4 bg() {
   if (uBlur < 0.5) return vec4(0.0, 0.0, 0.0, 1.0);
   vec2 u = vTextureCoord;
@@ -394,7 +406,7 @@ vec4 bg() {
   c += texture2D(uBg, u - uBgStep) * 0.0625;
   c += texture2D(uBg, u + vec2(uBgStep.x, -uBgStep.y)) * 0.0625;
   c += texture2D(uBg, u + vec2(-uBgStep.x, uBgStep.y)) * 0.0625;
-  return vec4(c.rgb * 0.8, 1.0);
+  return vec4(satur(c.rgb) * 0.8, 1.0);
 }
 void main() {
   vec2 t = vec2(vTextureCoord.x, 1.0 - vTextureCoord.y);
@@ -405,7 +417,8 @@ void main() {
   } else {
     if (uFlip > 0.5) p.x = 1.0 - p.x;
     vec2 s = vec2(uCrop.x + p.x * (1.0 - uCrop.x - uCrop.z), uCrop.y + p.y * (1.0 - uCrop.y - uCrop.w));
-    gl_FragColor = texture2D(uSampler, vec2(s.x, 1.0 - s.y));
+    vec4 c = texture2D(uSampler, vec2(s.x, 1.0 - s.y));
+    gl_FragColor = vec4(satur(c.rgb), 1.0);
   }
 }
 """

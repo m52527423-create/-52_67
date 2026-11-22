@@ -288,7 +288,9 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       val vertical = cfg.height > cfg.width
       val rotation = if (vertical) 90 else 0
       maxVideoBitrate = cfg.bitrate; videoBitrate = cfg.bitrate
-      val ok = s.prepareVideo(max(fw, fh), min(fw, fh), cfg.bitrate, cfg.fps, 2, rotation) &&
+      val highOk = try { s.prepareVideo(max(fw, fh), min(fw, fh), cfg.bitrate, cfg.fps, 2, rotation, android.media.MediaCodecInfo.CodecProfileLevel.AVCProfileHigh) } catch (e: Exception) { false }
+      if (!highOk) Log.i(TAG, "High profile not supported, fallback")
+      val ok = (highOk || s.prepareVideo(max(fw, fh), min(fw, fh), cfg.bitrate, cfg.fps, 2, rotation)) &&
         s.prepareAudio(44100, true, AUDIO_BITRATE, echoCanceler = false, noiseSuppressor = cfg.noiseSuppress && cfg.audio != "game")
       if (!ok) {
         s.release()
@@ -401,7 +403,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
       try { f.setGif(ByteArrayInputStream(firstGif)) } catch (e: Exception) { Log.w(TAG, "gif", e) }
       f.alpha = 0f; addF(f, R_GIF)
     }
-    val nWeb = min(3, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
+    val nWeb = min(4, cfg.scenes.maxOfOrNull { sc -> sc.widgets.count { it.type == "web" && it.url.isNotBlank() } } ?: 0)
     while (webFilters.size < nWeb) {
       val idx = webFilters.size
       webHosts += WebWidgetHost(this); webState += ""
@@ -443,7 +445,7 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
     ensureFilters(cfg)
     val r = sc.screen
     if (r != null) Log.i(TAG, "screen rect ${r.x},${r.y} ${r.w}x${r.h} crop ${r.cl},${r.ct},${r.cr},${r.cb} blur=${r.blur} frame=${fw}x$fh")
-    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); userCrop = floatArrayOf(r.cl, r.ct, r.cr, r.cb); applyCrop(); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh) }
+    if (r != null) { place.setRect(r.x, r.y, r.w, r.h, r.flip); userCrop = floatArrayOf(r.cl, r.ct, r.cr, r.cb); applyCrop(); place.setBlur(r.blur, r.w * fw / (r.h * fh).coerceAtLeast(1f), fw.toFloat() / fh); place.setSaturation(r.sat) }
     else { place.setRect(0f, 0f, 1f, 1f, false); userCrop = floatArrayOf(0f, 0f, 0f, 0f); applyCrop(); place.setBlur(false, 1f, 1f) }
     BitmapFactory.decodeByteArray(sc.overlayPng, 0, sc.overlayPng.size)?.let {
       overlay.setImage(it); overlay.setScale(100f, 100f); overlay.setPosition(0f, 0f)
@@ -779,7 +781,8 @@ class StreamService : Service(), ConnectChecker, FloatingControls.Actions {
 
   // ---------------- автокачество, батарея, нагрев ----------------
   private fun makeAdapter(maxVideo: Int) {
-    adapter = QueueAwareBitrateAdapter(maxVideo + AUDIO_BITRATE, max(400_000, maxVideo / 5) + AUDIO_BITRATE) { b ->
+    // не даём автокачеству падать ниже половины — иначе картинка рассыпается на квадраты
+    adapter = QueueAwareBitrateAdapter(maxVideo + AUDIO_BITRATE, max(1_200_000, maxVideo / 2) + AUDIO_BITRATE) { b ->
       val v = (b - AUDIO_BITRATE).coerceAtLeast(300_000)
       videoBitrate = v
       try { stream?.setVideoBitrateOnFly(v) } catch (_: Exception) {}

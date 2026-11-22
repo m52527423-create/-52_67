@@ -446,6 +446,9 @@ body.fs .stage{border-radius:0;outline:0;box-shadow:none;margin:0}
 <symbol id="i-blur" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="7.5" y="8" width="9" height="8" rx="1"/><path d="M4.5 9h1.5M4.5 12h1.5M4.5 15h1.5M18 9h1.5M18 12h1.5M18 15h1.5"/></symbol>
 <symbol id="i-rotate" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M3 14a9 9 0 0 0 6 6.5M21 10a9 9 0 0 0-6-6.5"/><path d="M3 11v3h3M21 13v-3h-3"/></symbol>
 <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+<symbol id="i-sat" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></symbol>
 <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></symbol>
 <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
@@ -620,6 +623,11 @@ body.fs .stage{border-radius:0;outline:0;box-shadow:none;margin:0}
         <div class="item"><div class="lbl" style="flex:none;width:80px">Снизу</div><input type="range" data-crop="cb" min="0" max="45"><span class="val" data-cv="cb"></span></div>
       </div>
 
+      <div class="group" id="gColor">
+        <div class="ghead">Цвет<span class="sp"></span><button class="btn sm" id="pColorReset">Сбросить</button></div>
+        <div class="item"><div class="lbl" style="flex:none;width:110px">Насыщенность</div><input type="range" id="pSat" min="0" max="200" step="5"><span class="val" id="pSatV"></span></div>
+      </div>
+
       <div class="group" id="gScreen">
         <div class="ghead">Экран игры</div>
         <div class="item"><div class="lbl note">В эфире здесь будет экран телефона. Для примерки можно подставить свою запись экрана.</div></div>
@@ -660,6 +668,11 @@ body.fs .stage{border-radius:0;outline:0;box-shadow:none;margin:0}
         <button class="tile" data-add="chat"><svg class="ic"><use href="#i-chat"/></svg>Чат</button>
         <button class="tile" data-da="alerts"><svg class="ic"><use href="#i-bell"/></svg>Алерты</button>
         <button class="tile" data-da="goal"><svg class="ic"><use href="#i-target"/></svg>Сбор средств</button>
+        <button class="tile" data-da="stats"><svg class="ic"><use href="#i-list"/></svg>Статистика донатов</button>
+        <button class="tile" data-da="polls"><svg class="ic"><use href="#i-chart"/></svg>Опрос</button>
+        <button class="tile" data-da="media"><svg class="ic"><use href="#i-film"/></svg>Медиа от зрителей</button>
+        <button class="tile" data-da="other"><svg class="ic"><use href="#i-globe"/></svg>Другой виджет DA</button>
+        <button class="tile" id="addGif"><svg class="ic"><use href="#i-image"/></svg>GIF-анимация</button>
         <button class="tile" data-add="timer"><svg class="ic"><use href="#i-timer"/></svg>Таймер эфира</button>
         <button class="tile" data-add="clock"><svg class="ic"><use href="#i-clock"/></svg>Часы</button>
         <button class="tile" data-add="viewers"><svg class="ic"><use href="#i-eye"/></svg>Зрители</button>
@@ -1172,6 +1185,7 @@ function drawGoalDemo(c, l) {
 function drawLayer(c, l, t = performance.now()) {
   if (!l.visible) return;
   c.save(); c.globalAlpha = l.opacity;
+  if (l.type === 'screen' && (l.sat ?? 100) !== 100) c.filter = `saturate(${l.sat}%)`;
   switch (l.type) {
     case 'text': drawTextBox(c, l, l.text || ''); break;
     case 'timer': drawTextBox(c, l, fmtElapsed(Date.now() - T0)); break;
@@ -1355,11 +1369,11 @@ function setOrient(o) {
 
 /* ================= Стрим на Twitch (только в приложении) ================= */
 const QUALITY = {
-  '720p30':  { long: 1280, short: 720,  fps: 30, kbps: 3000, label: '720p · 30 к/с (рекомендую)' },
-  '720p60':  { long: 1280, short: 720,  fps: 60, kbps: 4500, label: '720p · 60 к/с (плавнее)' },
-  '1080p30': { long: 1920, short: 1080, fps: 30, kbps: 4500, label: '1080p · 30 к/с' },
-  '1080p60': { long: 1920, short: 1080, fps: 60, kbps: 6000, label: '1080p · 60 к/с (нужен быстрый интернет)' },
-  '540p30':  { long: 960,  short: 540,  fps: 30, kbps: 1800, label: '540p · 30 к/с (слабый интернет)' }
+  '720p60':  { long: 1280, short: 720,  fps: 60, kbps: 6000, label: '720p · 60 к/с (рекомендую для игр, 6 Мбит/с)' },
+  '720p30':  { long: 1280, short: 720,  fps: 30, kbps: 4500, label: '720p · 30 к/с (4,5 Мбит/с)' },
+  '1080p30': { long: 1920, short: 1080, fps: 30, kbps: 6000, label: '1080p · 30 к/с (6 Мбит/с)' },
+  '1080p60': { long: 1920, short: 1080, fps: 60, kbps: 8000, label: '1080p · 60 к/с (8 Мбит/с, нужен быстрый интернет)' },
+  '540p30':  { long: 960,  short: 540,  fps: 30, kbps: 2500, label: '540p · 30 к/с (слабый интернет)' }
 };
 const AUDIO = { mix: 'Игра + микрофон', game: 'Только звук игры', mic: 'Только микрофон' };
 const INGEST = 'rtmp://ingest.global-contribute.live-video.net/app/';
@@ -1472,7 +1486,7 @@ function buildScene(sc, EW, EH) {
       const r = Math.min(l.radius / 100 * Math.min(l.w, l.h), Math.min(l.w, l.h) / 2);
       x.save(); x.globalCompositeOperation = 'destination-out'; x.globalAlpha = l.opacity;
       x.beginPath(); x.roundRect(l.x, l.y, l.w, l.h, r); x.fill(); x.restore();
-      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip, cl: (l.cl || 0) / 100, ct: (l.ct || 0) / 100, cr: (l.cr || 0) / 100, cb: (l.cb || 0) / 100, blur: !!l.blurBg };
+      screen = { x: l.x / W, y: l.y / H, w: l.w / W, h: l.h / H, flip: !!l.flip, cl: (l.cl || 0) / 100, ct: (l.ct || 0) / 100, cr: (l.cr || 0) / 100, cb: (l.cb || 0) / 100, blur: !!l.blurBg, sat: (l.sat ?? 100) / 100 };
     } else drawLayer(x, l);
   }
   return { name: sc.name, screen, overlay: c.toDataURL('image/png'), widgets };
@@ -1614,6 +1628,8 @@ function renderProps() {
   if (t === 'ticker') { $('#pSpeed').value = Math.round((s.speed || 1) * 10); $('#vSpeed').textContent = (s.speed || 1).toFixed(1) + '×'; }
   show('#gImage', t === 'image' || t === 'gif');
   show('#gCrop', t === 'image' || t === 'screen');
+  show('#gColor', t === 'screen');
+  if (t === 'screen') { const v = s.sat ?? 100; $('#pSat').value = v; $('#pSatV').textContent = v + '%'; }
   if (t === 'image' || t === 'screen') ['cl', 'cr', 'ct', 'cb'].forEach(k => { $(`[data-crop="${k}"]`).value = s[k] || 0; $(`[data-cv="${k}"]`).textContent = (s[k] || 0) + '%'; });
   show('#gScreen', t === 'screen');
 }
@@ -1761,6 +1777,8 @@ $('#pGoalB').onchange = e => { const s = selected(); if (!s) return; s.rateBits 
 $('#pGoalSub').onchange = e => { const s = selected(); if (!s) return; s.rateSub = Math.max(0, numIn(e.target.value) || 0); e.target.value = s.rateSub; save(); };
 $('#pGoalC').oninput = e => { const s = selected(); if (!s) return; s.strokeColor = e.target.value; save(); };
 $('#pGoalReset').onclick = () => sheetOpts('Обнулить собранную сумму?', [{ label: 'Обнулить', cls: 'danger', fn: () => { const s = selected(); if (!s) return; s.goalStart = 0; s.goalRev = 'g' + Date.now(); save(); renderUI(); toast('Сумма обнулена'); } }]);
+$('#pSat').oninput = e => { const s = selected(); if (!s) return; s.sat = +e.target.value; $('#pSatV').textContent = s.sat + '%'; save(); };
+$('#pColorReset').onclick = () => { const s = selected(); if (!s) return; s.sat = 100; save(); renderProps(); };
 $('#pDaEdit').onclick = () => { const s = selected(); if (s && s.daKind) daLinkSheet(s.daKind, () => renderProps()); };
 $('#pDaHow').onclick = () => openGuide(true, 'da');
 $('#pDaShow').onclick = () => { const s = selected(); if (s && s.url) revealLink($('#pDaUrl'), s.url); };
@@ -1818,6 +1836,7 @@ function placeAt(o) {
   const [x, y] = map[o.pos] || [(W - o.w) / 2, (H - o.h) / 2]; return { x, y };
 }
 $$('[data-da]').forEach(b => b.onclick = () => addDaLayer(b.dataset.da));
+$('#addGif').onclick = () => $('#fileGif').click();
 $$('[data-add]').forEach(b => b.onclick = () => {
   const type = b.dataset.add, d = LIVE_DEFAULTS()[type];
   if (type === 'camera' && layers().some(l => l.type === 'camera')) return toast('Камера уже есть в этой сцене');
@@ -2015,6 +2034,7 @@ function renderLive() {
     <div class="item col"><span class="lab">Как держишь телефон в игре</span>
       <div class="seg txt" id="segGame"><button data-v="land">Горизонтально</button><button data-v="port">Вертикально</button></div></div>
     <div class="item col"><span class="lab">Качество</span><select class="inp" id="skQ" ${live ? 'disabled' : ''}>${opt(QUALITY, streamCfg.quality)}</select></div>
+    <div class="item adv"><div class="lbl">Битрейт, Мбит/с<small>больше — чётче картинка, но нужен интернет быстрее. Пусто — как в качестве</small></div><input class="inp" id="skKbps" inputmode="decimal" style="width:80px;text-align:right" placeholder="${(QUALITY[streamCfg.quality].kbps / 1000).toString().replace('.', ',')}" value="${streamCfg.kbps ? (streamCfg.kbps / 1000).toString().replace('.', ',') : ''}" ${live ? 'disabled' : ''}></div>
     <div class="item adv"><div class="lbl">Автокачество<small>снижает битрейт, если интернет проседает, и поднимает обратно</small></div><label class="sw"><input type="checkbox" id="skAuto"${streamCfg.autoBitrate ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
     <div class="item adv"><div class="lbl">Задержка эфира, секунд<small>зрители увидят всё позже на это время${streamCfg.delay >= 60 ? ' · большая задержка расходует память' : ''}</small></div><input class="inp" id="skDelay" inputmode="numeric" style="width:80px;text-align:right" value="${streamCfg.delay || 0}" ${live ? 'disabled' : ''}></div>
     <div class="item"><div class="lbl">Пробный эфир<small>уходит на Twitch, но зрители его не видят</small></div><label class="sw"><input type="checkbox" id="skTest"${streamCfg.testMode ? ' checked' : ''} ${live ? 'disabled' : ''}><span></span></label></div>
@@ -2074,6 +2094,12 @@ function renderLive() {
   $$('[data-dashow]').forEach(b => b.onclick = () => revealLink($('#dl_' + b.dataset.dashow), daLinks[b.dataset.dashow]));
   $('#daGuide').onclick = () => openGuide(true, 'da');
   $('#skAdv').onclick = () => { streamCfg.advanced = !streamCfg.advanced; saveCfg(); renderLive(); };
+  $('#skKbps').onchange = e => {
+    let v = parseFloat(String(e.target.value).replace(',', '.'));
+    if (!v) { streamCfg.kbps = 0; e.target.value = ''; saveCfg(); return; }
+    v = Math.round(Math.min(10, Math.max(1, v)) * 1000); streamCfg.kbps = v; e.target.value = (v / 1000).toString().replace('.', ','); saveCfg();
+    if (v > 7000) toast('Twitch может не принять больше 8 Мбит/с — проверь интернет');
+  };
   $('#skDelay').onchange = e => {
     let v = Math.round(parseFloat(String(e.target.value).replace(',', '.')) || 0);
     if (v > 300) { v = 300; toast('Максимум 300 секунд (5 минут)'); }
@@ -2204,7 +2230,7 @@ async function launch(key, bubble) {
       privacy = c.toDataURL('image/png');
     }
     const url = INGEST + key + (streamCfg.testMode ? '?bandwidthtest=true' : '');
-    NATIVE.start(JSON.stringify({ url, width: w, height: h, fps: q.fps, bitrate: q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur,
+    NATIVE.start(JSON.stringify({ url, width: w, height: h, fps: q.fps, bitrate: streamCfg.kbps || q.kbps, audio: streamCfg.audio, gameLandscape: !GAME_PORT, bubble, scenes: out, current: cur,
       testMode: streamCfg.testMode, autoBitrate: streamCfg.autoBitrate, gameVolume: streamCfg.gameVol / 100, micVolume: streamCfg.micVol / 100,
       noise: streamCfg.noise, hideOnLock: streamCfg.hideOnLock, hideInApp: streamCfg.hideInApp, chatChannel, privacy, delay: streamCfg.delay || 0, record: !!streamCfg.record }));
     if (streamCfg.testMode) toast('Пробный эфир: зрители его не увидят');
@@ -2298,8 +2324,9 @@ function renderHome() {
     h += sp && sp.ok ? chkRow(sp.mbps >= 5 ? 'ok' : 'warn', `Интернет: ${sp.mbps.toFixed(1)} Мбит/с`, sp.mbps >= 5 ? 'хватает для выбранного качества' : 'слабовато, выбери качество пониже', `<button class="btn sm" id="hSpeed">Ещё раз</button>`)
       : chkRow('no', speedBusy ? 'Проверяю интернет…' : 'Интернет не проверен', 'займёт 10 секунд', speedBusy ? '' : `<button class="btn sm" id="hSpeed">Проверить</button>`);
     if (b) h += chkRow(b.battery < 20 && !b.charging ? 'warn' : 'ok', `Батарея ${b.battery}%${b.charging ? ', заряжается' : ''}`, b.battery < 20 && !b.charging ? 'подключи зарядку' : '');
-    const daN = Object.values(daLinks).filter(Boolean).length;
-    h += daN ? chkRow('ok', 'Виджеты DonationAlerts', daN === 2 ? 'алерты и сбор средств' : daLinks.alerts ? 'алерты' : 'сбор средств') : chkRow('no', 'Алерты DonationAlerts не добавлены', 'по желанию', `<button class="btn sm" id="hDa">Добавить</button>`);
+    const daOn = Object.keys(DA_KINDS).filter(k => daLinks[k]);
+    const daN = daOn.length;
+    h += daN ? chkRow('ok', 'Виджеты DonationAlerts', daOn.map(k => DA_KINDS[k].title.toLowerCase()).join(', ')) : chkRow('no', 'Алерты DonationAlerts не добавлены', 'по желанию', `<button class="btn sm" id="hDa">Добавить</button>`);
     if (NATIVE && streamCfg.bubble) h += NATIVE.canOverlay() ? chkRow('ok', 'Кружок поверх игры разрешён', '') : chkRow('warn', 'Кружок поверх игры не разрешён', '', `<button class="btn sm" id="hOv">Разрешить</button>`);
     h += `</div>`;
     h += `<button class="btn" id="hGuide" style="width:100%;margin-top:16px;height:48px">${I('live')}Гайд по приложению · 1 минута</button>`;
@@ -2406,9 +2433,13 @@ document.addEventListener('click', e => {
 /* ================= Виджеты DonationAlerts ================= */
 const DA_KINDS = {
   alerts: { title: 'Алерты', full: 'Алерты DonationAlerts', site: 'Оповещения', w: .5, h: .42, pw: 800, icon: 'bell' },
-  goal: { title: 'Сбор средств', full: 'Сбор средств DonationAlerts', site: 'Сбор средств', w: .45, h: .16, pw: 700, icon: 'target' }
+  goal: { title: 'Сбор средств', full: 'Сбор средств DonationAlerts', site: 'Сбор средств', w: .45, h: .16, pw: 700, icon: 'target' },
+  stats: { title: 'Статистика донатов', full: 'Статистика DonationAlerts', site: 'Статистика (последние донаты, топ донатеров)', w: .32, h: .3, pw: 600, icon: 'list' },
+  polls: { title: 'Опрос', full: 'Опрос DonationAlerts', site: 'Опросы', w: .35, h: .35, pw: 600, icon: 'chart' },
+  media: { title: 'Медиа от зрителей', full: 'Медиа DonationAlerts', site: 'Медиа (видео за донат)', w: .4, h: .4, pw: 800, icon: 'film' },
+  other: { title: 'Другой виджет', full: 'Виджет DonationAlerts', site: 'любой виджет', w: .4, h: .3, pw: 800, icon: 'globe' }
 };
-let daLinks = Object.assign({ alerts: '', goal: '' }, store.get('daLinks', {}));
+let daLinks = Object.assign({ alerts: '', goal: '', stats: '', polls: '', media: '', other: '' }, store.get('daLinks', {}));
 function saveDaLink(kind, url) {
   daLinks[kind] = url; store.set('daLinks', daLinks);
   scenes.forEach(sc => sc.layers.forEach(l => { if (l.daKind === kind) l.url = url; }));
@@ -2513,7 +2544,9 @@ const GUIDE = [
     <p><b>Сбор средств:</b></p><ol class="steps2"><li>На сайте слева: <b>«Сбор средств»</b> → <b>«Добавить сбор»</b>: название и сумма.</li><li>Скопируй <b>ссылку для встраивания</b> этого сбора.</li><li>В Glowcast: <b>Добавить → Сбор средств</b>, вставь ссылку.</li></ol>
     <p>Ссылки сохраняются: в следующий раз слой добавится сразу, без вставки.</p>
     <div class="tip">Поменял оформление на сайте — ссылка та же, ничего делать не надо. Новый сбор или новый виджет — выбери слой → <b>Изменить ссылку</b> (или Настройки → DonationAlerts). Ссылка обновится во всех сценах.</div>
-    <p style="margin-top:10px">Фолловы и сабы Twitch тоже можно показывать: на сайте DonationAlerts подключи Twitch и включи эти оповещения.</p>
+    <p style="margin-top:10px"><b>Другие виджеты</b> (статистика донатов, опросы, медиа от зрителей и любые другие) добавляются так же: на сайте открой нужный виджет, скопируй его ссылку для встраивания, в Glowcast — «Добавить» и нужная плитка. Для всего остального есть «Другой виджет DA».</p>
+    <p>Чат зрителей на стрим добавляется плиткой <b>«Чат»</b> — он берётся прямо из Twitch.</p>
+    <p>Фолловы и сабы Twitch тоже можно показывать: на сайте DonationAlerts подключи Twitch и включи эти оповещения.</p>
     <p><b>Не показывай ссылку никому</b> — по ней можно открыть твои алерты.</p>`, 'da'],
   ['bubble', 'Кружок поверх игры', `<p>Во время эфира поверх игры висит кружок. Его обводка показывает связь: <b>розовая</b> — всё хорошо, <b>жёлтая</b> — подключение, <b>красная</b> — переподключение.</p><p>Нажми на кружок — откроется меню: зрители, Мбит/с, события, чат (нажми на сообщение — покажу его на стриме), сцены и кнопки Микрофон, Скрыть, Запись, Правка, Стоп.</p><div class="tip">«Правка» открывает слои, а зрители в это время видят заставку. «К игре» — обратно.</div>`],
   ['rec', 'Запись видео', `<p>Настройки → Запись: <b>«Записывать эфир в файл»</b> — эфир сохранится в Галерею, папка Movies/StreamScene. Во время эфира запись включается кнопкой в кружке.</p><p>На Пульте есть <b>«Только запись, 1080p»</b> — запись без Twitch, например для YouTube или TikTok.</p>`],

@@ -9,7 +9,8 @@ import org.json.JSONObject
 data class ScreenRect(
   val x: Float, val y: Float, val w: Float, val h: Float, val flip: Boolean,
   val cl: Float = 0f, val ct: Float = 0f, val cr: Float = 0f, val cb: Float = 0f,
-  val blur: Boolean = false   // края кадра — размытая игра
+  val blur: Boolean = false,  // края кадра — размытая игра
+  val sat: Float = 1f         // насыщенность цвета (1 — как есть)
 )
 
 /** Своё оформление алерта: картинка или GIF и звук. */
@@ -161,7 +162,7 @@ object StreamState {
       screen = r?.let {
         ScreenRect(
           f(it, "x"), f(it, "y"), f(it, "w", 1.0), f(it, "h", 1.0), it.optBoolean("flip", false),
-          f(it, "cl"), f(it, "ct"), f(it, "cr"), f(it, "cb"), it.optBoolean("blur", false)
+          f(it, "cl"), f(it, "ct"), f(it, "cr"), f(it, "cb"), it.optBoolean("blur", false), it.optDouble("sat", 1.0).toFloat().coerceIn(0f, 2f)
         )
       },
       overlayPng = Base64.decode(s.getString("overlay").substringAfter(","), Base64.DEFAULT),

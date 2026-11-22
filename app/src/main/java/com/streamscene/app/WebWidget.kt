@@ -126,11 +126,15 @@ void main() {
   vec2 tc = (uWebST * vec4(p.x, 1.0 - p.y, 0.0, 1.0)).xy;
   vec4 col = texture2D(uWeb, tc);
   float a = 1.0;
+  vec3 f = col.rgb;
   if (uKey > 0.5) {
-    float d = distance(col.rgb, vec3(1.0, 0.0, 1.0));
-    a = smoothstep(0.22, 0.42, d);
+    // страница нарисована поверх розового (1,0,1): пиксель = a*цвет + (1-a)*розовый.
+    // «Розовость» пикселя показывает, сколько фона просвечивает, — восстанавливаем и прозрачность, и настоящий цвет.
+    float m = clamp(min(col.r, col.b) - col.g, 0.0, 1.0);
+    a = clamp((1.0 - m - 0.03) / 0.94, 0.0, 1.0);
+    f = a > 0.02 ? clamp((col.rgb - (1.0 - a) * vec3(1.0, 0.0, 1.0)) / a, 0.0, 1.0) : vec3(0.0);
   }
-  gl_FragColor = vec4(mix(base.rgb, col.rgb, a * uAlpha), 1.0);
+  gl_FragColor = vec4(mix(base.rgb, f, a * uAlpha), 1.0);
 }
 """
   }
